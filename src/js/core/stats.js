@@ -11,7 +11,7 @@ function recalc(){
   for(const id of g.relics||[]){const st=RELICS[id].st;if(st)for(const k in st)it[k]=(it[k]||0)+st[k]}
   synUpdate(g,it);
   {const ms=mapStats(g);for(const k in ms)it[k]=(it[k]||0)+ms[k]}
-  g.aff=(AFF[g.map]&&AFF[g.map].h===g.start)?AFF[g.map]:null;
+  {const A=AFF[bio(g.map)];g.aff=(A&&A.h===g.start)?A:null}
   if(g.aff)for(const k in g.aff.st)it[k]=(it[k]||0)+g.aff.st[k];
   if(g.cls)for(const k in g.cls.st)it[k]=(it[k]||0)+g.cls.st[k];
   {const Gr=GROW[g.start],lv=(p.lv||1)-1;if(Gr&&lv>0)for(const k in Gr.st)it[k]=(it[k]||0)+Gr.st[k]*lv}

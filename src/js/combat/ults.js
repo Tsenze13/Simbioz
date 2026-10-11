@@ -59,23 +59,23 @@ const ULT_LV=BAL.hero.ultLv;
 /* Печати мастерства: у мастеров вместо печатей симбиозов. fx(x,y,lv) — после удара ульты в точке (x,y). */
 function onScreen(){const g=G;return g.en.filter(e=>!e.dead&&!e.sub&&vis(e.x,e.y,40))}
 const MSEAL={
-  fire:[{k:'ash',n:'Пепелище',d:'Ульта оставляет горящую землю на 6 с',fx(x,y,lv){addZone(x,y,{vis:'wildfire',r:150,life:6,dps:12+8*lv+G.wave*1.5,dt:'magic',col:'#ff7a3a',st:{burn:[6+2*lv,3]}})}},
-    {k:'nova',n:'Сверхновая',d:'Мощный взрыв в центре удара',fx(x,y,lv){explodeAt(x,y,220,60+30*lv+G.wave*4,{dt:'magic',col:'#ffb347',knock:320,shake:9})}},
-    {k:'ignite',n:'Возгорание',d:'Поджигает всех врагов на экране',fx(x,y,lv){for(const e of onScreen())applySt(e,{burn:[10+3*G.wave,4]},1)}}],
+  fire:[{k:'ash',n:'Пепелище',d:'Ульта оставляет горящую землю на 6 с',fx(x,y,lv){addZone(x,y,{vis:'wildfire',r:150,life:6,dps:12+8*lv+SW()*1.5,dt:'magic',col:'#ff7a3a',st:{burn:[6+2*lv,3]}})}},
+    {k:'nova',n:'Сверхновая',d:'Мощный взрыв в центре удара',fx(x,y,lv){explodeAt(x,y,220,60+30*lv+SW()*4,{dt:'magic',col:'#ffb347',knock:320,shake:9})}},
+    {k:'ignite',n:'Возгорание',d:'Поджигает всех врагов на экране',fx(x,y,lv){for(const e of onScreen())applySt(e,{burn:[10+3*SW(),4]},1)}}],
   water:[{k:'tsunami',n:'Цунами',d:'Отбрасывает и мочит всех вокруг героя',fx(x,y,lv){const p=G.p;for(const e of G.en){if(e.dead)continue;const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<320){knockE(e,e.x-p.x,e.y-p.y,520);applySt(e,{wet:3},1)}}ring(p.x,p.y,320,'#3aa7ff',0.6)}},
     {k:'heal',n:'Исцеление',d:'Ульта лечит 30% здоровья',fx(x,y,lv){heal(G.S.maxHp*0.3);ring(G.p.x,G.p.y,90,'#6fe3a0',0.6)}},
     {k:'frost',n:'Лёд',d:'Замораживает врагов у точки удара на 2 с',fx(x,y,lv){for(const e of G.en){if(!e.dead&&(e.x-x)**2+(e.y-y)**2<260*260)applySt(e,{frz:2},1)}ring(x,y,260,'#bdf0ff',0.6)}}],
-  earth:[{k:'quake',n:'Землетрясение',d:'Оглушает всех врагов на экране на 1,5 с',fx(x,y,lv){for(const e of onScreen()){applySt(e,{stun:1.5},1);hitEnemy(e,10+5*lv+G.wave*2,{dt:'phys',aoe:true,quiet:true})}G.shake=Math.max(G.shake,10)}},
+  earth:[{k:'quake',n:'Землетрясение',d:'Оглушает всех врагов на экране на 1,5 с',fx(x,y,lv){for(const e of onScreen()){applySt(e,{stun:1.5},1);hitEnemy(e,10+5*lv+SW()*2,{dt:'phys',aoe:true,quiet:true})}G.shake=Math.max(G.shake,10)}},
     {k:'citadel',n:'Цитадель',d:'4 секунды неуязвимости',fx(x,y,lv){G.shield=Math.max(G.shield,4);ring(G.p.x,G.p.y,70,'#c9974f',0.6)}},
-    {k:'debris',n:'Обломки',d:'После удара падает град камней',fx(x,y,lv){for(let i=0;i<8;i++){const a=rnd(0,TAU),d=rnd(40,200);CAST.blast({r:50,dmg:20+10*lv+G.wave*2,dt:'phys',delay:0.4+i*0.1,range:5000,vis:'shell',col:'#c9974f',knock:140},{px:G.p.x,py:G.p.y,x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,ang:0,col:'#c9974f'})}}}],
+    {k:'debris',n:'Обломки',d:'После удара падает град камней',fx(x,y,lv){for(let i=0;i<8;i++){const a=rnd(0,TAU),d=rnd(40,200);CAST.blast({r:50,dmg:20+10*lv+SW()*2,dt:'phys',delay:0.4+i*0.1,range:5000,vis:'shell',col:'#c9974f',knock:140},{px:G.p.x,py:G.p.y,x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,ang:0,col:'#c9974f'})}}}],
   air:[{k:'hurricane',n:'Ураган',d:'Затягивает врагов в центр удара',fx(x,y,lv){for(const e of G.en){if(e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<340&&d>20)knockE(e,x-e.x,y-e.y,Math.min(600,d*2.2))}ring(x,y,340,'#8febd0',0.6)}},
-    {k:'storm',n:'Шторм',d:'6 молний бьют врагов на экране',fx(x,y,lv){const L=onScreen();for(let i=0;i<6&&L.length;i++){const e=pickOf(L);chainBolt(e.x+rnd(-30,30),e.y-320,e,1,30+12*lv+G.wave*3,150,{dt:'magic',shock:true,col:'#f4f08a'})}}},
+    {k:'storm',n:'Шторм',d:'6 молний бьют врагов на экране',fx(x,y,lv){const L=onScreen();for(let i=0;i<6&&L.length;i++){const e=pickOf(L);chainBolt(e.x+rnd(-30,30),e.y-320,e,1,30+12*lv+SW()*3,150,{dt:'magic',shock:true,col:'#f4f08a'})}}},
     {k:'tailwind',n:'Попутный ветер',d:'Рывки восстановлены, скорость +40% на 5 с',fx(x,y,lv){const g=G;g.p.dch=1+(g.S.dch||0);g.bf.spd={t:5,v:0.4};tickBuffs(0)}}],
-  metal:[{k:'carpet',n:'Ковровая бомбардировка',d:'Линия взрывов от героя до цели',fx(x,y,lv){const p=G.p;for(let i=1;i<=10;i++){const k=i/10;CAST.blast({r:55,dmg:22+10*lv+G.wave*2,dt:'phys',delay:0.15+i*0.07,range:5000,vis:'shell',col:'#ffb347',knock:160},{px:p.x,py:p.y,x:p.x+(x-p.x)*k*1.3,y:p.y+(y-p.y)*k*1.3,ang:0,col:'#ffb347'})}}},
+  metal:[{k:'carpet',n:'Ковровая бомбардировка',d:'Линия взрывов от героя до цели',fx(x,y,lv){const p=G.p;for(let i=1;i<=10;i++){const k=i/10;CAST.blast({r:55,dmg:22+10*lv+SW()*2,dt:'phys',delay:0.15+i*0.07,range:5000,vis:'shell',col:'#ffb347',knock:160},{px:p.x,py:p.y,x:p.x+(x-p.x)*k*1.3,y:p.y+(y-p.y)*k*1.3,ang:0,col:'#ffb347'})}}},
     {k:'ap',n:'Бронебойные',d:'Ржавчина на всех врагах экрана: −14 брони на 6 с',fx(x,y,lv){for(const e of onScreen())e.rust=Math.max(e.rust,6)}},
     {k:'overdrive',n:'Перегрузка стволов',d:'5 с все стволы стреляют вдвое чаще',fx(x,y,lv){G.odT=5}}],
   wood:[{k:'jungle',n:'Джунгли',d:'Корни держат всех врагов на экране 2 с',fx(x,y,lv){for(const e of onScreen())applySt(e,{root:2},1)}},
-    {k:'plague',n:'Чума',d:'Отравляет всех врагов на экране',fx(x,y,lv){for(const e of onScreen())applySt(e,{poison:[8+2*G.wave,5]},1)}},
+    {k:'plague',n:'Чума',d:'Отравляет всех врагов на экране',fx(x,y,lv){for(const e of onScreen())applySt(e,{poison:[8+2*SW(),5]},1)}},
     {k:'bloom',n:'Цветение',d:'Лечит 20% и даёт +8 регенерации на 6 с',fx(x,y,lv){const g=G;heal(g.S.maxHp*0.2);g.bf.regen={t:6,v:8};tickBuffs(0)}}]
 };
 function ultMods(){const g=G;return EK.filter(p=>p!==g.start&&g.ult.seals&&g.ult.seals[p])}

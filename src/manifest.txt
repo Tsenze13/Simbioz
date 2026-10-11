@@ -15,6 +15,7 @@ js/core/save.js
 js/core/music.js
 js/core/state.js
 js/world/maps.js
+js/world/chapters.js
 js/core/stats.js
 js/combat/damage.js
 js/combat/cast.js

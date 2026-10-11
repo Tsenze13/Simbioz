@@ -5,13 +5,15 @@ for(const k in BOSS){
   const B=BOSS[k];
   ET['boss_'+k]={n:B.n,r:B.r,hp:B.hp,sp:B.sp,dmg:B.dmg,gold:0,xp:'xl',col:B.col,shape:B.shape,ai:'boss',armor:B.armor,mres:B.mres,from:99,wt:0,d:B.d,dt:'mixed'};
 }
-const hpMul=w=>{const B=BAL.enemy;return 1+B.hpLin*(w-1)+B.hpQuad*(w-1)*(w-1)+(w>B.lateFrom?B.hpLate*(w-B.lateFrom)**2:0)};
-const dmgMul=w=>{const B=BAL.enemy;return 1+B.dmgLin*(w-1)+B.dmgQuad*(w-1)*(w-1)+(w>B.lateFrom?B.dmgLate*(w-B.lateFrom)**2:0)};
+const hpMul=w=>{const B=BAL.enemy;w=effW(w);return 1+B.hpLin*(w-1)+B.hpQuad*(w-1)*(w-1)+(w>B.lateFrom?B.hpLate*(w-B.lateFrom)**2:0)};
+const dmgMul=w=>{const B=BAL.enemy;w=effW(w);return 1+B.dmgLin*(w-1)+B.dmgQuad*(w-1)*(w-1)+(w>B.lateFrom?B.dmgLate*(w-B.lateFrom)**2:0)};
 const lvAdj=()=>{const g=G,B=BAL.enemy;return g&&g.p?1+B.lvAdjK*Math.max(0,g.p.lv-(B.lvExpBase+B.lvExpPerWave*g.wave)):1};
 const BOSS_ORDER=['guard','ent','queen','golem','sandlord','devourer'];
+/* босс — на последней волне каждой карты (12, 24, 36; в бесконечном режиме — дальше по кругу) */
 function bossKeyFor(w){
-  if(w<4||w%4)return null;
-  return BOSS_ORDER[(w/4-1)%BOSS_ORDER.length];
+  if(w<WPM||w%WPM)return null;
+  const B=chapOf(G).boss;
+  return B[(w/WPM-1)%B.length];
 }
 function spawnR(){return Math.hypot(VW,VH)/2+160}
 function spawnPos(){
@@ -21,12 +23,12 @@ function spawnPos(){
 function spawnAt(type,x,y,hm,dm,opts){
   const g=G,d=ET[type],F=MAPS[g.map].foe;
   opts=opts||{};
-  hm*=(F.hp||1)*lvAdj()*ascMod('hp')*(g.curseW===g.wave?1.3:1);dm*=(F.dmg||1)*ascMod('dmg')*(g.trialW===g.wave?1.15:1);
+  hm*=(F.hp||1)*lvAdj()*ascMod('hp')*chapHp()*(g.risk?BAL.chap.riskHp:1)*(g.curseW===g.wave?1.3:1);dm*=(F.dmg||1)*ascMod('dmg')*chapDm()*(g.risk?BAL.chap.riskDm:1)*(g.trialW===g.wave?1.15:1);
   const e={type:type,def:d,x:x,y:y,r:d.r,hp:d.hp*hm,max:d.hp*hm,sp:d.sp,dmg:d.dmg*dm,armor:d.armor||0,mres:d.mres||0,col:d.col,shape:d.shape,ai:d.ai,
     hpMul:hm,dmgMul:dm,flash:0,burn:0,burnDps:0,bt:0,poison:0,poisonDps:0,pt:0,slow:0,slowF:1,frz:0,stun:0,root:0,wet:0,rust:0,ovl:0,kx:0,ky:0,kres:1,rockCd:0,slam:0,cc:0,
     cd:rnd(0.6,d.cd||2.2),st:'move',tm:0,dir:0,ang:0,elite:false,boss:false,affix:null,dead:false,hitP:false};
   if(F.sp)e.sp*=F.sp;
-  if(!opts.boss)e.sp*=1+Math.min(0.18,0.007*(g.wave-1));
+  if(!opts.boss)e.sp*=1+Math.min(0.18,0.007*(SW()-1));
   if(F.mres)e.mres=Math.min(0.85,e.mres+F.mres);
   if(opts.elite){
     e.elite=true;tut('elite');e.r*=1.3;e.hp*=4;e.max=e.hp;e.kres=0.5;e.dmg*=1.2;
@@ -45,8 +47,9 @@ function spawnEnemy(type,opts){
   if(pk&&!(opts&&opts.elite))for(let i=1;i<pk&&g.en.length<200;i++)spawnAt(type,pos.x+rnd(-30,30),pos.y+rnd(-30,30),hpMul(w),dmgMul(w));
   return e;
 }
-function enemyOk(k){const d=ET[k];return !d.map||d.map===G.map}
+function enemyOk(k){const d=ET[k];return !d.map||d.map===bio(G.map)}
 function pickType(w){
+  w=effW(w);
   const R=MAPS[G.map].roster||{};
   let sum=0;const c=[];
   for(const k of ET_KEYS){
@@ -58,6 +61,7 @@ function pickType(w){
   return 'wisp';
 }
 function eliteType(w){
+  w=effW(w);
   const ok=ET_KEYS.filter(k=>ET[k].from<=w&&enemyOk(k)&&['wisp','swift','healer','summoner','scarab','ember'].indexOf(k)<0);
   return ok.length?pickOf(ok):'brute';
 }
@@ -317,7 +321,7 @@ function updEnemies(dt){
         else if(pl.kind==='puddle')e.wet=Math.max(e.wet,0.8);
         else if(pl.kind==='lava'){
           e.lavaT=(e.lavaT||0)-dt;
-          if(e.lavaT<=0){e.lavaT=0.5;hitEnemy(e,(6+g.wave*1.2)*(e.boss?0.3:1),{dt:'magic',src:'dot',quiet:true,st:{burn:[8,1.2]}});if(e.dead)continue}
+          if(e.lavaT<=0){e.lavaT=0.5;hitEnemy(e,(6+SW()*1.2)*(e.boss?0.3:1),{dt:'magic',src:'dot',quiet:true,st:{burn:[8,1.2]}});if(e.dead)continue}
         }
       }
     }
@@ -394,7 +398,7 @@ function updEnemies(dt){
       }else if(ai==='banner'){
         if(canMove){if(d<250){e.x-=dx/d*sp*dt;e.y-=dy/d*sp*dt}else if(d>340){e.x+=dx/d*sp*dt;e.y+=dy/d*sp*dt}}
       }else if(ai==='slammer'){
-        if(e.st==='slam'){e.tm-=dt;if(e.tm<=0){e.st='move';e.cd=rnd(2.6,3.6);addPatch(e.x,e.y,56,2.6,6+g.wave*0.8,'fire');g.shake=Math.max(g.shake,6)}}
+        if(e.st==='slam'){e.tm-=dt;if(e.tm<=0){e.st='move';e.cd=rnd(2.6,3.6);addPatch(e.x,e.y,56,2.6,6+SW()*0.8,'fire');g.shake=Math.max(g.shake,6)}}
         else{
           if(canMove&&d>e.r+18){e.x+=dx/d*sp*dt;e.y+=dy/d*sp*dt}
           e.cd-=dt;

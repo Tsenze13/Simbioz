@@ -25,7 +25,7 @@ function buildChips(g){
 function fillStats(){
   const g=G,S=g.S,E=g.E;
   const rows=[
-    ['Карта',MAPS[g.map].n],['Сложность',ASC[g.asc||0].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
+    ['Глава',(g.ch||1)+'. '+chapOf(g).n],['Карта',MAPS[g.map].n+(g.risk?' (тропа испытаний)':'')],['Сложность',ASC[g.asc||0].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
     ['Мана',Math.round(S.maxMana)],['Восстановление маны',S.mreg.toFixed(1)+' в с'],
     ['Радиус подбора',Math.round(S.magnet)],['Урон','+'+Math.round((E.dm-1)*100)+'%'],
     ['Скорость бега','+'+Math.round((E.spd-1+0.03*g.el.air)*100)+'%'],['Скорость навыков','+'+Math.round(S.cdr*100)+'%'],
@@ -54,7 +54,7 @@ function dmgRows(g){
 }
 function showOver(win,add){
   const g=G;
-  $('goT').textContent=win?'Пожиратель повержен':(g.endless?'Бесконечный режим окончен':'Аватар пал');
+  $('goT').textContent=win?((g.ch||1)>=CHAP.length?'Пожиратель повержен':'Глава '+(g.ch||1)+' пройдена'):(g.endless?'Бесконечный режим окончен':'Аватар пал');
   $('goW').textContent=g.wave;$('goLv').textContent=g.p.lv;$('goK').textContent=g.kills;$('goE').textContent='+'+add;
   $('goBuild').innerHTML=buildChips(g);
   {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}

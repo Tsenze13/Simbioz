@@ -36,7 +36,8 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/data/relics.js | реликвии боссов `RELICS`, сложность `ASC` + `ascMod()`, события `EVTS`, комбо предметов `SYN` |
 | js/core/save.js, state.js | сохранение `SAVE` (+ hints/tut, asc/ascSel, mus, fps), звук `sfx`, `needFor` |
 | js/core/music.js | `MUS` — генеративная музыка по карте/боссу, громкость `SAVE.mus` |
-| js/world/maps.js | карты/биомы, чанки, события карты, прилив воды |
+| js/world/maps.js | биомы `MAPS`, чанки, ловушки карт `hazards`, прилив воды |
+| js/world/chapters.js | **главы** `CHAP` (6 × [старт, путь А, путь Б, логово] + боссы), варианты карт `vmap` (поле `bio` = биом), «волна сложности» `effW/SW()`, `chapHp/chapDm`, здоровье боссов `bossHpScale`, безопасная зона `openSafeZone`, порталы |
 | js/core/stats.js | `recalc()` (все статы игрока), `tickBuffs`, эффекты |
 | js/combat/damage.js | `OUT_MODS` (множители урона), `bossDefense`, учёт урона `dmgBy`/`tagNew`, `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
 | js/combat/cast.js | `CAST.*` — типы способностей |
@@ -66,6 +67,13 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 смешивает до 3 стихий (каждая до 4), учит симбиозы. Хелперы: `isAva(g)`, `elCap(k)`, `hEl(k)` (цвет/имя героя,
 вместо `EL[g.start]`), `HEROK` (список героев для меню). Тело Аватара — спрайт Мистика (`heroBody`) + гало стихий.
 Механики конкретного героя проверяются как `g.start==='fire'` — для Аватара они сами выключены.
+
+## Главы (с 0.36-беты, дизайн — docs/design-chapters.md)
+Забег = одна глава (`g.ch`): 3 карты по `WPM`=12 волн, `WAVES_TOTAL`=36. `g.wave` — сквозной номер волны;
+`mapStage(w)`/`mapWave(w)` — карта и волна на ней. Рост врагов, ловушек и цен идёт по «волне сложности» `SW()`,
+а не по `g.wave` — новую формулу с номером волны пиши через `SW()`. Карта главы — вариант биома: проверки врагов
+по карте, сродство героя `AFF` и музыка — через `bio(g.map)`. После босса карты: `g.safe` (фаза 'inter' без таймера),
+`g.portals`, вход — `interact()` → `usePortal`. `g.risk` — «Тропа испытаний».
 
 ## Прокачка (с v0.23)
 Три пути: **уровень → карточки**, **очки навыков → древо** (навыки, мутации, пассивка, ульта и её печати),
