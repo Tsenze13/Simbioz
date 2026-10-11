@@ -24,15 +24,18 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | shell/*.html, styles/game.css | разметка, стили, обёртка `<script>` |
 | portraits/portraits.js | отдельный скрипт: живые портреты героев (`PORTRAIT.draw`) |
 | js/core/prelude.js | хелперы `$`, `TAU`, `rnd`, `clamp`, `pickOf`, `WAVES_TOTAL` |
+| js/data/balance.js | **`BAL` — все числа баланса**: опыт, рост врагов, защита боссов, волны, лавка, уровни ульты |
 | js/data/heroes.js | стихии `EL`, классы `CLS`, рост `GROW`, `HST`, пассивки `HPAS`, `HMECH`, иконки `GL` |
 | js/data/skills.js | навыки `AB` через `def(...)`, ульты `ULT`, `ultRoom/ultOverflow` |
 | js/data/enemies.js | враги `ET`, боссы `BOSS` (pats/p2 — списки приёмов) |
 | js/data/items.js | предметы `ITEMS` через `it(...)`, торговцы `MERCH`, вложения `INVEST` |
 | js/data/meta.js | мета-прокачка `META`, статы карточек `STC`, клавиши `ACTIONS/DEFKEYS` |
-| js/core/save.js, state.js | сохранение `SAVE`, звук, создание забега (объект `G`) |
+| js/data/relics.js | реликвии боссов `RELICS`, сложность `ASC` + `ascMod()`, события `EVTS`, комбо предметов `SYN` |
+| js/core/save.js, state.js | сохранение `SAVE` (+ hints/tut, asc/ascSel, mus, fps), звук `sfx`, `needFor` |
+| js/core/music.js | `MUS` — генеративная музыка по карте/боссу, громкость `SAVE.mus` |
 | js/world/maps.js | карты/биомы, чанки, события карты, прилив воды |
 | js/core/stats.js | `recalc()` (все статы игрока), `tickBuffs`, эффекты |
-| js/combat/damage.js | `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
+| js/combat/damage.js | `OUT_MODS` (множители урона), `bossDefense`, учёт урона `dmgBy`/`tagNew`, `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
 | js/combat/cast.js | `CAST.*` — типы способностей |
 | js/combat/trees.js | древа мутаций `TREE`, хуки `HK`, `castSlot`, `useItem` |
 | js/combat/ults.js | `ULTFN` |
@@ -41,8 +44,9 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/enemies/ai.js | `hurtPlayer`, ИИ врагов, `bossPattern`, `bossDodge`, `bossAI`, `updEnemies` |
 | js/enemies/waves.js | спавн, волны (`startWave`, `endWave`) |
 | js/game/bag.js, leveling.js | рюкзак/покупки, опыт `gainXp`, карточки `buildChoices/applyChoice` |
-| js/game/flow.js | рывок, движение, `heroMech`, `itemFx`, `update(dt)`, старт/конец забега |
-| js/ui/*.js | HUD и подсказки, окно уровня, древо, лавка, пауза, меню, ввод |
+| js/game/flow.js | рывок, движение, `heroMech`, `itemFx`, `update(dt)`, волны `waveLogic`, старт/конец забега |
+| js/game/runextras.js | выбор реликвий, комбо (`synUpdate`, `synTip`), события между волнами (`spawnEvents`, `useEvent`, `drawEvents`) |
+| js/ui/*.js | HUD, подсказки новичку `tut()`, окно уровня, древо, лавка, пауза и итоги (`dmgRows`), меню (сложность `ascRow`), ввод |
 | js/render/*.js | спрайты навыков `SP`, снаряды, стволы (`GUNS`, `GMOD`), торговцы `MS`, враги `ENS`, герои `HTD`, карта, `render()` |
 | js/core/loop.js | игровой цикл, отладочные хуки `window.__sb`, `window.__x` |
 
@@ -50,6 +54,14 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 Хуки включаются `localStorage['simbioz-debug']='1'`. `window.__sb` даёт `G`, `startRun`, `startWave`,
 `update(dt)`, `render`, `castSlot`, `spawnEnemy`, `bossPattern` и т.д. — их использует `tests/smoke.py`.
 Ошибки в отложенных вызовах `g.later` копятся в `window.__le`.
+
+## Прокачка (с v0.23)
+Три пути: **уровень → карточки**, **очки навыков → древо** (навыки, мутации, пассивка, ульта и её печати),
+**золото → лавка**. Отдельных очков ульты нет: уровни ульты открываются с уровня героя `BAL.hero.ultLvReq`.
+
+## Учёт урона
+Навык при касте ставит `g.curSk`, новые снаряды/зоны/взрывы помечаются `sk` (`tagNew`), циклы в
+player_side.js выставляют `g.curSk` от сущности. Новая механика урона героя — укажи `sk` или служебную метку из `DMG_LBL`.
 
 ## Подводные камни
 - `ENS`, `SP`, `MS`, `HTD` — константы в общей области, проверять `typeof ENS!=='undefined'`, не `window.ENS`.

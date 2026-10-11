@@ -50,6 +50,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .act{pointer-events:auto;background:var(--text);color:#10131c;border:0;border-radius:6px;padding:8px 14px;font-weight:700;font-size:13px}
 .act:hover{background:#fff}
 .toast{position:absolute;left:16px;right:16px;top:26%;text-align:center;font:700 clamp(22px,5vw,36px)/1.15 var(--f-display);text-shadow:0 2px 18px rgba(0,0,0,.85);animation:toast 2.6s ease both;pointer-events:none}
+.fps{position:fixed;left:8px;bottom:8px;z-index:60;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.6);font:600 11px var(--f-body);color:#9fe0ff;pointer-events:none;font-variant-numeric:tabular-nums}
 .hint{position:absolute;left:50%;top:86px;transform:translateX(-50%);width:max-content;max-width:min(520px,calc(100% - 32px));background:rgba(11,14,22,.93);border:1px solid var(--line2);border-left:3px solid #ffd36b;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.4;color:#dfe5f3;pointer-events:none;box-shadow:0 10px 30px -10px #000;animation:hintIn .35s ease both;z-index:5}
 .hint b{display:block;color:#ffd36b;font:700 16px var(--f-display);margin-bottom:2px}
 .hint kbd{display:inline-block;padding:0 6px;border:1px solid var(--line2);border-radius:4px;background:#1a2030;font:600 12px var(--f-body);color:#fff}
@@ -384,6 +385,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
     <div id="biome" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="hint" class="hint" hidden></div>
+    <div id="fps" class="fps" hidden></div>
     <div id="prompt" hidden></div>
     <button id="useBtn" class="act" type="button" hidden>Торговец</button>
     <button id="dashBtn" class="dashbtn" type="button">Рывок</button>
@@ -411,7 +413,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.25 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.26 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1901,7 +1903,7 @@ const SYN=[
    СОХРАНЕНИЕ, ЗВУК, ВВОД
    ===================================================================== */
 const SAVE_KEY='simbioz-save-v2';
-function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0}}
+function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0,mus:0.5,fps:false}}
 let SAVE=freshSave();
 (function loadSave(){
   try{
@@ -1949,6 +1951,82 @@ function sfx(f,d,type,v,slide){
 }
 let lastKillSfx=0,lastBoltSfx=0,lastHitSfx=0;
 
+
+/* =====================================================================
+   МУЗЫКА — генерируется кодом (Web Audio), без файлов.
+   Своё настроение на каждую карту, отдельная тема босса, спокойная — в меню и передышке.
+   Громкость: SAVE.vol (общая) × SAVE.mus (музыка).
+   ===================================================================== */
+const MUS=(function(){
+  const MOODS={
+    menu:{root:45,sc:[0,2,3,5,7,8,10],bpm:76,prog:[0,5,3,4]},
+    ash:{root:45,sc:[0,2,3,5,7,8,10],bpm:96,prog:[0,5,2,4]},
+    forest:{root:50,sc:[0,2,4,7,9],bpm:88,prog:[0,3,1,4]},
+    ice:{root:52,sc:[0,2,3,7,8],bpm:80,prog:[0,3,2,1]},
+    lava:{root:43,sc:[0,1,4,5,7,8,10],bpm:104,prog:[0,1,5,4]},
+    dunes:{root:47,sc:[0,1,4,5,7,8,11],bpm:96,prog:[0,1,0,5]},
+    storm:{root:48,sc:[0,2,3,5,7,9,10],bpm:112,prog:[0,6,5,4]},
+    boss:{root:41,sc:[0,1,3,5,6,8,10],bpm:134,prog:[0,1,5,4]}
+  };
+  let mg=null,noise=null,timer=0,next=0,step=0,ci=0,mood='menu',calm=true,want=0;
+  const mtof=m=>440*Math.pow(2,(m-69)/12);
+  function deg(M,d,oct){const n=M.sc.length,o=Math.floor(d/n);return M.root+12*(oct+o)+M.sc[((d%n)+n)%n]}
+  function init(){
+    if(mg||!ac)return;
+    mg=ac.createGain();mg.gain.value=0;mg.connect(ac.destination);
+    const len=ac.sampleRate*0.5;noise=ac.createBuffer(1,len,ac.sampleRate);
+    const d=noise.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    timer=setInterval(sched,90);next=ac.currentTime+0.1;
+  }
+  function tone(f,t,dur,type,vol,cut,att){
+    const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;
+    let out=o;
+    if(cut){const fl=ac.createBiquadFilter();fl.type='lowpass';fl.frequency.value=cut;o.connect(fl);out=fl}
+    out.connect(g);g.connect(mg);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+(att||0.01));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t);o.stop(t+dur+0.05);
+  }
+  function hat(t,vol){const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise;f.type='highpass';f.frequency.value=7000;s.connect(f);f.connect(g);g.connect(mg);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);s.start(t);s.stop(t+0.06)}
+  function kick(t,vol){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+0.16);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);o.connect(g);g.connect(mg);o.start(t);o.stop(t+0.25)}
+  function sched(){
+    if(!ac||!mg)return;
+    const v=SAVE.muted?0:SAVE.vol*(SAVE.mus===undefined?0.5:SAVE.mus)*0.55;
+    mg.gain.setTargetAtTime(v*want,ac.currentTime,0.6);
+    if(ac.state!=='running'||v<=0||want<=0){next=Math.max(next,ac.currentTime+0.05);return}
+    const M=MOODS[mood]||MOODS.ash,s16=60/M.bpm/4,boss=mood==='boss';
+    while(next<ac.currentTime+0.25){
+      const t=next,st=step%16,ch=M.prog[ci%M.prog.length];
+      if(st===0){
+        for(const k of [0,2,4])tone(mtof(deg(M,ch+k,0)),t,s16*16,'sawtooth',boss?0.018:0.022,boss?1200:800,0.4);
+      }
+      if(st%(calm?8:4)===0)tone(mtof(deg(M,ch,-1)),t,s16*(calm?7:3.5),boss?'square':'triangle',boss?0.05:0.06,boss?600:500,0.01);
+      if(!calm||st%4===0){const ap=[0,2,4,7,4,2,0,4][(step>>1)%8];if(st%2===0)tone(mtof(deg(M,ch+ap,1)),t,s16*1.6,'triangle',calm?0.016:0.022,0,0.005)}
+      if(!calm){
+        if(boss?st%4===0:st%8===0)kick(t,boss?0.22:0.16);
+        if(st%2===1)hat(t,boss?0.03:0.018);
+      }
+      next+=s16;step++;if(step%16===0)ci++;
+    }
+  }
+  /* вызывается каждый кадр: выбирает настроение по состоянию игры */
+  function update(){
+    if(!ac)return;
+    init();
+    let m='menu',c=true,w=1;
+    if(mode!=='menu'&&G){
+      if(G.over){w=0}
+      else if(G.bossRef&&!G.bossRef.dead&&G.phase==='fight'){m='boss';c=false}
+      else{m=MOODS[G.map]?G.map:'ash';c=G.phase!=='fight'}
+      if(G.paused)w=0.35;
+    }
+    if(m!==mood){mood=m;ci=0;step=0}
+    calm=c;want=w;
+  }
+  return {update,get mood(){return mood}};
+})();
+/* звук в браузере можно включить только после действия игрока */
+function audioWake(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(_){}}
+addEventListener('pointerdown',audioWake);addEventListener('keydown',audioWake);
 /* =====================================================================
    СОСТОЯНИЕ
    ===================================================================== */
@@ -5761,8 +5839,8 @@ function keysTab(){
     h+='<div class="krow"><span>'+a[1]+'</span><button class="kbtn'+(on?' listen':'')+'" type="button" data-key="'+a[0]+'">'+(on?'Нажми клавишу…':keyName(SAVE.keys[a[0]]))+'</button></div>';
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
-  h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -5778,6 +5856,7 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
+  else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
   else if(t.dataset.wipe){
@@ -5785,7 +5864,7 @@ $('mpanel').addEventListener('click',e=>{
     resetArmed=0;const keep=SAVE.keys;SAVE=freshSave();SAVE.keys=keep;store();renderMenu();
   }
 });
-$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}});
+$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
 $('tabs').addEventListener('click',e=>{
   const t=e.target.closest('.tab');
   if(t){menuTab=t.dataset.tab;listening=null;resetArmed=0;renderMenu()}
@@ -9135,12 +9214,14 @@ function portraits(){
   if(mode==='menu'){const m=$('mpc');if(m)porDraw(m,menuEl,1)}
   else if(G&&$('hud')&&!$('hud').hidden)porDraw($('pc'),G.start,G.p.hp/G.S.maxHp);
 }
+let fpsA=60,fpsT=0;
 function frame(t){
-  const dt=Math.min(0.05,Math.max(0,(t-last)/1000));last=t;anim+=dt;
+  const raw=(t-last)/1000,dt=Math.min(0.05,Math.max(0,raw));last=t;anim+=dt;
+  if(SAVE.fps){if(raw>0&&raw<1)fpsA+=(1/raw-fpsA)*0.05;fpsT-=raw;if(fpsT<=0){fpsT=0.5;const el=$('fps');el.hidden=false;el.textContent=Math.round(fpsA)+' FPS'+(G&&mode==='play'?' · врагов '+G.en.length:'')}}else if(fpsT!==-1){fpsT=-1;$('fps').hidden=true}
   try{
     if(mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen&&!G.over)update(dt);
     else if(mode==='menu')demoUpdate(dt);
-    ambUpdate(dt);render();hud();portraits();
+    ambUpdate(dt);render();hud();portraits();MUS.update();
   }catch(err){
     console.error(err);
   }
@@ -9161,7 +9242,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    activeReload,GMOD,gunMag,heroMech,interact,bossPattern,itemTip,ultCanUp,BOSS,
+    activeReload,GMOD,gunMag,heroMech,interact,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

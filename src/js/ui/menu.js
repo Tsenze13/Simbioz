@@ -115,8 +115,8 @@ function keysTab(){
     h+='<div class="krow"><span>'+a[1]+'</span><button class="kbtn'+(on?' listen':'')+'" type="button" data-key="'+a[0]+'">'+(on?'Нажми клавишу…':keyName(SAVE.keys[a[0]]))+'</button></div>';
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
-  h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -132,6 +132,7 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
+  else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
   else if(t.dataset.wipe){
@@ -139,7 +140,7 @@ $('mpanel').addEventListener('click',e=>{
     resetArmed=0;const keep=SAVE.keys;SAVE=freshSave();SAVE.keys=keep;store();renderMenu();
   }
 });
-$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}});
+$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
 $('tabs').addEventListener('click',e=>{
   const t=e.target.closest('.tab');
   if(t){menuTab=t.dataset.tab;listening=null;resetArmed=0;renderMenu()}

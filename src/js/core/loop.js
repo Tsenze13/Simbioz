@@ -22,12 +22,14 @@ function portraits(){
   if(mode==='menu'){const m=$('mpc');if(m)porDraw(m,menuEl,1)}
   else if(G&&$('hud')&&!$('hud').hidden)porDraw($('pc'),G.start,G.p.hp/G.S.maxHp);
 }
+let fpsA=60,fpsT=0;
 function frame(t){
-  const dt=Math.min(0.05,Math.max(0,(t-last)/1000));last=t;anim+=dt;
+  const raw=(t-last)/1000,dt=Math.min(0.05,Math.max(0,raw));last=t;anim+=dt;
+  if(SAVE.fps){if(raw>0&&raw<1)fpsA+=(1/raw-fpsA)*0.05;fpsT-=raw;if(fpsT<=0){fpsT=0.5;const el=$('fps');el.hidden=false;el.textContent=Math.round(fpsA)+' FPS'+(G&&mode==='play'?' · врагов '+G.en.length:'')}}else if(fpsT!==-1){fpsT=-1;$('fps').hidden=true}
   try{
     if(mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen&&!G.over)update(dt);
     else if(mode==='menu')demoUpdate(dt);
-    ambUpdate(dt);render();hud();portraits();
+    ambUpdate(dt);render();hud();portraits();MUS.update();
   }catch(err){
     console.error(err);
   }
@@ -48,7 +50,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    activeReload,GMOD,gunMag,heroMech,interact,bossPattern,itemTip,ultCanUp,BOSS,
+    activeReload,GMOD,gunMag,heroMech,interact,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

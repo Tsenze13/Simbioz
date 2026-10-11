@@ -12,6 +12,7 @@ js/data/items.js
 js/data/meta.js
 js/data/relics.js
 js/core/save.js
+js/core/music.js
 js/core/state.js
 js/world/maps.js
 js/core/stats.js
