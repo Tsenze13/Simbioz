@@ -38,6 +38,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .bar{position:relative;height:14px;background:rgba(255,255,255,.09);border-radius:3px;overflow:hidden;width:100%}
 .bar i{position:absolute;inset:0;transform-origin:left center}
 .bar span{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.bar em{position:absolute;right:7px;top:0;bottom:0;display:flex;align-items:center;font-style:normal;font-size:10px;font-weight:700;opacity:.85;text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums}
 .bar.boss{height:12px}.bar.boss i{background:linear-gradient(90deg,#8d3dd0,#d58bff)}
 .bar.hp i{background:linear-gradient(90deg,#c03247,#ff6b7f)}
 .bar.mp i{background:linear-gradient(90deg,#2c63d6,#78aeff)}
@@ -73,6 +74,19 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 @keyframes phurt{50%{box-shadow:0 0 0 1px #000,0 0 26px 2px #d01010,inset 0 1px 0 rgba(255,255,255,.25)}}
 .pdetail .mpc{float:right;width:132px;height:160px;margin:0 0 8px 14px;border-radius:8px;border:3px solid #6a5530;box-shadow:0 0 0 1px #000,0 0 20px -6px var(--c1);background:#000}
 .portrait b{position:absolute;right:-2px;bottom:-2px;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--panel2);border:1px solid var(--line2);display:grid;place-items:center;font:700 14px var(--f-display);font-variant-numeric:tabular-nums}
+.hstats{width:150px;margin-left:10px;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:2px 2px 2px 0}
+.hstats .sh{font:600 9.5px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#6a7591;margin:0 0 3px 2px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;gap:6px}
+.hstats .sh b{color:var(--c1);letter-spacing:.06em;white-space:nowrap}
+.st{--sc:#fff;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:7px;padding:3px 6px 3px 3px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.035),transparent);font-variant-numeric:tabular-nums;cursor:help;pointer-events:auto}
+.st:hover{background:linear-gradient(90deg,rgba(255,255,255,.09),transparent)}
+.st i{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--sc) 35%,#000),#0b0e15 85%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sc) 45%,transparent),0 0 8px -3px var(--sc)}
+.st svg{width:13px;height:13px;fill:none;stroke:var(--sc);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st span{font-size:11px;color:#93a0bc;white-space:nowrap}
+.st b{font:700 14px var(--f-display);color:#f2f5fb;text-shadow:0 1px 2px #000}
+.st.main{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sc) 55%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 18%,transparent),transparent)}
+.st.main span::after{content:' ★';color:#ffd36b;font-size:10px}
+.st .up{font-size:9px;color:#6fe3a0;margin-left:3px;font-family:var(--f-body)}
+@media(max-width:760px){.hstats{display:none}}
 .dmain{display:grid;gap:8px;min-width:0}
 .skills{display:flex;gap:6px;align-items:flex-end}
 .skrow{display:flex;gap:10px;align-items:flex-end}
@@ -344,11 +358,12 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
     <button id="dashBtn" class="dashbtn" type="button">Рывок</button>
     <div id="dock">
       <div class="portrait pframe" id="portrait"><canvas id="pc"></canvas><div class="shine"></div><div class="pname"><small id="pel"></small><span id="pname"></span></div><div class="pxp"><i id="pxpF"></i></div><b id="portLv">1</b><span class="orb" id="portOrb" hidden></span></div>
+      <div class="hstats" id="hstats"></div>
       <div class="dmain">
         <div class="skrow"><div id="pasw"></div><div class="skills" id="skills"></div></div>
         <div class="dbars">
-          <div class="bar hp"><i id="hpF"></i><span id="hpT"></span></div>
-          <div class="bar mp"><i id="mpF"></i><span id="mpT"></span></div>
+          <div class="bar hp"><i id="hpF"></i><span id="hpT"></span><em id="hpR"></em></div>
+          <div class="bar mp"><i id="mpF"></i><span id="mpT"></span><em id="mpR"></em></div>
         </div>
       </div>
       <div class="bagbox">
@@ -365,7 +380,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.19 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.20 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1023,6 +1038,30 @@ const EUP={
 };
 const ELSK={fire:'fireball',water:'spring',earth:'quake',air:'bolt',metal:'volley',wood:'whip'};
 /* классы по стартовой стихии: плюсы, минусы и особенность */
+/* рост характеристик героя за уровень и его главный атрибут (как в Dota 2) */
+const GROW={
+  fire:{main:'dmg',st:{dm:0.022,cdr:0.003},t:'Пиромант с каждым уровнем бьёт сильнее'},
+  water:{main:'as',st:{cdr:0.008,mreg:0.12,mres:0.004},t:'Мистик с каждым уровнем быстрее колдует и восстанавливает ману'},
+  earth:{main:'def',st:{armor:0.6,hp:6},t:'Каменный страж с каждым уровнем всё прочнее'},
+  air:{main:'spd',st:{spd:0.009,crit:0.003},t:'Налётчик с каждым уровнем быстрее и точнее'},
+  metal:{main:'as',st:{cdr:0.007,dm:0.008,armor:0.2},t:'Солдат с каждым уровнем стреляет быстрее'},
+  wood:{main:'def',st:{regen:0.09,hp:3,ls:0.002,armor:0.35},t:'Друид с каждым уровнем живучее'}
+};
+const HST=[
+  {k:'dmg',n:'Урон',c:'#ff7a5a',g:'<path d="M14.5 4.5l5 5L9 20H4v-5z"/><path d="M12 7l5 5"/>',v:g=>Math.round(30*g.E.dm),d:'Множитель всего урона: автоатак, навыков и ульты.'},
+  {k:'def',n:'Защита',c:'#8fb4ff',g:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',v:g=>Math.round(g.E.armor),d:g=>'Броня снижает физический урон на '+Math.round(armorRed(g.E.armor)*100)+'%. Сопротивление магии '+Math.round(g.E.mres*100)+'%.'},
+  {k:'spd',n:'Скорость',c:'#6fe0c0',g:'<path d="M13 4l-2 7h6l-6 9 2-7H7z"/>',v:g=>Math.round(300*(g.E.spd+0.03*g.el.air)),d:'Скорость бега.'},
+  {k:'as',n:'Скор. атаки',c:'#ffd56a',g:'<circle cx="12" cy="12" r="7"/><path d="M12 8v4l3 2"/>',v:g=>Math.round(100*(1+g.E.cdr)),d:'Как часто стреляют автоатаки и как быстро восстанавливаются навыки.'}
+];
+function renderHStats(){
+  const g=G,Gr=GROW[g.start];
+  let h='<div class="sh">Характеристики <b>ур. '+g.p.lv+'</b></div>';
+  for(const s of HST){
+    const main=Gr.main===s.k,d=typeof s.d==='function'?s.d(g):s.d;
+    h+='<div class="st'+(main?' main':'')+'" style="--sc:'+s.c+'" title="'+s.n+': '+d+(main?' Главная характеристика героя: '+Gr.t.toLowerCase()+'.':'')+'"><i><svg viewBox="0 0 24 24">'+s.g+'</svg></i><span>'+s.n+'</span><b>'+s.v(g)+'</b></div>';
+  }
+  $('hstats').innerHTML=h;
+}
 const CLS={
   fire:{n:'Пиромант',role:'Стеклянная пушка',st:{dm:0.16,cdr:0.04,hp:-25,armor:-2},dot:1.25,
     plus:'+16% урона, +4% скорости способностей, горение на 25% сильнее. Убитый горящим враг взрывается.',minus:'−25 здоровья, −2 брони.'},
@@ -2188,6 +2227,7 @@ function recalc(){
   g.aff=(AFF[g.map]&&AFF[g.map].h===g.start)?AFF[g.map]:null;
   if(g.aff)for(const k in g.aff.st)it[k]=(it[k]||0)+g.aff.st[k];
   if(g.cls)for(const k in g.cls.st)it[k]=(it[k]||0)+g.cls.st[k];
+  {const Gr=GROW[g.start],lv=(p.lv||1)-1;if(Gr&&lv>0)for(const k in Gr.st)it[k]=(it[k]||0)+Gr.st[k]*lv}
   if(g.inv)for(const s of INVEST){const n=g.inv[s.k]||0;if(n)for(const q in s.st)it[q]=(it[q]||0)+s.st[q]*n}
   {const a=PV('air',[0,.06,.1,.14]);if(a)it.spd=(it.spd||0)+a;const m=PV('metal',[0,.06,.1,.14]);if(m)it.crit=(it.crit||0)+m;if(g.start==='air'&&g.pl>=2)it.drc=(it.drc||0)+0.15}
   const x=k=>it[k]||0;
@@ -2457,7 +2497,7 @@ function explodeAt(x,y,r,dmg,o){
   if(o.shake)g.shake=Math.max(g.shake,o.shake);
 }
 function burstAt(b,x,y){const q=b.burst,off=rnd(0,TAU);for(let i=0;i<q.n;i++){const a=off+i*TAU/q.n;shoot({vis:q.vis||'seed',x:x,y:y,vx:Math.cos(a)*(q.spd||300),vy:Math.sin(a)*(q.spd||300),r:5,dmg:q.dmg,dt:b.dt,life:q.life||0.8,pierce:1,col:q.col||b.col,st:q.st||b.st,homing:!!q.homing,src:'proj'})}}
-function shoot(o){
+function shoot(o){if((o.src==='auto'||o.gun)&&!o.hr)o.hr=o.r+8;
   o.pierce=o.pierce||0;o.hit=null;G.pr.push(o);
   if((o.src==='auto'||o.src==='skill')&&!o.gun&&o.vis!=='bullet'&&o.vis!=='pellet')heroAtk(Math.atan2(o.vy,o.vx));
 }
@@ -3452,7 +3492,7 @@ function updPlayerSide(dt){
     for(const e of g.en){
       if(e.dead)continue;
       if(b.hit&&b.hit.has(e))continue;
-      const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+b.r;
+      const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+(b.hr||b.r);
       if(dx*dx+dy*dy<rr*rr){
         if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
         hitEnemy(e,b.dmg,{dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true});
@@ -4096,7 +4136,7 @@ function sellItem(i){
 function gainXp(v){
   const g=G,p=g.p;
   p.xp+=v*(1+g.S.xpm);
-  while(p.xp>=p.need){p.xp-=p.need;p.lv++;p.need=needFor(p.lv);g.pending++;g.sp++;if(p.lv>=ULT_LV&&(p.lv-ULT_LV)%4===0){g.up++;toast('Очко ульты',g.ult.kind?'Древо (T) → Ульта: уровень или печать':'Древо (T) → Ульта: выберите свою ульту')}}
+  while(p.xp>=p.need){p.xp-=p.need;p.lv++;p.need=needFor(p.lv);g.pending++;g.sp++;recalc();if(p.lv>=ULT_LV&&(p.lv-ULT_LV)%4===0){g.up++;toast('Очко ульты',g.ult.kind?'Древо (T) → Ульта: уровень или печать':'Древо (T) → Ульта: выберите свою ульту')}}
 }
 function buildChoices(){
   const g=G,pool=[];
@@ -4510,14 +4550,15 @@ function hud(){
   /* бары */
   const hp=Math.ceil(p.hp);
   const rgh=Math.round(g.E.regen*10)/10;
-  if(hc.hp!==hp||hc.mx!==S.maxHp||hc.rgh!==rgh){hc.hp=hp;hc.mx=S.maxHp;hc.rgh=rgh;$('hpF').style.transform='scaleX('+clamp(p.hp/S.maxHp,0,1)+')';$('hpT').textContent=hp+' / '+Math.round(S.maxHp)+'   +'+rgh.toFixed(1)+'/с'}
+  if(hc.hp!==hp||hc.mx!==S.maxHp||hc.rgh!==rgh){hc.hp=hp;hc.mx=S.maxHp;hc.rgh=rgh;$('hpF').style.transform='scaleX('+clamp(p.hp/S.maxHp,0,1)+')';$('hpT').textContent=hp+' / '+Math.round(S.maxHp);$('hpR').textContent='+'+rgh.toFixed(1)+'/с'}
   const mp=Math.floor(p.mana);
   const mrh=Math.round(S.mreg*10)/10;
-  if(hc.mp!==mp||hc.mm!==S.maxMana||hc.mrh!==mrh){hc.mp=mp;hc.mm=S.maxMana;hc.mrh=mrh;$('mpF').style.transform='scaleX('+clamp(p.mana/S.maxMana,0,1)+')';$('mpT').textContent=mp+' / '+Math.round(S.maxMana)+'   +'+mrh.toFixed(1)+'/с'}
+  if(hc.mp!==mp||hc.mm!==S.maxMana||hc.mrh!==mrh){hc.mp=mp;hc.mm=S.maxMana;hc.mrh=mrh;$('mpF').style.transform='scaleX('+clamp(p.mana/S.maxMana,0,1)+')';$('mpT').textContent=mp+' / '+Math.round(S.maxMana);$('mpR').textContent='+'+mrh.toFixed(1)+'/с'}
   const xp=Math.round(p.xp/p.need*100);
   if(hc.xp!==xp){hc.xp=xp;$('portrait').style.setProperty('--p',xp);$('pxpF').style.width=xp+'%'}
   {const hu=p.hp<S.maxHp*0.25;if(hc.hu!==hu){hc.hu=hu;$('portrait').classList.toggle('hurt',hu)}}
   setText('portLv',String(p.lv));
+  {const sig=p.lv+'|'+Math.round(g.E.dm*100)+'|'+Math.round(g.E.armor)+'|'+Math.round(g.E.spd*100)+'|'+Math.round(g.E.cdr*100)+'|'+g.el.air+'|'+Math.round(g.E.mres*100);if(hc.hst!==sig){hc.hst=sig;renderHStats()}}
   setText('kl',g.kills+' убито');
   const gd=Math.floor(p.gold);
   if(hc.gold!==gd){hc.gold=gd;$('gold').innerHTML='<span class="coin"></span>'+gd;$('gold2').innerHTML='<span class="coin"></span>'+gd}
