@@ -1,0 +1,390 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Оружие Солдата</title><style>
+body{margin:0;background:#11160f;color:#e8ecdf;font:15px/1.45 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 4px}p{color:#aab39c;margin:4px 0 14px}
+.row{background:#1a2418;border:1px solid #2c3a28;border-radius:10px;margin:0 0 14px;padding:10px 12px}
+.row h2{font-size:17px;margin:0 0 6px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cols div{font-size:12px;color:#8f9a82;text-transform:uppercase;letter-spacing:.06em}
+canvas{width:100%;height:auto;display:block;background:radial-gradient(#26301f,#161d13);border-radius:8px}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Оружие Солдата — было / стало</h1>
+<p>Бета 0.35. Слева старые спрайты, справа новые. В каждой рамке: крупно (как в карточке уровня) и мелко в углу — как ствол парит возле героя в бою. Оружие стреляет по кругу.</p>
+<div id=list></div></main><script>
+const TAU=Math.PI*2;
+function rg(c,x,y,r,st){const g=c.createRadialGradient(x,y,0,x,y,r);for(const [o,col] of st)g.addColorStop(o,col);return g}
+function lg(c,x1,y1,x2,y2,st){const g=c.createLinearGradient(x1,y1,x2,y2);for(const [o,col] of st)g.addColorStop(o,col);return g}
+const OLD=(function(){/* ---------- ОГНЕСТРЕЛ ---------- */
+function gunBody(c,pts,top,bot){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=lg(c,0,-14,0,14,[[0,top],[.45,'#6b7589'],[1,bot]]);c.fill();c.strokeStyle='rgba(8,10,16,.95)';c.lineWidth=1.2;c.stroke()}
+function pistol(c,fl){
+  gunBody(c,[[-18,-8],[26,-8],[26,2],[-6,2],[-8,6],[-18,6]],'#e5ebf5','#2a3040');
+  gunBody(c,[[-12,2],[-2,2],[4,22],[-9,22]],'#5a4632','#241a10');
+  c.strokeStyle='#14181f';c.lineWidth=1.6;c.beginPath();c.moveTo(-2,2);c.quadraticCurveTo(3,10,10,3);c.stroke();
+  c.fillStyle='rgba(255,255,255,.7)';c.fillRect(-16,-7,40,1.2);c.fillStyle='#10131a';c.fillRect(24,-6,3,3);
+  c.fillStyle='rgba(0,0,0,.5)';for(let i=0;i<5;i++)c.fillRect(-16+i*2.2,-6,1,6);
+  if(fl>0){flash(c,27,-4,fl)}
+}
+function shotgun(c,fl){
+  gunBody(c,[[-4,-5],[70,-5],[70,0],[-4,0]],'#dfe5f0','#2a3040');
+  gunBody(c,[[-4,0],[60,0],[60,5],[-4,5]],'#aab4c6','#222838');
+  gunBody(c,[[-30,-2],[-4,-6],[-4,6],[-24,12],[-34,10]],'#8a5e36','#3a2412');
+  gunBody(c,[[8,2],[34,2],[34,9],[8,9]],'#7a4e2c','#2e1c0e');
+  c.fillStyle='rgba(255,255,255,.65)';c.fillRect(0,-4.4,68,1);
+  c.fillStyle='#10131a';c.beginPath();c.arc(70,-2,2,0,TAU);c.fill();c.beginPath();c.arc(60,2.5,2,0,TAU);c.fill();
+  c.strokeStyle='#14181f';c.lineWidth=1.4;c.beginPath();c.moveTo(-2,5);c.quadraticCurveTo(2,12,8,6);c.stroke();
+  if(fl>0)flash(c,72,-2,fl);
+}
+function wood(c,pts){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=lg(c,0,-12,0,14,[[0,'#c98a52'],[.5,'#8a5530'],[1,'#3e2210']]);c.fill();c.strokeStyle='rgba(20,10,4,.95)';c.lineWidth=1.2;c.stroke();c.strokeStyle='rgba(255,220,170,.18)';c.lineWidth=.8;const p0=pts[0],p1=pts[1];c.beginPath();c.moveTo(p0[0]+2,p0[1]+3);c.lineTo(p1[0]-2,p1[1]+3);c.stroke()}
+function rifle(c,fl){ /* штурмовая винтовка: изогнутый магазин, дерево */
+  wood(c,[[-36,-4],[-8,-8],[-8,5],[-27,13],[-38,9]]);
+  gunBody(c,[[-8,-9],[36,-9],[36,3],[-8,3]],'#6a7488','#161a24');
+  c.fillStyle='rgba(255,255,255,.35)';c.fillRect(-6,-8,40,1);c.fillStyle='rgba(0,0,0,.45)';for(let i=0;i<4;i++)c.fillRect(4+i*6,-3,3,5);
+  wood(c,[[36,-7],[62,-7],[62,3],[36,3]]);
+  gunBody(c,[[38,-12],[66,-12],[66,-8],[38,-8]],'#7d879b','#262c3c');
+  gunBody(c,[[62,-5.5],[88,-5.5],[88,-1.8],[62,-1.8]],'#aab4c6','#222838');
+  gunBody(c,[[84,-8],[92,-8],[92,1],[84,1]],'#4a5266','#10131a');
+  c.fillStyle='#10131a';c.beginPath();c.moveTo(76,-6);c.lineTo(78,-12);c.lineTo(80,-6);c.fill();
+  c.beginPath();c.moveTo(6,3);c.lineTo(22,3);c.quadraticCurveTo(24,24,40,38);c.lineTo(26,40);c.quadraticCurveTo(10,26,6,3);c.closePath();
+  c.fillStyle=lg(c,8,0,32,0,[[0,'#6a4a2e'],[.5,'#9a6a3e'],[1,'#3e2a18']]);c.fill();c.strokeStyle='#14100a';c.lineWidth=1.2;c.stroke();
+  c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=1;for(let i=0;i<5;i++){const q=i/5;c.beginPath();c.moveTo(8+q*10+q*q*8,8+i*6);c.lineTo(21+q*12+q*q*8,6+i*6.4);c.stroke()}
+  gunBody(c,[[-6,3],[4,3],[7,18],[-3,18]],'#3a3e4a','#10131a');
+  c.strokeStyle='#14181f';c.lineWidth=1.4;c.beginPath();c.moveTo(3,3);c.quadraticCurveTo(8,10,14,3);c.stroke();
+  if(fl>0)flash(c,93,-3.7,fl);
+}
+function smg(c,fl){ /* пистолет-пулемёт: компактный корпус, длинный магазин, складной приклад */
+  c.strokeStyle='#2a3040';c.lineWidth=2.2;c.lineCap='round';c.beginPath();c.moveTo(-8,-3);c.lineTo(-30,-6);c.lineTo(-34,6);c.stroke();c.strokeStyle='#8a94a8';c.lineWidth=1;c.beginPath();c.moveTo(-8,-3);c.lineTo(-30,-6);c.lineTo(-34,6);c.stroke();c.lineCap='butt';
+  gunBody(c,[[-34,2],[-28,2],[-28,10],[-34,10]],'#4a5266','#10131a');
+  gunBody(c,[[-8,-9],[34,-9],[34,3],[-8,3]],'#8a96ac','#1c2230');
+  c.fillStyle='rgba(255,255,255,.4)';c.fillRect(-6,-8,38,1);c.fillStyle='rgba(0,0,0,.5)';for(let i=0;i<6;i++)c.fillRect(8+i*3.4,-6,1.6,6);
+  gunBody(c,[[34,-7],[58,-7],[58,0],[34,0]],'#c0c9d8','#2a3040');
+  gunBody(c,[[56,-6],[64,-6],[64,-1],[56,-1]],'#4a5266','#10131a');
+  c.fillStyle='#10131a';c.fillRect(24,-12,6,3);
+  gunBody(c,[[6,3],[17,3],[19,32],[8,32]],'#5a6074','#12151e');
+  c.fillStyle='rgba(255,210,90,.9)';for(let i=0;i<3;i++)c.fillRect(10,10+i*7,4,2);
+  gunBody(c,[[-8,3],[0,3],[3,18],[-6,18]],'#3a3e4a','#10131a');
+  c.strokeStyle='#14181f';c.lineWidth=1.4;c.beginPath();c.moveTo(0,3);c.quadraticCurveTo(5,10,11,3);c.stroke();
+  if(fl>0)flash(c,66,-3.5,fl);
+}
+function launcher(c,fl){ /* гранатомёт: толстый ствол-труба, барабан-коробка, деревянный приклад */
+  wood(c,[[-40,-4],[-10,-8],[-10,6],[-30,14],[-42,10]]);
+  gunBody(c,[[-10,-10],[30,-10],[30,6],[-10,6]],'#6a7488','#161a24');
+  c.fillStyle='rgba(255,255,255,.3)';c.fillRect(-8,-9,36,1);
+  gunBody(c,[[28,-13],[84,-13],[84,3],[28,3]],'#aab4c6','#222838');
+  c.fillStyle='rgba(255,255,255,.55)';c.fillRect(30,-12,52,1.4);
+  c.strokeStyle='rgba(20,24,34,.6)';c.lineWidth=1.2;for(let x=40;x<82;x+=10){c.beginPath();c.moveTo(x,-13);c.lineTo(x,3);c.stroke()}
+  gunBody(c,[[82,-16],[94,-16],[94,6],[82,6]],'#4a5266','#10131a');
+  c.fillStyle='#0a0c10';c.beginPath();c.ellipse(94,-5,2.4,10,0,0,TAU);c.fill();
+  c.fillStyle='#e8c84a';c.fillRect(46,-18,2,6);c.fillRect(44,-19,6,2);
+  wood(c,[[30,3],[60,3],[60,10],[30,10]]);
+  gunBody(c,[[-8,6],[2,6],[6,24],[-4,24]],'#3a3e4a','#10131a');
+  c.strokeStyle='#14181f';c.lineWidth=1.4;c.beginPath();c.moveTo(-2,6);c.quadraticCurveTo(3,13,10,6);c.stroke();
+  if(fl>0)flash(c,96,-5,fl*1.2);
+}
+function grenade(c,t){ c.fillStyle=rg(c,-2,-2,9,[[0,'#8a9a6a'],[1,'#2e3a22']]);c.beginPath();c.ellipse(0,0,6.5,5,0,0,TAU);c.fill();c.strokeStyle='#10140a';c.lineWidth=1.1;c.stroke();c.fillStyle='#c8ccd6';c.fillRect(-1.5,-7.5,3,3);c.strokeStyle='rgba(0,0,0,.35)';c.beginPath();c.moveTo(-3,-4);c.lineTo(-3,4);c.moveTo(1,-4.5);c.lineTo(1,4.5);c.stroke() }
+function sniper(c,fl){ /* снайперская винтовка: длинный ствол, оптика, сошки */
+  gunBody(c,[[-38,-3],[-8,-8],[-8,5],[-24,13],[-40,11]],'#7a8a52','#2a3216');
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(-22,2,6,3.5,.3,0,TAU);c.fill();
+  gunBody(c,[[-8,-8],[46,-8],[46,3],[-8,3]],'#566074','#12161f');
+  c.fillStyle='rgba(255,255,255,.4)';c.fillRect(-6,-7,50,1);
+  gunBody(c,[[46,-5.5],[126,-5.5],[126,-1.8],[46,-1.8]],'#c4cdda','#2a3040');
+  c.strokeStyle='rgba(20,24,34,.55)';c.lineWidth=1;for(let x=58;x<110;x+=8){c.beginPath();c.moveTo(x,-5.5);c.lineTo(x,-1.8);c.stroke()}
+  gunBody(c,[[122,-8],[136,-8],[136,1],[122,1]],'#4a5266','#10131a');
+  c.fillStyle='#05070a';for(const x of [126,130])c.fillRect(x,-6,1.6,6);
+  gunBody(c,[[4,-12],[10,-12],[10,-8],[4,-8]],'#3a4258','#161a24');gunBody(c,[[32,-12],[38,-12],[38,-8],[32,-8]],'#3a4258','#161a24');
+  gunBody(c,[[-6,-19],[40,-19],[40,-12],[-6,-12]],'#3a4458','#0e1118');
+  gunBody(c,[[38,-21],[52,-21],[52,-10],[38,-10]],'#2c3446','#0a0d14');gunBody(c,[[-12,-20],[-4,-20],[-4,-11],[-12,-11]],'#2c3446','#0a0d14');
+  c.fillStyle=rg(c,51,-15.5,6,[[0,'#bfe8ff'],[.5,'#3a78c8'],[1,'#0a1a38']]);c.beginPath();c.ellipse(51.5,-15.5,2.2,5,0,0,TAU);c.fill();
+  c.fillStyle='rgba(255,255,255,.6)';c.fillRect(0,-18,38,1);
+  c.strokeStyle='#14181f';c.lineWidth=2.4;c.beginPath();c.moveTo(-2,-4);c.lineTo(-10,-1);c.stroke();c.fillStyle='#8a94a8';c.beginPath();c.arc(-11,-.5,2.6,0,TAU);c.fill();
+  gunBody(c,[[10,3],[24,3],[24,11],[10,11]],'#3a4258','#161a24');
+  c.strokeStyle='#8a94a8';c.lineWidth=2.2;c.lineCap='round';c.beginPath();c.moveTo(86,-1);c.lineTo(78,16);c.moveTo(92,-1);c.lineTo(100,16);c.stroke();c.lineCap='butt';
+  if(fl>0)flash(c,138,-3.7,fl);
+}
+function flash(c,x,y,f){
+  c.save();c.globalCompositeOperation='lighter';c.translate(x,y);
+  c.fillStyle=rg(c,0,0,30*f,[[0,'rgba(255,255,255,1)'],[.3,'rgba(255,220,120,.9)'],[1,'rgba(255,120,30,0)']]);c.beginPath();c.arc(0,0,30*f,0,TAU);c.fill();
+  c.fillStyle='rgba(255,230,150,.9)';c.beginPath();c.moveTo(0,0);c.lineTo(34*f,-4*f);c.lineTo(16*f,0);c.lineTo(34*f,4*f);c.closePath();c.fill();c.restore();
+}
+return {pistol,shotgun,rifle,smg,launcher,sniper,grenade}})();
+/* =====================================================================
+   ОРУЖИЕ СОЛДАТА — детальные спрайты (бета 0.35)
+   Ствол смотрит в +x, дуло — в тех же точках, что у прежних спрайтов,
+   поэтому GUNS[].mz и превью карточек (PVG) не меняются.
+   Подключается после sprites_skills.js и подменяет SP.pistol … SP.grenade.
+   ===================================================================== */
+const GUNART=(function(){
+const TAU=Math.PI*2;
+const OUT='rgba(6,8,12,.96)';
+function path(c,p){c.beginPath();for(let i=0;i<p.length;i++)i?c.lineTo(p[i][0],p[i][1]):c.moveTo(p[i][0],p[i][1]);c.closePath()}
+function box(p){let a=1e9,b=-1e9,y0=1e9,y1=-1e9;for(const q of p){a=Math.min(a,q[0]);b=Math.max(b,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])}return [a,y0,b,y1]}
+function lgr(c,x1,y1,x2,y2,st){const g=c.createLinearGradient(x1,y1,x2,y2);for(const [o,k] of st)g.addColorStop(o,k);return g}
+function rgr(c,x,y,r,st){const g=c.createRadialGradient(x,y,0,x,y,r);for(const [o,k] of st)g.addColorStop(o,k);return g}
+/* скос: светлая кромка сверху, тень снизу (внутри формы) */
+function bevel(c,p,hi,lo){c.save();path(c,p);c.clip();c.lineWidth=1.6;
+  c.translate(0,1.1);path(c,p);c.strokeStyle=hi;c.stroke();
+  c.translate(0,-2.2);path(c,p);c.strokeStyle=lo;c.stroke();c.restore()}
+/* палитры: [верх, середина, низ] */
+const PAL={
+  steel:['#dfe6f2','#7d889c','#262c3a'],
+  dark:['#8c96aa','#3c4352','#11141c'],
+  blue:['#b6c6e2','#4c5a78','#161c2c'],
+  poly:['#5c6270','#2e323c','#111318'],
+  olive:['#a7b07a','#5f6a3c','#232914'],
+  tan:['#e2cf9e','#a98c58','#4a3a1e'],
+  brass:['#fff0b0','#d2a442','#6a4a12'],
+  red:['#ff9a86','#c8382a','#4e0e08']};
+function part(c,p,pal,o){
+  const P=PAL[pal]||pal,b=box(p);path(c,p);
+  c.fillStyle=lgr(c,0,b[1],0,b[3],[[0,P[0]],[.42,P[1]],[1,P[2]]]);c.fill();
+  bevel(c,p,'rgba(255,255,255,'+((o&&o.hi)||.38)+')','rgba(0,0,0,.42)');
+  path(c,p);c.strokeStyle=OUT;c.lineWidth=1.15;c.stroke();
+}
+function wood(c,p,dark){
+  const b=box(p);path(c,p);
+  c.fillStyle=lgr(c,0,b[1],0,b[3],dark?[[0,'#a8683a'],[.5,'#6a3c1c'],[1,'#2a160a']]:[[0,'#e0a464'],[.45,'#9c5e30'],[1,'#3e200c']]);c.fill();
+  c.save();path(c,p);c.clip();
+  c.strokeStyle='rgba(40,16,4,.35)';c.lineWidth=.8;
+  for(let i=0;i<7;i++){const y=b[1]+(i+.5)*(b[3]-b[1])/7;c.beginPath();c.moveTo(b[0]-2,y);
+    for(let x=b[0];x<=b[2]+4;x+=6)c.lineTo(x,y+Math.sin(x*.21+i*1.7)*1.1);c.stroke()}
+  c.strokeStyle='rgba(255,226,180,.18)';c.beginPath();c.ellipse((b[0]+b[2])/2,(b[1]+b[3])/2,(b[2]-b[0])*.3,(b[3]-b[1])*.2,0,0,TAU);c.stroke();
+  c.restore();
+  bevel(c,p,'rgba(255,230,190,.35)','rgba(0,0,0,.45)');
+  path(c,p);c.strokeStyle='rgba(22,10,3,.96)';c.lineWidth=1.15;c.stroke();
+}
+/* рукоять с насечкой */
+function grip(c,p,pal){
+  part(c,p,pal||'poly',{hi:.22});
+  c.save();path(c,p);c.clip();c.fillStyle='rgba(0,0,0,.35)';const b=box(p);
+  for(let y=b[1]+3;y<b[3]-1;y+=2.2)for(let x=b[0]+((y*1.3)%2.2);x<b[2];x+=2.2)c.fillRect(x,y,.9,.9);
+  c.fillStyle='rgba(255,255,255,.07)';for(let y=b[1]+4;y<b[3]-1;y+=2.2)for(let x=b[0]+1+((y*1.3)%2.2);x<b[2];x+=2.2)c.fillRect(x,y,.6,.6);
+  c.restore();
+}
+function screw(c,x,y,r){r=r||1.3;c.fillStyle=rgr(c,x-r*.3,y-r*.3,r*1.4,[[0,'#f2f5fa'],[.5,'#8a94a6'],[1,'#20242e']]);c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
+  c.strokeStyle='rgba(10,12,16,.8)';c.lineWidth=.5;c.beginPath();c.moveTo(x-r*.7,y);c.lineTo(x+r*.7,y);c.stroke()}
+function line(c,x0,y0,x1,y1,col,w){c.strokeStyle=col;c.lineWidth=w||1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke()}
+/* планка Пикатинни */
+function rail(c,x0,x1,y){part(c,[[x0,y-2.4],[x1,y-2.4],[x1,y],[x0,y]],'dark',{hi:.25});
+  c.fillStyle='#0b0d12';for(let x=x0+1.5;x<x1-1.5;x+=3)c.fillRect(x,y-3.6,1.6,1.4)}
+/* дульная вспышка: лепестки + ядро, мерцает от f */
+function flash(c,x,y,f){
+  c.save();c.globalCompositeOperation='lighter';c.translate(x,y);
+  const s=f*(.85+.3*Math.sin(f*37));
+  c.fillStyle=rgr(c,0,0,30*s,[[0,'rgba(255,255,240,1)'],[.25,'rgba(255,214,110,.85)'],[1,'rgba(255,110,20,0)']]);c.beginPath();c.arc(4*s,0,30*s,0,TAU);c.fill();
+  const pet=[[0,40,6],[.5,20,4],[-.5,20,4],[1.15,14,3],[-1.15,14,3]];
+  for(const [a,L,W] of pet){c.save();c.rotate(a+Math.sin(f*23+a)*.08);
+    c.fillStyle=lgr(c,0,0,L*s,0,[[0,'rgba(255,255,230,.95)'],[.5,'rgba(255,200,90,.8)'],[1,'rgba(255,90,20,0)']]);
+    c.beginPath();c.moveTo(0,-W*s*.5);c.quadraticCurveTo(L*s*.5,-W*s,L*s,0);c.quadraticCurveTo(L*s*.5,W*s,0,W*s*.5);c.closePath();c.fill();c.restore()}
+  c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.ellipse(3*s,0,6*s,3*s,0,0,TAU);c.fill();
+  c.restore();
+}
+function guard(c,x0,x1,y0,dy){c.strokeStyle='#14171e';c.lineWidth=2.2;c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo(x0+1,y0+dy,(x0+x1)/2,y0+dy);c.quadraticCurveTo(x1,y0+dy,x1,y0);c.stroke();
+  c.strokeStyle='rgba(160,170,190,.45)';c.lineWidth=.7;c.stroke();
+  c.strokeStyle='#0c0e12';c.lineWidth=1.4;c.beginPath();c.moveTo((x0+x1)/2-1,y0);c.quadraticCurveTo((x0+x1)/2+1,y0+dy*.5,(x0+x1)/2-1.5,y0+dy*.75);c.stroke()}
+
+/* ---------- ПИСТОЛЕТ ---------- */
+function pistol(c,fl){
+  grip(c,[[-15,0],[-3,0],[-4,6],[-6,20],[-17,21],[-18,18]],'poly');
+  part(c,[[-18.5,19],[-5.5,18.4],[-5.8,21.6],[-18.8,22.2]],'dark');
+  part(c,[[-15,-2],[25,-2],[25,3],[2,3],[-3,1],[-15,1]],'dark');
+  guard(c,-3,9,2.5,7);
+  part(c,[[-19,-8],[-18,-10],[25,-10],[27,-8.5],[27,-1.5],[-19,-1.5]],'steel');
+  c.fillStyle='rgba(0,0,0,.55)';for(let i=0;i<6;i++)c.fillRect(-16.5+i*1.9,-9,1,6.5);
+  part(c,[[4,-10],[14,-10],[14,-6],[4,-6]],'dark',{hi:.15});c.fillStyle='#d6a33e';c.fillRect(6,-8.6,5,1.6);
+  c.fillStyle='#0b0d12';c.fillRect(22.5,-12.2,2.2,2.4);c.fillRect(-17.5,-12.2,3.6,2.4);
+  c.fillStyle='#ff4a3a';c.beginPath();c.arc(23.6,-11.6,.7,0,TAU);c.fill();c.fillStyle='#7cff8a';c.fillRect(-16.6,-11.9,.8,.8);c.fillRect(-14.9,-11.9,.8,.8);
+  line(c,-17,-6.2,25.5,-6.2,'rgba(255,255,255,.55)',.6);
+  part(c,[[-21,-6],[-18.5,-7],[-18.5,-3],[-21,-3.6]],'dark');
+  screw(c,-10.5,4.2,1.1);screw(c,-12,16,1.1);
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(27,-5,.9,2,0,0,TAU);c.fill();
+  if(fl>0)flash(c,28,-5,fl);
+}
+
+/* ---------- ДРОБОВИК (помповый) ---------- */
+function shotgun(c,fl){
+  wood(c,[[-34,-4],[-8,-7],[-6,1],[-12,4],[-24,10],[-35,12],[-37,6]]);
+  part(c,[[-38,-4.6],[-34.5,-4.8],[-35,12.6],[-38.4,12.4]],'poly',{hi:.18});
+  part(c,[[-6,-8],[16,-8],[18,-6],[18,5],[-6,5]],'blue');
+  c.fillStyle='#0b0d12';path(c,[[0,-1],[12,-1],[12,3],[0,3]]);c.fill();c.fillStyle='rgba(210,164,66,.85)';c.fillRect(2,0,7,2);
+  screw(c,-3,-4,1.1);screw(c,14,-4,1.1);
+  guard(c,-4,8,5,7);
+  part(c,[[16,-1],[64,-1],[64,4],[16,4]],'dark');
+  part(c,[[16,-6.5],[72,-6.5],[72,-1.5],[16,-1.5]],'steel');
+  c.save();path(c,[[22,-8.8],[62,-8.8],[62,-6.2],[22,-6.2]]);c.fillStyle='#262b38';c.fill();c.restore();
+  c.fillStyle='#0b0d12';for(let x=25;x<60;x+=5){c.beginPath();c.ellipse(x,-7.5,1.5,.8,0,0,TAU);c.fill()}
+  wood(c,[[22,-2],[42,-2],[43,7],[21,7]],true);
+  c.strokeStyle='rgba(20,8,2,.8)';c.lineWidth=1;for(let x=24;x<41;x+=2.6){c.beginPath();c.moveTo(x,-1);c.lineTo(x,6);c.stroke()}
+  part(c,[[62,-2],[66,-2],[66,4.5],[62,4.5]],'dark');
+  part(c,[[68,-7.2],[72.6,-7.2],[72.6,-.8],[68,-.8]],'dark');
+  c.fillStyle='#f2e6b8';c.beginPath();c.arc(70,-8,1,0,TAU);c.fill();
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(72.4,-4,1.1,2.2,0,0,TAU);c.fill();
+  for(let i=0;i<4;i++){const x=-4.5+i*4.6;part(c,[[x,-14.2],[x+3.8,-14.2],[x+3.8,-10.2],[x,-10.2]],'red',{hi:.3});part(c,[[x,-10.4],[x+3.8,-10.4],[x+3.8,-8.4],[x,-8.4]],'brass',{hi:.4})}
+  if(fl>0)flash(c,73,-4,fl*1.15);
+}
+
+/* ---------- АВТОМАТ ---------- */
+function rifle(c,fl){
+  wood(c,[[-38,-5],[-10,-8],[-8,0],[-10,4],[-24,10],[-37,12],[-40,8]]);
+  part(c,[[-41,-5.6],[-37.6,-5.8],[-38.2,12.6],[-41.4,12.4]],'poly',{hi:.18});
+  /* магазин */
+  c.beginPath();c.moveTo(6,3);c.lineTo(21,3);c.quadraticCurveTo(23,24,39,37);c.lineTo(26,41);c.quadraticCurveTo(9,27,6,3);c.closePath();
+  c.fillStyle=lgr(c,6,0,36,0,[[0,'#3e2a18'],[.4,'#a86e3a'],[.7,'#7a4a24'],[1,'#2e1c0e']]);c.fill();c.strokeStyle='rgba(22,10,3,.96)';c.lineWidth=1.15;c.stroke();
+  c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=1;for(let i=0;i<5;i++){const q=(i+1)/6;c.beginPath();c.moveTo(7+q*12+q*q*7,3+q*30);c.lineTo(21+q*10+q*q*8,3+q*30-2);c.stroke()}
+  part(c,[[24,39],[39.5,34.5],[41,38],[26.6,42.6]],'dark');
+  grip(c,[[-7,2],[3,2],[5,7],[2,19],[-8,19],[-9,15]],'poly');
+  guard(c,2,14,3,6);
+  /* ствольная коробка */
+  part(c,[[-10,-9],[36,-9],[36,3],[-10,3]],'blue');
+  c.save();path(c,[[-8,-12],[34,-12],[36,-9],[-10,-9]]);c.fillStyle=lgr(c,0,-12,0,-9,[[0,'#d5deec'],[1,'#4c5a78']]);c.fill();c.strokeStyle=OUT;c.lineWidth=1.1;c.stroke();c.restore();
+  c.strokeStyle='rgba(0,0,0,.45)';c.lineWidth=.9;for(let x=0;x<32;x+=6){c.beginPath();c.moveTo(x,-11.6);c.lineTo(x+2,-9.3);c.stroke()}
+  part(c,[[16,-6],[28,-6],[28,-1],[16,-1]],'dark',{hi:.12});c.fillStyle='rgba(210,164,66,.9)';c.fillRect(18,-4.4,6,2);
+  part(c,[[-6,-1],[6,-3],[7,-1.6],[-5,.4]],'steel');
+  screw(c,-6,-5,1.1);screw(c,32,-1,1.1);
+  /* цевьё и газовая трубка */
+  wood(c,[[36,-8],[62,-8],[62,3],[36,3]],true);
+  c.strokeStyle='rgba(255,230,190,.25)';c.lineWidth=.7;for(let x=40;x<60;x+=5){c.beginPath();c.moveTo(x,-6);c.lineTo(x,1);c.stroke()}
+  part(c,[[36,-13],[68,-13],[68,-8.5],[36,-8.5]],'blue');
+  c.fillStyle='#0b0d12';for(let x=42;x<66;x+=6)c.fillRect(x,-11.6,2.6,1.4);
+  part(c,[[62,-5.6],[86,-5.6],[86,-1.8],[62,-1.8]],'steel');
+  part(c,[[70,-7],[73,-7],[73,-.6],[70,-.6]],'dark');
+  part(c,[[76,-6.4],[79,-6.4],[79,-.8],[76,-.8]],'dark');
+  c.fillStyle='#0b0d12';c.beginPath();c.moveTo(76.4,-6.4);c.lineTo(77.6,-12.6);c.lineTo(78.8,-6.4);c.closePath();c.fill();
+  c.fillStyle='#ffd27a';c.beginPath();c.arc(77.6,-12.6,.6,0,TAU);c.fill();
+  /* дульный тормоз */
+  part(c,[[84,-7.6],[93,-7.6],[93,0],[84,0]],'dark');
+  c.fillStyle='#05070a';for(const x of [86,89])c.fillRect(x,-6.6,1.6,2.6);
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(93,-3.7,1,2.4,0,0,TAU);c.fill();
+  if(fl>0)flash(c,94,-3.7,fl);
+}
+
+/* ---------- ПИСТОЛЕТ-ПУЛЕМЁТ ---------- */
+function smg(c,fl){
+  c.lineCap='round';c.lineJoin='round';
+  c.strokeStyle='#14171e';c.lineWidth=3;c.beginPath();c.moveTo(-8,-4);c.lineTo(-30,-6);c.lineTo(-33,7);c.lineTo(-10,2);c.stroke();
+  c.strokeStyle='#9aa4b8';c.lineWidth=1.2;c.stroke();c.lineCap='butt';c.lineJoin='miter';
+  part(c,[[-36,-8],[-30,-8],[-31,9],[-37,9]],'poly',{hi:.2});
+  /* длинный магазин с окном патронов */
+  part(c,[[6,3],[17,3],[19,33],[8,33]],'dark');
+  c.fillStyle='#0b0d12';path(c,[[10,8],[14,8],[15.6,28],[11.6,28]]);c.fill();
+  for(let i=0;i<4;i++){c.fillStyle=lgr(c,10,0,16,0,[[0,'#7a5212'],[.5,'#ffd77a'],[1,'#8a5e16']]);c.fillRect(10.6+i*.32,9.4+i*4.6,3.6,2.4)}
+  part(c,[[7.2,32],[19.4,32],[19.8,35],[7,35]],'dark');
+  grip(c,[[-9,2],[0,2],[1,6],[-1,18],[-10,18],[-11,14]],'poly');
+  guard(c,0,10,3,6);
+  part(c,[[-10,-10],[34,-10],[34,3],[-10,3]],'steel');
+  c.fillStyle='#0b0d12';c.fillRect(14,-6,10,3);c.fillStyle='rgba(210,164,66,.85)';c.fillRect(16,-5.4,5,1.8);
+  part(c,[[-6,-3.5],[2,-3.5],[2,-.8],[-6,-.8]],'dark');
+  screw(c,-6,-7,1.1);screw(c,30,-1,1.1);
+  /* кожух ствола с отверстиями */
+  part(c,[[34,-8],[58,-8],[58,1],[34,1]],'dark');
+  c.fillStyle='#05070a';for(let x=37;x<56;x+=4.4){c.beginPath();c.arc(x,-3.6,1.4,0,TAU);c.fill()}
+  c.fillStyle='rgba(255,255,255,.18)';for(let x=37;x<56;x+=4.4){c.beginPath();c.arc(x+.4,-3.2,.6,0,TAU);c.fill()}
+  part(c,[[58,-6.6],[66,-6.6],[66,-.4],[58,-.4]],'blue');
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(66,-3.5,1,2.2,0,0,TAU);c.fill();
+  /* коллиматор */
+  rail(c,-4,30,-10);
+  part(c,[[6,-12.4],[22,-12.4],[22,-10],[6,-10]],'dark');
+  part(c,[[4,-20],[24,-20],[24,-12.4],[4,-12.4]],'poly',{hi:.3});
+  c.fillStyle=rgr(c,22.5,-16.2,5,[[0,'#ffe0d8'],[.35,'#ff4a3a'],[1,'#3a0606']]);c.beginPath();c.ellipse(22.6,-16.2,1.6,3.2,0,0,TAU);c.fill();
+  c.save();c.globalCompositeOperation='lighter';c.fillStyle='rgba(255,60,40,.5)';c.beginPath();c.arc(22.6,-16.2,3.4,0,TAU);c.fill();c.restore();
+  screw(c,10,-16.2,1);
+  if(fl>0)flash(c,67,-3.5,fl);
+}
+
+/* ---------- ГРАНАТОМЁТ (револьверный) ---------- */
+function launcher(c,fl){
+  wood(c,[[-40,-5],[-12,-8],[-10,2],[-14,6],[-28,13],[-41,13],[-43,8]]);
+  part(c,[[-44,-5.6],[-40.4,-5.8],[-41,13.6],[-44.4,13.4]],'poly',{hi:.18});
+  grip(c,[[-10,4],[0,4],[2,9],[0,24],[-9,24],[-11,19]],'poly');
+  guard(c,0,12,6,6);
+  part(c,[[-12,-11],[12,-11],[12,6],[-12,6]],'olive');
+  screw(c,-8,-7,1.2);screw(c,-8,2,1.2);
+  /* барабан с камерами */
+  part(c,[[10,-18],[40,-18],[42,-14],[42,10],[40,13],[10,13],[8,10],[8,-14]],'dark');
+  for(let i=0;i<3;i++){const y=-12.4+i*8.6;
+    part(c,[[11,y-3.2],[39,y-3.2],[39,y+3.2],[11,y+3.2]],'olive',{hi:.3});
+    c.fillStyle=rgr(c,13,y-1,4,[[0,'#fff4c0'],[.5,'#d2a442'],[1,'#5a3e10']]);c.beginPath();c.arc(13.5,y,2.6,0,TAU);c.fill();
+    c.fillStyle='rgba(0,0,0,.35)';c.fillRect(30,y-3.2,1.2,6.4)}
+  screw(c,25,-15.6,1.2);
+  /* труба ствола */
+  part(c,[[40,-14],[84,-14],[84,4],[40,4]],'steel');
+  c.strokeStyle='rgba(20,24,34,.55)';c.lineWidth=1.3;for(let x=50;x<82;x+=8){c.beginPath();c.moveTo(x,-14);c.lineTo(x,4);c.stroke()}
+  c.fillStyle='rgba(255,255,255,.35)';c.fillRect(42,-12.4,40,1);
+  part(c,[[82,-17],[96,-17],[96,7],[82,7]],'dark');
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(96,-5,2.6,10.2,0,0,TAU);c.fill();
+  c.fillStyle='rgba(255,230,140,.25)';c.beginPath();c.ellipse(95.6,-8,1,4,0,0,TAU);c.fill();
+  /* передняя рукоять и прицел */
+  grip(c,[[54,4],[62,4],[63,16],[55,17]],'poly');
+  part(c,[[46,-22],[60,-22],[60,-14],[46,-14]],'dark');
+  c.fillStyle='#e8c84a';c.fillRect(51,-28,2.4,6);c.fillRect(48.8,-29,6.8,2.2);
+  c.save();c.globalCompositeOperation='lighter';c.fillStyle='rgba(255,220,90,.35)';c.beginPath();c.arc(52.2,-27.8,3,0,TAU);c.fill();c.restore();
+  if(fl>0)flash(c,97,-5,fl*1.3);
+}
+
+/* ---------- СНАЙПЕРКА ---------- */
+function sniper(c,fl){
+  /* приклад с вырезом под большой палец */
+  c.beginPath();c.moveTo(-40,-5);c.lineTo(-10,-9);c.lineTo(-8,3);c.lineTo(-12,6);c.lineTo(-24,13);c.lineTo(-39,13);c.lineTo(-42,8);c.closePath();
+  c.moveTo(-26,1);c.ellipse(-21,2.5,5.6,3,.25,Math.PI,Math.PI*3);
+  c.fillStyle=lgr(c,0,-9,0,13,[[0,PAL.olive[0]],[.45,PAL.olive[1]],[1,PAL.olive[2]]]);c.fill('evenodd');c.strokeStyle=OUT;c.lineWidth=1.15;c.stroke();
+  part(c,[[-34,-11],[-16,-11.6],[-15,-8.4],[-33,-7.4]],'olive',{hi:.3});
+  part(c,[[-44,-5.6],[-40.4,-5.8],[-41,13.6],[-44.4,13.4]],'poly',{hi:.18});
+  grip(c,[[-8,1],[2,1],[3,6],[0,16],[-9,16],[-10,11]],'olive');
+  guard(c,2,14,3,5);
+  part(c,[[-10,-9],[46,-9],[46,3],[-10,3]],'dark');
+  part(c,[[46,-7],[60,-7],[60,2],[46,2]],'olive');
+  /* затвор */
+  part(c,[[-4,-6.4],[12,-6.4],[12,-2.4],[-4,-2.4]],'steel');
+  c.strokeStyle='#14171e';c.lineWidth=2.4;c.beginPath();c.moveTo(-2,-3);c.lineTo(-8,3);c.stroke();
+  c.fillStyle=rgr(c,-9,3.6,3.4,[[0,'#f2f5fa'],[.6,'#8a94a6'],[1,'#20242e']]);c.beginPath();c.arc(-9,3.8,2.6,0,TAU);c.fill();
+  /* ствол с долами */
+  part(c,[[58,-5.8],[124,-5.8],[124,-1.6],[58,-1.6]],'steel');
+  c.strokeStyle='rgba(16,20,28,.6)';c.lineWidth=.8;c.beginPath();c.moveTo(62,-3.7);c.lineTo(110,-3.7);c.stroke();
+  c.strokeStyle='rgba(255,255,255,.45)';c.beginPath();c.moveTo(62,-4.8);c.lineTo(110,-4.8);c.stroke();
+  part(c,[[122,-8],[137,-8],[137,.6],[122,.6]],'dark');
+  c.fillStyle='#05070a';for(const x of [125,128.6,132.2])c.fillRect(x,-6.8,1.8,6.2);
+  c.fillStyle='#05070a';c.beginPath();c.ellipse(137.4,-3.7,1,2.4,0,0,TAU);c.fill();
+  /* сошки */
+  c.lineCap='round';c.strokeStyle='#14171e';c.lineWidth=2.8;c.beginPath();c.moveTo(66,1);c.lineTo(58,18);c.moveTo(70,1);c.lineTo(78,18);c.stroke();
+  c.strokeStyle='#8a94a8';c.lineWidth=1.1;c.stroke();c.lineCap='butt';
+  part(c,[[63,-.4],[73,-.4],[73,3],[63,3]],'dark');
+  /* оптика */
+  part(c,[[2,-12.4],[8,-12.4],[8,-9],[2,-9]],'dark');part(c,[[30,-12.4],[36,-12.4],[36,-9],[30,-9]],'dark');
+  part(c,[[-4,-19],[40,-19],[40,-12.4],[-4,-12.4]],'poly',{hi:.3});
+  part(c,[[14,-22],[20,-22],[20,-19],[14,-19]],'dark');part(c,[[15,-12.4],[19,-12.4],[19,-10.6],[15,-10.6]],'dark');
+  part(c,[[38,-22.6],[54,-22.6],[54,-8.8],[38,-8.8]],'poly',{hi:.3});
+  part(c,[[-12,-21],[-3,-21],[-3,-10.4],[-12,-10.4]],'poly',{hi:.3});
+  c.fillStyle=rgr(c,53,-17.6,8,[[0,'#e8f8ff'],[.25,'#8cd2ff'],[.6,'#2a62b4'],[1,'#071430']]);c.beginPath();c.ellipse(54,-15.7,2.6,6.2,0,0,TAU);c.fill();
+  c.save();c.globalCompositeOperation='lighter';c.fillStyle='rgba(150,220,255,.35)';c.beginPath();c.ellipse(54.6,-15.7,4,7.4,0,0,TAU);c.fill();
+  c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.ellipse(53.6,-18.4,.7,1.6,0,0,TAU);c.fill();c.restore();
+  c.fillStyle='#d2a442';c.fillRect(38.6,-21.8,1.6,12.2);
+  if(fl>0)flash(c,138,-3.7,fl*1.2);
+}
+
+/* ---------- ГРАНАТА (осколочная) ---------- */
+function grenade(c,t){
+  c.fillStyle=rgr(c,-2.2,-1.8,9,[[0,'#b8c48a'],[.45,'#5f6a3c'],[1,'#1c2210']]);c.beginPath();c.ellipse(0,1,6.4,5.6,0,0,TAU);c.fill();
+  c.strokeStyle='rgba(20,26,10,.75)';c.lineWidth=.8;
+  c.beginPath();c.moveTo(-6,1);c.lineTo(6,1);c.moveTo(-5,-2);c.lineTo(5,-2);c.moveTo(-5,4);c.lineTo(5,4);c.stroke();
+  c.beginPath();c.moveTo(-2.4,-4);c.lineTo(-2.4,6);c.moveTo(2.4,-4);c.lineTo(2.4,6);c.stroke();
+  c.strokeStyle='rgba(8,10,4,.95)';c.lineWidth=1.1;c.beginPath();c.ellipse(0,1,6.4,5.6,0,0,TAU);c.stroke();
+  c.fillStyle='#9aa2b2';c.fillRect(-2.2,-7.4,4.4,3);c.strokeStyle='#14171e';c.lineWidth=.8;c.strokeRect(-2.2,-7.4,4.4,3);
+  c.fillStyle='#c8ccd6';c.beginPath();c.moveTo(2,-7.4);c.quadraticCurveTo(7,-7,6.6,-1);c.lineTo(5.4,-1.4);c.quadraticCurveTo(5.6,-5.6,2,-6);c.closePath();c.fill();c.stroke();
+  c.strokeStyle='#e8c84a';c.lineWidth=1;c.beginPath();c.arc(-3.8,-7.2,1.8,0,TAU);c.stroke();
+}
+return {pistol,shotgun,rifle,smg,launcher,sniper,grenade};
+})();
+
+
+const L=[['pistol','Пистолет',-22,30,.5,.7],['shotgun','Дробовик',-40,74,1.15,.55],['rifle','Автомат',-42,95,.17,.5],['smg','Пистолет-пулемёт',-38,68,1.25,.5],['launcher','Гранатомёт',-46,98,2.1,.5],['sniper','Снайперка',-46,140,1.9,.46],['grenade','Граната',-10,10,1,3]];
+const cv=[];const list=document.getElementById('list');
+for(const [k,n,x0,x1,cd,sc] of L){const r=document.createElement('div');r.className='row';r.innerHTML='<h2>'+n+'</h2><div class=cols><div>было<canvas width=520 height=230></canvas></div><div>стало<canvas width=520 height=230></canvas></div></div>';list.appendChild(r);
+  const cs=r.querySelectorAll('canvas');cv.push([cs[0],OLD[k],k,x0,x1,cd,sc],[cs[1],GUNART[k],k,x0,x1,cd,sc])}
+function frame(t){t/=1000;
+  for(const [el,f,k,x0,x1,cd,sc] of cv){const c=el.getContext('2d');c.clearRect(0,0,520,230);
+    if(k==='grenade'){c.save();c.translate(170,110);c.scale(7,7);f(c,0);c.restore();c.save();c.translate(380,120);c.rotate(t*5);c.scale(3,3);f(c,0);c.restore();continue}
+    const u=t%Math.max(1.1,cd+.4),fl=u<.12?1-u/.12:0,K=Math.min(3.4,440/(x1-x0));
+    c.save();c.translate(40-x0*K,95);c.scale(K,K);c.translate(-fl*3,0);f(c,fl);c.restore();
+    c.save();c.translate(455,40);c.rotate(-.25+Math.sin(t*.7)*.2);c.scale(sc,sc);c.translate(-fl*3,0);f(c,fl);c.restore();
+  }requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script></body></html>
