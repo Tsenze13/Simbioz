@@ -21,6 +21,7 @@ js/combat/cast.js
 js/combat/trees.js
 js/combat/ults.js
 js/combat/weapons.js
+js/combat/forms.js
 js/combat/player_side.js
 js/enemies/ai.js
 js/enemies/waves.js

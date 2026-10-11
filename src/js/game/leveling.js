@@ -24,6 +24,11 @@ function buildChoices(){
     for(const t of new Set(own))if(!GM[t]&&GMOD[t]){const L=GMOD[t];for(const m of L)pool.push({w:3.6/L.length,kind:'gunmod',key:t,mk:m.k,tag:'Модификация · '+GUNS[t].n,title:m.n,sub:'Одна модификация на ствол',desc:m.d,c1:EL.metal.c,c2:'#ffd36b'})}
     for(const q in GMODU)if(!MU[q])pool.push({w:1.1,kind:'gmodule',key:q,tag:'Модуль · все стволы',title:GMODU[q].n,sub:'Ставится на все орудия',desc:GMODU[q].d,c1:EL.metal.c,c2:EL.metal.c2});
   }
+  if(!isAva(g)&&g.start!=='metal'&&g.el[g.start]>0){
+    const own=new Set(g.forms.map(f=>f.t)),E=EL[g.start];
+    if(g.forms.length<BAL.hero.maxForms)for(const id of FORM_IDS)if(FORMS[id].el===g.start&&!own.has(id))pool.push({w:1.5,kind:'form',key:id,tag:'Форма · '+FLINE[g.start],title:FORMS[id].n,sub:'Новая автоатака ('+(g.forms.length+1)+' из '+BAL.hero.maxForms+')',desc:FORMS[id].d,c1:E.c,c2:E.c2});
+    for(const f of g.forms)if(!f.m)for(const m of FORMS[f.t].mods)pool.push({w:1.6,kind:'formmod',key:f.t,mk:m.k,tag:'Модификация · '+FORMS[f.t].n,title:m.n,sub:'Одна на форму',desc:m.d,c1:E.c,c2:'#ffd36b'});
+  }
   const free=freeSlot()>=0;
   const lvOf=id=>{const s=g.slots.find(x=>x&&x.id===id);return s?s.lv:0};
   const mc=a=>'Мана '+a.mana+' · Перезарядка '+a.cd+' с';
@@ -58,6 +63,8 @@ function buildChoices(){
 function applyChoice(c){
   const g=G,p=g.p;
   if(c.kind==='gun'){g.guns.push({t:c.key,cd:0,aim:0,fl:0,rec:0});toast('Оружие: '+GUNS[c.key].n,'Теперь вокруг вас парят '+g.guns.length+' ствола')}
+  else if(c.kind==='form'){g.forms.push({t:c.key,cd:0.5,m:''});toast('Форма: '+FORMS[c.key].n,FORMS[c.key].d)}
+  else if(c.kind==='formmod'){const f=g.forms.find(x=>x.t===c.key);if(f)f.m=c.mk;toast(FORMS[c.key].n+': '+c.title,c.desc)}
   else if(c.kind==='relic'){g.relics.push(c.key);recalc();toast('Реликвия: '+c.title,c.desc);ring(p.x,p.y,150,'#ffd36b',0.8);puff(p.x,p.y,'#ffd36b',30,260,0.8,3.5)}
   else if(c.kind==='gunmod'){(g.gmods||(g.gmods={}))[c.key]=c.mk;toast(GUNS[c.key].n+': '+c.title,c.desc);sfx(640,0.15,'triangle',0.05,200)}
   else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;toast('Модуль: '+c.title,c.desc)}

@@ -16,6 +16,7 @@ function buildChips(g){
     const d=ITEMS[b.id];
     h+='<span class="chip stat"><b>'+d.n+'</b>'+(d.ch?' ×'+b.ch:'')+'</span>';
   }
+  for(const f of g.forms||[]){const F=FORMS[f.t],m=f.m?F.mods.find(x=>x.k===f.m):null;h+='<span class="chip" style="--c1:'+EL[F.el].c+'"><span class="orb sm" style="--c1:'+EL[F.el].c+';--c2:'+EL[F.el].c2+'"></span><b>'+F.n+'</b>'+(m?' · '+m.n:'')+'</span>'}
   for(const id of g.relics||[])h+='<span class="chip" style="--c1:#ffd36b" title="'+RELICS[id].d+'"><span class="orb sm" style="--c1:#ffd36b;--c2:'+BOSS[RELICS[id].boss].col+'"></span><b>'+RELICS[id].n+'</b></span>';
   for(const n of g.synOn||[])h+='<span class="chip stat" style="border-color:#c47bff"><b style="color:#c9b3ff">Комбо: '+n+'</b></span>';
   for(const k in g.pass){if(g.pass[k]>0)h+='<span class="chip stat"><b>'+STCM[k].n+'</b> '+g.pass[k]+'</span>'}

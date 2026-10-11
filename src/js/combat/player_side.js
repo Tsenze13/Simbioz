@@ -189,7 +189,7 @@ function updPlayerSide0(dt){
       const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+(b.hr||b.r);
       if(dx*dx+dy*dy<rr*rr){
         if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
-        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock,sk:b.sk||(b.gt?'__gun':undefined)};let bd=b.dmg,kn=b.knock||0;
+        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock,icy:b.icy,sk:b.sk||(b.gt?'__gun':undefined)};let bd=b.dmg,kn=b.knock||0;
         if(b.gt){const gr=gunHit(b,e,bo);bd=gr[0];kn*=gr[1]}
         if(g.impR&&g.start==='air'){bd*=2.5;bo.fcrit=true;kn=Math.max(kn,300);g.imp=0;g.impR=false;ring(e.x,e.y,34,'#e6fff7',0.3);sparks(e.x,e.y,'#e6fff7',8,280);g.shake=Math.max(g.shake,3)}
         hitEnemy(e,bd,bo);

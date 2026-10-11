@@ -24,7 +24,7 @@ const BAL={
   /* волны */
   wave:{durBase:56,durMax:75,interTime:60,interHeal:0.35},
   /* герой */
-  hero:{ultLv:12,ultLvReq:[12,18,24],dashCd:2.2,pasLv:[3,8,13]}, /* ulta: открыть / ур.2 / ур.3 — с этих уровней героя */
+  hero:{maxForms:4,ultLv:12,ultLvReq:[12,18,24],dashCd:2.2,pasLv:[3,8,13]}, /* ulta: открыть / ур.2 / ур.3 — с этих уровней героя */
   /* лавка */
   shop:{spBase:260,spStep:60,invMax:5,awkBase:380,awkStep:130}
 };

@@ -40,6 +40,7 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/combat/trees.js | древа мутаций `TREE`, хуки `HK`, `castSlot`, `useItem` |
 | js/combat/ults.js | `ULTFN` |
 | js/combat/weapons.js | автоатаки стихий, стволы металла, гранаты |
+| js/combat/forms.js | формы мастеров `FORMS` (линии Очаги/Течения/Глыбы/…): `fire(f,l,t,m)`, `formsTick`, `drawForms`; карточки form/formmod |
 | js/combat/player_side.js | снаряды, зоны, столкновения |
 | js/enemies/ai.js | `hurtPlayer`, ИИ врагов, `bossPattern`, `bossDodge`, `bossAI`, `updEnemies` |
 | js/enemies/waves.js | спавн, волны (`startWave`, `endWave`) |

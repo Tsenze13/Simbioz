@@ -414,7 +414,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.28 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.29 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1105,7 +1105,7 @@ const BAL={
   /* волны */
   wave:{durBase:56,durMax:75,interTime:60,interHeal:0.35},
   /* герой */
-  hero:{ultLv:12,ultLvReq:[12,18,24],dashCd:2.2,pasLv:[3,8,13]}, /* ulta: открыть / ур.2 / ур.3 — с этих уровней героя */
+  hero:{maxForms:4,ultLv:12,ultLvReq:[12,18,24],dashCd:2.2,pasLv:[3,8,13]}, /* ulta: открыть / ур.2 / ур.3 — с этих уровней героя */
   /* лавка */
   shop:{spBase:260,spStep:60,invMax:5,awkBase:380,awkStep:130}
 };
@@ -2524,7 +2524,7 @@ function mkState(start,map){
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
-    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},relics:[],evts:[],syn:{},synOn:[],asc:Math.min(SAVE.ascSel||0,SAVE.asc||0),symKnown:{},bag:[null,null,null,null,null,null],
+    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},relics:[],evts:[],forms:[],syn:{},synOn:[],asc:Math.min(SAVE.ascSel||0,SAVE.asc||0),symKnown:{},bag:[null,null,null,null,null,null],
     S:{},E:{},bf:{dm:{t:0,v:0},spd:{t:0,v:0},armor:{t:0,v:0},ls:{t:0,v:0},regen:{t:0,v:0}},
     en:[],pr:[],zn:[],gem:[],pt:[],tx:[],bl:[],tor:[],fx:[],pk:[],bolts:[],beams:[],em:[],stc:[],eps:[],tgs:[],gh:[],merch:[],solids:[],pools:[],decors:[],gk:'',deb:[],smk:[],spk:[],fl:[],sc:[],slowmo:0,zk:0,lavaT:0,
     cdw:{},choices:[],pending:0,shake:0,hitFlash:0,rockAng:0,dashT:0,dashAng:0,block:0,shield:0,vac:0,slowAll:0,slowAllF:1,
@@ -2715,7 +2715,7 @@ function bossDefense(e,eff,o,dot){
 /* Учёт урона по источникам для итогов забега: ключ — id навыка или служебная метка (__auto, __gun …). */
 const DMG_LBL={__auto:'Автоатака',__gun:'Стволы',__item:'Предметы',__dot:'Горение и яд',__dash:'Рывок',__mech:'Особенность героя',__other:'Прочее'};
 function dmgKey(o){const g=G,src=o.src||'skill';return o.sk||g.curSk||(src==='auto'?'__auto':src==='item'?'__item':src==='dot'?'__dot':'__other')}
-function dmgLabel(k){if(k==='__ult')return 'Ульта: '+ultInfo().n;return DMG_LBL[k]||(AB[k]?AB[k].n:k)}
+function dmgLabel(k){if(k.indexOf('form:')===0&&FORMS[k.slice(5)])return FORMS[k.slice(5)].n;if(k==='__ult')return 'Ульта: '+ultInfo().n;return DMG_LBL[k]||(AB[k]?AB[k].n:k)}
 /* Метит сущности, созданные навыком (снаряды, зоны, взрывы, смерчи, постройки), чтобы их урон шёл в зачёт навыку. */
 function tagNew(L0,sk){const g=G;for(const k in L0){const A=g[k];for(let i=L0[k];i<A.length;i++)if(A[i]&&!A[i].sk)A[i].sk=sk}}
 function lens(){const g=G;return {pr:g.pr.length,zn:g.zn.length,bl:g.bl.length,tor:g.tor.length,stc:g.stc.length,em:g.em.length}}
@@ -3701,6 +3701,7 @@ function weapons(dt){
     const q=g.gren[i];q.t+=dt;
     if(q.t>=q.life){g.gren.splice(i,1);gExplode(q)}
   }
+  formsTick(dt,cdm);
   if(e.wood>0&&cd('wood')){
     const l=e.wood,t=nearest(p.x,p.y,460);
     if(t){
@@ -3714,6 +3715,123 @@ function weapons(dt){
   }
 }
 
+
+/* =====================================================================
+   ФОРМЫ СТИХИИ — линия глубины мастера (как стволы у Солдата).
+   До BAL.hero.maxForms форм; у каждой одна модификация из двух. Сила растёт с уровнем своей стихии.
+   fire(f,l,t,m): f — состояние формы, l — уровень стихии, t — цель (или null), m — ключ модификации.
+   ===================================================================== */
+const FLINE={fire:'Очаги',water:'Течения',earth:'Глыбы',air:'Ветра',wood:'Поросль'};
+function fctx(t,col){const p=G.p;return {px:p.x,py:p.y,x:t?t.x:p.x,y:t?t.y:p.y,ang:t?Math.atan2(t.y-p.y,t.x-p.x):p.face,col:col,col2:col}}
+const FORMS={
+  /* ---------- ОГОНЬ: Очаги ---------- */
+  fspear:{el:'fire',n:'Огненное копьё',d:'Пробивает всех на линии и поджигает.',cd:2.2,rng:520,
+    mods:[{k:'hot',n:'Раскалённое копьё',d:'Поджог втрое сильнее.'},{k:'twin',n:'Двойное копьё',d:'Два копья веером.'}],
+    fire(f,l,t,m){const p=G.p,c=fctx(t),n=m==='twin'?2:1;for(let i=0;i<n;i++){const a=c.ang+(n>1?(i-.5)*0.18:0);
+      shoot({vis:'fire',x:p.x,y:p.y,vx:Math.cos(a)*720,vy:Math.sin(a)*720,r:7,hr:16,dmg:14+7*l,dt:'magic',life:0.8,pierce:99,st:{burn:[(3+1.5*l)*(m==='hot'?3:1),3]},col:'#ff8a3a',src:'proj'})}}},
+  fmeteor:{el:'fire',n:'Метеорчик',d:'Навесом падает на врага и оставляет горящую землю.',cd:3.2,rng:460,
+    mods:[{k:'wide',n:'Широкое пламя',d:'Горящая земля вдвое больше.'},{k:'tri',n:'Три метеорчика',d:'Три малых метеора вместо одного.'}],
+    fire(f,l,t,m){const c=fctx(t,'#ff6a2b'),z={r:m==='wide'?90:60,life:3,dps:5+2*l,dt:'magic',col:'#ff7a3a',st:{burn:[2+l,2]},vis:'wildfire'};
+      if(m==='tri'){for(let i=0;i<3;i++){const a=rnd(0,TAU),d=rnd(20,70);CAST.blast({r:46,dmg:(20+9*l)*0.55,dt:'magic',delay:0.6+i*0.12,range:520,vis:'meteor',col:'#ff6a2b',st:{burn:[3+l,3]},zone:Object.assign({},z,{r:40})},Object.assign({},c,{x:c.x+Math.cos(a)*d,y:c.y+Math.sin(a)*d}))}}
+      else CAST.blast({r:70,dmg:20+9*l,dt:'magic',delay:0.7,range:520,vis:'meteor',col:'#ff6a2b',st:{burn:[4+l,3]},zone:z},c)}},
+  fring:{el:'fire',n:'Кольцо пламени',d:'Огненное кольцо вокруг героя жжёт всех рядом.',cd:0.5,rng:0,aura:true,
+    mods:[{k:'wide',n:'Широкое кольцо',d:'Радиус кольца +40%.'},{k:'pulse',n:'Пульс',d:'Каждые 3 с кольцо взрывается.'}],
+    rad(l,m){return (95+6*l)*(m==='wide'?1.4:1)*(1+G.S.area*0.5)},
+    fire(f,l,t,m){const g=G,p=g.p,R=this.rad(l,m);
+      for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<(R+e.r)**2)hitEnemy(e,3+1.6*l,{dt:'magic',src:'zone',quiet:true,st:{burn:[2+l,1.2]}})}
+      if(m==='pulse'){f.pt=(f.pt||0)+0.5;if(f.pt>=3){f.pt=0;explodeAt(p.x,p.y,R+40,20+8*l,{dt:'magic',col:'#ff7a3a',knock:200,src:'proj',shake:3})}}}},
+  fphoenix:{el:'fire',n:'Фениксы',d:'Огненные птицы сами находят врагов.',cd:2.6,rng:480,
+    mods:[{k:'boom',n:'Взрывные фениксы',d:'Птицы взрываются при попадании.'},{k:'flock',n:'Стая',d:'+2 птицы.'}],
+    fire(f,l,t,m){const p=G.p,n=m==='flock'?4:2;for(let i=0;i<n;i++){const a=rnd(0,TAU);
+      shoot({vis:'fire',homing:true,x:p.x,y:p.y,vx:Math.cos(a)*260,vy:Math.sin(a)*260,r:7,dmg:12+5*l,dt:'magic',life:2.6,blast:m==='boom'?55:0,st:{burn:[3+l,3]},col:'#ffb347',src:'proj'})}}},
+  fsparks:{el:'fire',n:'Искры',d:'Веер искр вблизи.',cd:1.1,rng:230,
+    mods:[{k:'wide',n:'Сноп искр',d:'8 искр и шире веер.'},{k:'bounce',n:'Прыгучие искры',d:'Искры отскакивают к соседям.'}],
+    fire(f,l,t,m){const p=G.p,c=fctx(t),n=m==='wide'?8:5,sp=m==='wide'?1.4:0.9;for(let i=0;i<n;i++){const a=c.ang+(i/(n-1)-0.5)*sp;
+      shoot({vis:'fire',x:p.x,y:p.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:4,dmg:6+3*l,dt:'magic',life:0.4,bounce:m==='bounce'?1:0,st:{burn:[1.5+0.6*l,2]},col:'#ffd36b',src:'proj'})}}},
+  /* ---------- ВОДА: Течения ---------- */
+  wwhip:{el:'water',n:'Водяная плеть',d:'Хлещет дугой вблизи: мочит и отбрасывает.',cd:1.6,rng:200,
+    mods:[{k:'long',n:'Длинная плеть',d:'Дальность +40%.'},{k:'pull',n:'Затягивающая плеть',d:'Тянет врагов к вам вместо отброса.'}],
+    fire(f,l,t,m){CAST.cone({range:m==='long'?225:160,arc:1.5,dmg:12+6*l,dt:'magic',st:{wet:2,slow:[0.7,1]},knock:m==='pull'?-240:180,col:'#3aa7ff',vis:'arc'},fctx(t,'#3aa7ff'))}},
+  wbubble:{el:'water',n:'Пузыри',d:'Медленные пузыри оглушают тех, кого поймают.',cd:2.4,rng:380,
+    mods:[{k:'long',n:'Крепкие пузыри',d:'Оглушение вдвое дольше.'},{k:'chain',n:'Пузырьковая цепь',d:'Лопаясь, пузырь разлетается на 4 малых.'}],
+    fire(f,l,t,m){const p=G.p,c=fctx(t);
+      shoot({vis:'bubble',x:p.x,y:p.y,vx:Math.cos(c.ang)*150,vy:Math.sin(c.ang)*150,r:10,dmg:8+4*l,dt:'magic',life:2.8,blast:m==='chain'?40:0,burst:m==='chain'?{n:4,spd:260,dmg:5+2.5*l,vis:'bubble',life:0.5}:null,st:{stun:m==='long'?1.4:0.7,wet:2},col:'#9fe0ff',src:'proj'})}},
+  wice:{el:'water',n:'Ледяные иглы',d:'Быстрые иглы морозят врагов.',cd:1.3,rng:460,
+    mods:[{k:'pierce',n:'Пронзающие иглы',d:'Иглы пробивают 3 врагов.'},{k:'fan',n:'Веер игл',d:'5 игл вместо 3.'}],
+    fire(f,l,t,m){const p=G.p,c=fctx(t),n=m==='fan'?5:3,sp=m==='fan'?0.6:0.25;for(let i=0;i<n;i++){const a=c.ang+(i/(n-1)-0.5)*sp;
+      shoot({vis:'ice',x:p.x,y:p.y,vx:Math.cos(a)*700,vy:Math.sin(a)*700,r:5,dmg:7+3.5*l,dt:'magic',life:0.7,pierce:m==='pierce'?3:0,icy:true,st:{frz:0.35,slow:[0.6,1.2]},col:'#bdf0ff',src:'proj'})}}},
+  wgeyser:{el:'water',n:'Гейзер',d:'Под врагом бьёт столб воды.',cd:3,rng:420,
+    mods:[{k:'lift',n:'Подброс',d:'Гейзер оглушает на 0,7 с.'},{k:'heal',n:'Целебный гейзер',d:'Каждый гейзер лечит вас на 2%.'}],
+    fire(f,l,t,m){CAST.blast({r:62,dmg:22+9*l,dt:'magic',delay:0.5,range:460,vis:'drop',col:'#9fe0ff',knock:240,st:{wet:2,stun:m==='lift'?0.7:0}},fctx(t,'#9fe0ff'));if(m==='heal')heal(G.S.maxHp*0.02)}},
+  wrain:{el:'water',n:'Ливень',d:'Зона дождя мочит, замедляет и ранит.',cd:6,rng:420,
+    mods:[{k:'soak',n:'Проливной',d:'Замедление вдвое сильнее.'},{k:'follow',n:'Туча',d:'Дождь ходит за вами.'}],
+    fire(f,l,t,m){const z={r:110,life:4.5,dps:6+3*l,dt:'magic',col:'#6fb8ff',st:{wet:2,slow:[m==='soak'?0.4:0.7,1]},vis:'zone'};
+      if(m==='follow')addZone(G.p.x,G.p.y,z,true);else{const c=fctx(t);addZone(c.x,c.y,z,false)}}},
+  /* ---------- ЗЕМЛЯ: Глыбы ---------- */
+  eboulder:{el:'earth',n:'Валун',d:'Тяжёлый камень катится сквозь врагов и сбивает их.',cd:2.4,rng:440,
+    mods:[{k:'big',n:'Глыба',d:'Валун больше и бьёт на 40% сильнее.'},{k:'split',n:'Раскол',d:'На первом враге раскалывается на 3 камня.'}],
+    fire(f,l,t,m){const p=G.p,c=fctx(t),big=m==='big';
+      shoot({vis:'rock',x:p.x,y:p.y,vx:Math.cos(c.ang)*280,vy:Math.sin(c.ang)*280,r:13*(big?1.5:1),dmg:(16+8*l)*(big?1.4:1),dt:'phys',life:1.7,pierce:99,knock:260,blast:m==='split'?50:0,burst:m==='split'?{n:3,spd:320,dmg:8+4*l,vis:'rock',life:0.6}:null,col:'#c9974f',src:'proj'})}},
+  espike:{el:'earth',n:'Шипы из земли',d:'Из-под врага вырываются каменные шипы.',cd:2,rng:420,
+    mods:[{k:'chain',n:'Гряда шипов',d:'Три шипа по линии.'},{k:'stun',n:'Оглушающие шипы',d:'Шипы оглушают на 0,6 с.'}],
+    fire(f,l,t,m){const g=G,c=fctx(t),st=m==='stun'?{stun:0.6}:null,pts=[];
+      if(m==='chain'){const d=Math.hypot(c.x-c.px,c.y-c.py);for(const k of [-60,0,60]){const dd=Math.max(30,d+k);pts.push({x:c.px+Math.cos(c.ang)*dd,y:c.py+Math.sin(c.ang)*dd})}}else pts.push({x:c.x,y:c.y});
+      pts.forEach((q,i)=>{ring(q.x,q.y,58,'#c9974f',0.4);g.later.push({t:0.35+i*0.1,fn:()=>{g.curSk='form:espike';explodeAt(q.x,q.y,58,18+8*l,{dt:'phys',col:'#c9974f',spike:true,knock:150,st:st,src:'proj',sk:'form:espike'});g.curSk=null}})})}},
+  eshield:{el:'earth',n:'Каменный щит',d:'Камни кружат вокруг вас, ловят вражеские снаряды и бьют врагов.',cd:0,rng:0,aura:true,
+    mods:[{k:'twin',n:'Два щита',d:'Кружат два камня.'},{k:'reflect',n:'Отражение',d:'Пойманный снаряд летит обратно во врага.'}],
+    pos(g,f){const n=f.m==='twin'?2:1,out=[];for(let i=0;i<n;i++){const a=g.t*2.4+i*Math.PI;out.push({x:g.p.x+Math.cos(a)*52,y:g.p.y+Math.sin(a)*52})}return out},
+    fire(f,l,t,m){const g=G;for(const s of this.pos(g,f)){
+      for(const b of g.eps){if(b.dead)continue;if((b.x-s.x)**2+(b.y-s.y)**2<20*20){b.dead=true;sparks(s.x,s.y,'#e8c38a',5,180);
+        if(m==='reflect'){const e=nearest(s.x,s.y,500);if(e){const a=Math.atan2(e.y-s.y,e.x-s.x);shoot({vis:'rock',x:s.x,y:s.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:6,dmg:10+5*l,dt:'phys',life:1,col:'#e8c38a',src:'proj',sk:'form:eshield'})}}}}
+      for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-s.x)**2+(e.y-s.y)**2<(14+e.r)**2&&g.t>(e.shT||0)){e.shT=g.t+0.4;hitEnemy(e,6+3*l,{dt:'phys',src:'proj',col:'#c9974f'});if(!e.dead)knockE(e,e.x-g.p.x,e.y-g.p.y,160)}}}}},
+  edust:{el:'earth',n:'Пыльный вихрь',d:'Пыль вокруг вас замедляет врагов.',cd:0.4,rng:0,aura:true,
+    mods:[{k:'wide',n:'Пыльная буря',d:'Радиус +40%.'},{k:'blind',n:'Ослепление',d:'Враги в пыли бьют на 30% слабее.'}],
+    rad(l,m){return (105+5*l)*(m==='wide'?1.4:1)*(1+G.S.area*0.5)},
+    fire(f,l,t,m){const g=G,p=g.p,R=this.rad(l,m);
+      for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<(R+e.r)**2){applySt(e,{slow:[0.6,0.6]},1);hitEnemy(e,1.5+0.8*l,{dt:'phys',src:'zone',quiet:true});if(m==='blind')e.blindU=g.t+0.6}}}},
+  ehail:{el:'earth',n:'Каменный град',d:'С неба падают камни на врагов рядом.',cd:3.4,rng:480,
+    mods:[{k:'more',n:'Ливень камней',d:'7 камней вместо 4.'},{k:'big',n:'Тяжёлый град',d:'Камни крупнее и сильнее.'}],
+    fire(f,l,t,m){const g=G,p=g.p,near=nearList(p.x,p.y,480),n=m==='more'?7:4,big=m==='big';
+      for(let i=0;i<n;i++){const e=near.length?pickOf(near):null;const x=e?e.x:p.x+rnd(-200,200),y=e?e.y:p.y+rnd(-200,200);
+        CAST.blast({r:42*(big?1.4:1),dmg:(14+6*l)*(big?1.3:1),dt:'phys',delay:0.55+i*0.08,range:2000,vis:'shell',col:'#c9974f',knock:120},{px:p.x,py:p.y,x:x,y:y,ang:0,col:'#c9974f'})}}}
+};
+const FORM_IDS=Object.keys(FORMS);
+
+/* каждый кадр из weapons(): перезарядка и выстрел форм */
+function formsTick(dt,cdm){
+  const g=G;if(!g.forms||!g.forms.length)return;
+  const l=g.el[g.start]||1;
+  for(const f of g.forms){
+    const F=FORMS[f.t];if(!F)continue;
+    if(F.cd===0){g.curSk='form:'+f.t;F.fire(f,l,null,f.m);g.curSk=null;continue}
+    f.cd=(f.cd||0)-dt*cdm;if(f.cd>0)continue;
+    const t=F.aura?null:nearest(g.p.x,g.p.y,F.rng);
+    if(!F.aura&&!t){f.cd=0.15;continue}
+    const L0=lens();g.curSk='form:'+f.t;
+    F.fire(f,l,t,f.m);
+    tagNew(L0,'form:'+f.t);g.curSk=null;
+    f.cd=F.cd*(1-0.03*(l-1));
+  }
+}
+function drawForms(g){
+  if(!g.forms||!g.forms.length)return;
+  const l=g.el[g.start]||1,p=g.p;
+  for(const f of g.forms){
+    const F=FORMS[f.t];
+    if(f.t==='fring'||f.t==='edust'){
+      const R=F.rad(l,f.m),fire=f.t==='fring';
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      ctx.strokeStyle=fire?'rgba(255,122,58,'+(0.28+0.1*Math.sin(anim*7))+')':'rgba(201,151,79,0.22)';ctx.lineWidth=fire?3:2;
+      ctx.setLineDash(fire?[10,6]:[4,10]);ctx.lineDashOffset=-anim*(fire?40:20);ctx.beginPath();ctx.arc(p.x,p.y,R,0,TAU);ctx.stroke();ctx.setLineDash([]);
+      if(Math.random()<0.5&&g.pt.length<450){const a=rnd(0,TAU);g.pt.push({x:p.x+Math.cos(a)*R,y:p.y+Math.sin(a)*R,vx:rnd(-20,20),vy:fire?rnd(-60,-20):rnd(-20,20),life:0.5,max:0.5,col:fire?'#ff9a3c':'#a4825a',size:fire?2.4:3})}
+      ctx.restore();
+    }else if(f.t==='eshield'){
+      for(const s of F.pos(g,f)){ctx.save();ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(s.x+2,s.y+8,10,5,0,0,TAU);ctx.fill();
+        ctx.fillStyle='#8a7a62';ctx.strokeStyle='#3a2e22';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<7;i++){const a=i*TAU/7+anim,r=11+(i%2)*2;i?ctx.lineTo(s.x+Math.cos(a)*r,s.y+Math.sin(a)*r):ctx.moveTo(s.x+Math.cos(a)*r,s.y+Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle='rgba(232,195,138,.5)';ctx.beginPath();ctx.arc(s.x-3,s.y-3,3,0,TAU);ctx.fill();ctx.restore()}
+    }
+  }
+}
 /* ---------- обновление объектов стороны игрока ---------- */
 function updPlayerSide(dt){
   const g=G,p=g.p,E=g.E;
@@ -3905,7 +4023,7 @@ function updPlayerSide0(dt){
       const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+(b.hr||b.r);
       if(dx*dx+dy*dy<rr*rr){
         if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
-        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock,sk:b.sk||(b.gt?'__gun':undefined)};let bd=b.dmg,kn=b.knock||0;
+        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock,icy:b.icy,sk:b.sk||(b.gt?'__gun':undefined)};let bd=b.dmg,kn=b.knock||0;
         if(b.gt){const gr=gunHit(b,e,bo);bd=gr[0];kn*=gr[1]}
         if(g.impR&&g.start==='air'){bd*=2.5;bo.fcrit=true;kn=Math.max(kn,300);g.imp=0;g.impR=false;ring(e.x,e.y,34,'#e6fff7',0.3);sparks(e.x,e.y,'#e6fff7',8,280);g.shake=Math.max(g.shake,3)}
         hitEnemy(e,bd,bo);
@@ -4012,6 +4130,7 @@ function hurtPlayer(d,dt,att){
   const g=G,p=g.p,E=g.E;
   if(g.over||p.inv>0||g.dashT>0||g.shield>0||g.phase==='inter')return;
   if(g.block>0){g.block=0;ring(p.x,p.y,45,'#7fe6ff',0.4);p.inv=0.4;sfx(600,0.15,'triangle',0.05);return}
+  if(att&&att.e&&att.e.blindU>g.t)d*=0.7;
   if(dt==='phys')d*=1-armorRed(E.armor);
   else if(dt==='magic')d*=1-E.mres;
   d*=1-PV('earth',[0,.06,.1,.14]);
@@ -4649,6 +4768,11 @@ function buildChoices(){
     for(const t of new Set(own))if(!GM[t]&&GMOD[t]){const L=GMOD[t];for(const m of L)pool.push({w:3.6/L.length,kind:'gunmod',key:t,mk:m.k,tag:'Модификация · '+GUNS[t].n,title:m.n,sub:'Одна модификация на ствол',desc:m.d,c1:EL.metal.c,c2:'#ffd36b'})}
     for(const q in GMODU)if(!MU[q])pool.push({w:1.1,kind:'gmodule',key:q,tag:'Модуль · все стволы',title:GMODU[q].n,sub:'Ставится на все орудия',desc:GMODU[q].d,c1:EL.metal.c,c2:EL.metal.c2});
   }
+  if(!isAva(g)&&g.start!=='metal'&&g.el[g.start]>0){
+    const own=new Set(g.forms.map(f=>f.t)),E=EL[g.start];
+    if(g.forms.length<BAL.hero.maxForms)for(const id of FORM_IDS)if(FORMS[id].el===g.start&&!own.has(id))pool.push({w:1.5,kind:'form',key:id,tag:'Форма · '+FLINE[g.start],title:FORMS[id].n,sub:'Новая автоатака ('+(g.forms.length+1)+' из '+BAL.hero.maxForms+')',desc:FORMS[id].d,c1:E.c,c2:E.c2});
+    for(const f of g.forms)if(!f.m)for(const m of FORMS[f.t].mods)pool.push({w:1.6,kind:'formmod',key:f.t,mk:m.k,tag:'Модификация · '+FORMS[f.t].n,title:m.n,sub:'Одна на форму',desc:m.d,c1:E.c,c2:'#ffd36b'});
+  }
   const free=freeSlot()>=0;
   const lvOf=id=>{const s=g.slots.find(x=>x&&x.id===id);return s?s.lv:0};
   const mc=a=>'Мана '+a.mana+' · Перезарядка '+a.cd+' с';
@@ -4683,6 +4807,8 @@ function buildChoices(){
 function applyChoice(c){
   const g=G,p=g.p;
   if(c.kind==='gun'){g.guns.push({t:c.key,cd:0,aim:0,fl:0,rec:0});toast('Оружие: '+GUNS[c.key].n,'Теперь вокруг вас парят '+g.guns.length+' ствола')}
+  else if(c.kind==='form'){g.forms.push({t:c.key,cd:0.5,m:''});toast('Форма: '+FORMS[c.key].n,FORMS[c.key].d)}
+  else if(c.kind==='formmod'){const f=g.forms.find(x=>x.t===c.key);if(f)f.m=c.mk;toast(FORMS[c.key].n+': '+c.title,c.desc)}
   else if(c.kind==='relic'){g.relics.push(c.key);recalc();toast('Реликвия: '+c.title,c.desc);ring(p.x,p.y,150,'#ffd36b',0.8);puff(p.x,p.y,'#ffd36b',30,260,0.8,3.5)}
   else if(c.kind==='gunmod'){(g.gmods||(g.gmods={}))[c.key]=c.mk;toast(GUNS[c.key].n+': '+c.title,c.desc);sfx(640,0.15,'triangle',0.05,200)}
   else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;toast('Модуль: '+c.title,c.desc)}
@@ -5719,6 +5845,7 @@ function buildChips(g){
     const d=ITEMS[b.id];
     h+='<span class="chip stat"><b>'+d.n+'</b>'+(d.ch?' ×'+b.ch:'')+'</span>';
   }
+  for(const f of g.forms||[]){const F=FORMS[f.t],m=f.m?F.mods.find(x=>x.k===f.m):null;h+='<span class="chip" style="--c1:'+EL[F.el].c+'"><span class="orb sm" style="--c1:'+EL[F.el].c+';--c2:'+EL[F.el].c2+'"></span><b>'+F.n+'</b>'+(m?' · '+m.n:'')+'</span>'}
   for(const id of g.relics||[])h+='<span class="chip" style="--c1:#ffd36b" title="'+RELICS[id].d+'"><span class="orb sm" style="--c1:#ffd36b;--c2:'+BOSS[RELICS[id].boss].col+'"></span><b>'+RELICS[id].n+'</b></span>';
   for(const n of g.synOn||[])h+='<span class="chip stat" style="border-color:#c47bff"><b style="color:#c9b3ff">Комбо: '+n+'</b></span>';
   for(const k in g.pass){if(g.pass[k]>0)h+='<span class="chip stat"><b>'+STCM[k].n+'</b> '+g.pass[k]+'</span>'}
@@ -8513,7 +8640,7 @@ function drawPlayer(g){
   ctx.restore();
   ctx.globalAlpha=1;
   if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
-  drawDashBar(g);drawHeroRes(g);drawItemFx(g);
+  drawForms(g);drawDashBar(g);drawHeroRes(g);drawItemFx(g);
 }
 /* Аватар рисуется телом Мистика, вокруг кружат шары изученных стихий */
 function heroBody(g){return isAva(g)?'water':(g.start||'fire')}
@@ -9271,7 +9398,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    GMOD,heroMech,interact,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
+    GMOD,heroMech,interact,FORMS,FORM_IDS,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

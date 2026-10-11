@@ -61,7 +61,7 @@ function bossDefense(e,eff,o,dot){
 /* Учёт урона по источникам для итогов забега: ключ — id навыка или служебная метка (__auto, __gun …). */
 const DMG_LBL={__auto:'Автоатака',__gun:'Стволы',__item:'Предметы',__dot:'Горение и яд',__dash:'Рывок',__mech:'Особенность героя',__other:'Прочее'};
 function dmgKey(o){const g=G,src=o.src||'skill';return o.sk||g.curSk||(src==='auto'?'__auto':src==='item'?'__item':src==='dot'?'__dot':'__other')}
-function dmgLabel(k){if(k==='__ult')return 'Ульта: '+ultInfo().n;return DMG_LBL[k]||(AB[k]?AB[k].n:k)}
+function dmgLabel(k){if(k.indexOf('form:')===0&&FORMS[k.slice(5)])return FORMS[k.slice(5)].n;if(k==='__ult')return 'Ульта: '+ultInfo().n;return DMG_LBL[k]||(AB[k]?AB[k].n:k)}
 /* Метит сущности, созданные навыком (снаряды, зоны, взрывы, смерчи, постройки), чтобы их урон шёл в зачёт навыку. */
 function tagNew(L0,sk){const g=G;for(const k in L0){const A=g[k];for(let i=L0[k];i<A.length;i++)if(A[i]&&!A[i].sk)A[i].sk=sk}}
 function lens(){const g=G;return {pr:g.pr.length,zn:g.zn.length,bl:g.bl.length,tor:g.tor.length,stc:g.stc.length,em:g.em.length}}

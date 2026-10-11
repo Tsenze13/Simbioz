@@ -51,7 +51,7 @@ function drawPlayer(g){
   ctx.restore();
   ctx.globalAlpha=1;
   if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
-  drawDashBar(g);drawHeroRes(g);drawItemFx(g);
+  drawForms(g);drawDashBar(g);drawHeroRes(g);drawItemFx(g);
 }
 /* Аватар рисуется телом Мистика, вокруг кружат шары изученных стихий */
 function heroBody(g){return isAva(g)?'water':(g.start||'fire')}

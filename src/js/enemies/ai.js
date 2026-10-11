@@ -83,6 +83,7 @@ function hurtPlayer(d,dt,att){
   const g=G,p=g.p,E=g.E;
   if(g.over||p.inv>0||g.dashT>0||g.shield>0||g.phase==='inter')return;
   if(g.block>0){g.block=0;ring(p.x,p.y,45,'#7fe6ff',0.4);p.inv=0.4;sfx(600,0.15,'triangle',0.05);return}
+  if(att&&att.e&&att.e.blindU>g.t)d*=0.7;
   if(dt==='phys')d*=1-armorRed(E.armor);
   else if(dt==='magic')d*=1-E.mres;
   d*=1-PV('earth',[0,.06,.1,.14]);

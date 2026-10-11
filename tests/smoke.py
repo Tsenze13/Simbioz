@@ -71,6 +71,22 @@ with sync_playwright() as p:
     check('Аватар: первая карточка — выбор стихии', len(r['first']) == 3 and all(x.startswith('el:') for x in r['first']) and len(r['e1']) == 1, r)
     check('Аватар смешивает и учит симбиозы', len(r['els']) == 3 and 'skill' in r['kinds'] and r['kills'] > 0 and not r['heroUlt'], r)
 
+    print('Формы стихий')
+    r = J("""()=>{const S=window.__sb,bad=[],ok=[];
+      for(const id of S.FORM_IDS){const F=S.FORMS[id];for(const m of ['',...F.mods.map(x=>x.k)]){
+        S.quitToMenu();S.startRun(F.el);const g=S.G;g.el[F.el]=5;g.forms=[{t:id,cd:0,m:m}];S.startWave(3);g.spawnT=1e9;g.en.length=0;
+        const es=[];for(let i=0;i<4;i++){const e=S.spawnEnemy('wisp');e.hp=e.max=1e6;e.sp=0;es.push(e)}
+        for(let i=0;i<360;i++){es.forEach((e,j)=>{e.x=g.p.x+70+j*25;e.y=g.p.y+(j%2?20:-20)});g.p.inv=1;S.update(1/60);if(i%120===0)S.render()}
+        const dmg=es.reduce((a,e)=>a+(1e6-e.hp),0);const key='form:'+id;
+        if(dmg<=0||!(g.dmgBy&&g.dmgBy[key]>0))bad.push(id+':'+m+' dmg='+Math.round(dmg));else ok.push(id)}}
+      return {bad,n:ok.length}}""")
+    check('все формы и модификации бьют и учитываются в итогах', not r['bad'], r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;const k=new Set();for(let i=0;i<300;i++)for(const c of S.buildChoices())k.add(c.kind);
+      g.forms=[{t:'fspear',cd:0,m:''}];const mods=S.buildChoices;let fm=0;for(let i=0;i<300;i++)for(const c of S.buildChoices())if(c.kind==='formmod')fm++;
+      S.quitToMenu();S.startRun('avatar');const g2=S.G;g2.el.fire=3;let fa=0;for(let i=0;i<200;i++)for(const c of S.buildChoices())if(c.kind==='form')fa++;
+      return {kinds:[...k],fm,fa}}""")
+    check('карточки форм у мастера, у Аватара их нет', 'form' in r['kinds'] and r['fm'] > 0 and r['fa'] == 0, r)
+
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
         S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};

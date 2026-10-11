@@ -102,6 +102,7 @@ function weapons(dt){
     const q=g.gren[i];q.t+=dt;
     if(q.t>=q.life){g.gren.splice(i,1);gExplode(q)}
   }
+  formsTick(dt,cdm);
   if(e.wood>0&&cd('wood')){
     const l=e.wood,t=nearest(p.x,p.y,460);
     if(t){
