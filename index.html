@@ -380,7 +380,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.20 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.21 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1066,7 +1066,7 @@ const CLS={
   fire:{n:'Пиромант',role:'Стеклянная пушка',st:{dm:0.16,cdr:0.04,hp:-25,armor:-2},dot:1.25,
     plus:'+16% урона, +4% скорости способностей, горение на 25% сильнее. Убитый горящим враг взрывается.',minus:'−25 здоровья, −2 брони.'},
   water:{n:'Мистик прилива',role:'Поддержка',st:{regen:1.3,mana:30,mreg:1.6,ls:0.03,dm:-0.1},
-    plus:'+1.3 регенерации, +30 маны, мана быстрее, +3% вампиризма. Каждые 9 с прилив лечит 6% здоровья и замедляет врагов вокруг.',minus:'−10% урона.'},
+    plus:'+1.3 регенерации, +30 маны, мана быстрее, +3% вампиризма. Смена прилива и отлива лечит 6% здоровья и замедляет врагов вокруг.',minus:'−10% урона.'},
   earth:{n:'Каменный страж',role:'Танк',st:{hp:45,armor:6,thorns:0.25,spd:-0.1,cdr:-0.06},
     plus:'+45 здоровья, +6 брони, отражение урона 25%. Рывок вызывает ударную волну, оглушающую врагов.',minus:'−10% скорости, −6% скорости способностей.'},
   air:{n:'Налётчик ветра',role:'Мобильный охотник',st:{spd:0.1,crit:0.08,hp:-22,armor:-3},dashx:0.62,
@@ -1080,6 +1080,14 @@ const CLS={
 
 /* ---------- пассивки героев: 3 уровня, качаются очками навыков ---------- */
 const PASR=[3,8,13];
+const HMECH={
+  fire:{n:'Перегрев',d:'Каждый навык нагревает на 25. При 100 следующий навык бьёт ×1.5 и взрывом поджигает всё вокруг, но вы горите 3 с. Без кастов жар спадает'},
+  water:{n:'Приливы и отливы',d:'Фаза меняется каждые 10 с. Прилив: навыки на 30% дешевле. Отлив: +3 здоровья в секунду. Мокрый враг, добитый током, даёт 5 маны'},
+  earth:{n:'Стойкость',d:'Стоя на месте, каждую секунду наращиваете каменную плиту (до 5, +3 брони за каждую). Рывок тратит плиты: ударная волна шире, сильнее и дольше оглушает'},
+  air:{n:'Импульс',d:'Бег копит импульс, остановка гасит. На максимуме следующий снаряд бьёт ×2.5 критом и отбрасывает'},
+  metal:{n:'Патроны и перезарядка',d:'У стволов магазины. Пока идёт перезарядка, нажмите F в зелёной зоне: мгновенно и магазин +30% урона. Промах — заминка. F с неполным магазином — ручная перезарядка'},
+  wood:{n:'Сезоны',d:'Каждая волна — новый сезон. Весна: +2 регенерации. Лето: яд +40%. Осень: шипы +30%. Зима: корни держат на 50% дольше'}
+};
 const HPAS={
   fire:{n:'Раскалённая кровь',ic:'🔥',pd:['+8% урона по горящим врагам','+15% урона по горящим, горение длится на 1 с дольше','+25% урона по горящим; взрывы горящих врагов при смерти вдвое сильнее и шире']},
   water:{n:'Приливная сила',ic:'💧',pd:['Восстановление маны +10%','Восстановление маны +20%, мокрые враги на 15% медленнее','Восстановление маны +30%; каждый 10-й навык бесплатный']},
@@ -1702,9 +1710,9 @@ const ACTIONS=[
   ['up','Вверх'],['down','Вниз'],['left','Влево'],['right','Вправо'],['dash','Рывок'],
   ['s1','Навык 1'],['s2','Навык 2'],['s3','Навык 3'],['s4','Навык 4'],['s5','Навык 5'],['ult','Ульта'],
   ['i1','Предмет 1'],['i2','Предмет 2'],['i3','Предмет 3'],['i4','Предмет 4'],['i5','Предмет 5'],['i6','Предмет 6'],
-  ['tree','Древо навыков'],['use','Торговец'],['skip','Начать волну'],['pause','Пауза'],['mute','Звук']
+  ['tree','Древо навыков'],['use','Торговец'],['skip','Начать волну'],['reload','Перезарядка (Солдат)'],['pause','Пауза'],['mute','Звук']
 ];
-const DEFKEYS={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',dash:'Space',s1:'Digit1',s2:'Digit2',s3:'Digit3',s4:'Digit4',s5:'Digit5',ult:'KeyR',i1:'KeyZ',i2:'KeyX',i3:'KeyC',i4:'KeyV',i5:'KeyB',i6:'KeyN',tree:'KeyT',use:'KeyE',skip:'Enter',pause:'KeyP',mute:'KeyM'};
+const DEFKEYS={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',dash:'Space',s1:'Digit1',s2:'Digit2',s3:'Digit3',s4:'Digit4',s5:'Digit5',ult:'KeyR',i1:'KeyZ',i2:'KeyX',i3:'KeyC',i4:'KeyV',i5:'KeyB',i6:'KeyN',tree:'KeyT',use:'KeyE',skip:'Enter',pause:'KeyP',mute:'KeyM',reload:'KeyF'};
 
 /* =====================================================================
    СОХРАНЕНИЕ, ЗВУК, ВВОД
@@ -2103,7 +2111,7 @@ function envTick(dt){
   mapEvents(dt);
   if(g.later.length){const L=g.later;g.later=[];for(const q of L){q.t-=dt;if(q.t<=0){try{q.fn()}catch(e){window.__le=(window.__le||[]).concat(e.message)}}else g.later.push(q)}}
   treeBadge();
-  if(g.start==='water'&&g.phase==='fight'){g.tideT-=dt;if(g.tideT<=0){g.tideT=9;heal(g.S.maxHp*0.06);ring(p.x,p.y,170,'#6fd0ff',0.7);puff(p.x,p.y,'#9fe0ff',20,220,0.6,3);for(const e of g.en){if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<170*170)applySt(e,{slow:[0.55,2],wet:2},1)}}}
+  if(g.start==='water'&&g.phase==='fight'){g.tideT-=dt;if(g.tide==='ebb')heal(3*dt);if(g.tideT<=0){g.tideT=10;g.tide=g.tide==='ebb'?'flood':'ebb';if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-40,t:1.1,txt:g.tide==='ebb'?'Отлив: лечение':'Прилив: навыки дешевле',big:true,col:g.tide==='ebb'?'#6fe0b0':'#6fd0ff'});heal(g.S.maxHp*0.06);ring(p.x,p.y,170,'#6fd0ff',0.7);puff(p.x,p.y,'#9fe0ff',20,220,0.6,3);for(const e of g.en){if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<170*170)applySt(e,{slow:[0.55,2],wet:2},1)}}}
   g.flashA=Math.max(0,(g.flashA||0)-dt*2.2);
   for(const q of g.sk){q.t-=dt;if(q.t<=0)q.dead=true}
   for(const q of g.pch){
@@ -2196,7 +2204,7 @@ function mapStats(g){
 }
 function mkState(start,map){
   return {
-    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,cfx:[],leap:null,leapH:0,dashSp:0,dashHit:null,pl:0,castN:0,shotN:0,pasT:20,cls:CLS[start]||null,tideT:9,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
+    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,cfx:[],leap:null,leapH:0,dashSp:0,dashHit:null,pl:0,castN:0,shotN:0,pasT:20,cls:CLS[start]||null,tideT:10,tide:'flood',gmods:{},gmu:{},heat:0,heatIdle:0,ovhT:0,burnSelf:0,plates:0,stillT:0,imp:0,impR:false,season:0,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
@@ -2267,6 +2275,8 @@ function tickBuffs(dt){
   for(const k in bf){if(bf[k].t>0){bf[k].t-=dt;if(bf[k].t<=0){bf[k].t=0;bf[k].v=0}}}
   E.dm=S.dm+bf.dm.v;E.spd=S.spd+bf.spd.v;E.armor=S.armor+bf.armor.v;E.ls=S.ls+bf.ls.v;E.regen=S.regen+bf.regen.v;
   E.mres=S.mres;E.cdr=S.cdr;E.crit=S.crit;
+  if(g.start==='earth'&&g.plates)E.armor+=3*g.plates;
+  if(g.start==='wood'&&g.season===0)E.regen+=2;
 }
 function heal(n){
   const g=G,p=g.p;
@@ -2344,19 +2354,20 @@ function nearList(x,y,r){
   return out;
 }
 function knockE(e,dx,dy,f){const d=Math.hypot(dx,dy)||1;e.kx+=dx/d*f*e.kres;e.ky+=dy/d*f*e.kres}
+const SEAS=[{n:'Весна',c:'#8fe07a',d:'+2 регенерации'},{n:'Лето',c:'#ffd36b',d:'яд +40%'},{n:'Осень',c:'#e08a3a',d:'шипы +30%'},{n:'Зима',c:'#bfe6ff',d:'корни дольше на 50%'}];
 function applySt(e,st,dm){
   if(!st)return;
   const c=e.boss?0.25:(e.elite?0.5:1);
   dm=(dm||1)*((G&&G.cls&&G.cls.dot)||1);
   if(st.burn){e.burn=Math.max(e.burn,st.burn[1]+(G&&G.start==='fire'&&G.pl>=2?1:0));e.burnDps=Math.max(e.burnDps,st.burn[0]*dm)}
-  if(st.poison){const pm=1+PV('wood',[0,.15,.3,.45]);if(G&&G.start==='wood'&&G.pl>=2)e.pst=e.poison>0?Math.min(3,(e.pst||1)+1):1;e.poison=Math.max(e.poison,st.poison[1]);e.poisonDps=Math.max(e.poisonDps,st.poison[0]*dm*pm)}
+  if(st.poison){const pm=(1+PV('wood',[0,.15,.3,.45]))*(G&&G.start==='wood'&&G.season===1?1.4:1);if(G&&G.start==='wood'&&G.pl>=2)e.pst=e.poison>0?Math.min(3,(e.pst||1)+1):1;e.poison=Math.max(e.poison,st.poison[1]);e.poisonDps=Math.max(e.poisonDps,st.poison[0]*dm*pm)}
   if(st.slow){
     const f=e.boss?1-(1-st.slow[0])*0.5:st.slow[0];
     e.slowF=e.slow>0?Math.min(e.slowF,f):f;e.slow=Math.max(e.slow,st.slow[1]);
   }
   if(st.frz)e.frz=Math.max(e.frz,st.frz*c);
   if(st.stun)e.stun=Math.max(e.stun,st.stun*c);
-  if(st.root)e.root=Math.max(e.root,st.root*c);
+  if(st.root)e.root=Math.max(e.root,st.root*c*(G&&G.start==='wood'&&G.season===3?1.5:1));
   if(st.wet)e.wet=Math.max(e.wet,st.wet);
   if(st.rust)e.rust=Math.max(e.rust,st.rust);
 }
@@ -2369,7 +2380,9 @@ function hitEnemy(e,dmg,o){
   let crit=false,react=null,overload=false;
   if(!dot)dmg*=E.dm;
   if(e.burn>0&&g.start==='fire'&&g.pl)dmg*=1+PV('fire',[0,.08,.15,.25]);
-  if(!dot&&!zone&&E.crit>0&&Math.random()<E.crit){dmg*=2;crit=true}
+  if(g.ovhT>0&&!dot)dmg*=1.5;
+  {const cc=E.crit+(o.cc||0);if(!dot&&!zone&&cc>0&&Math.random()<cc){dmg*=2;crit=true}}
+  if(o.fcrit)crit=true;
   if(o.shock&&!dot){
     if(e.wet>0){dmg*=1.5;e.stun=Math.max(e.stun,e.boss?0.1:0.35);react='Электрошок'}
     else if(e.burn>0&&e.ovl<=0){e.ovl=1.6;react='Перегрузка';overload=true}
@@ -2377,7 +2390,7 @@ function hitEnemy(e,dmg,o){
   if(o.icy&&e.frz>0)dmg*=1.6;
   let eff=dmg;
   if(dt==='phys'){
-    eff*=1-armorRed(e.armor-(e.rust>0?14:0));
+    eff*=1-armorRed((e.empU>g.t?0:e.armor)-(e.rust>0?14:0));
     if(e.frz>0&&!dot&&!zone){eff*=1.5;e.frz=0;react='Раскол'}
   }else if(dt==='magic')eff*=1-e.mres;
   if(eff<0.2)eff=0.2;
@@ -2465,6 +2478,7 @@ function killEnemy(e,o){
   }
   if(g.cls&&!g.inChain){
     if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true});g.inChain=false}
+    if(g.start==='water'&&e.wet>0&&o&&o.shock){g.p.mana=Math.min(g.S.maxMana,g.p.mana+5);if(g.tx.length<40&&Math.random()<0.5)g.tx.push({x:e.x,y:e.y-16,t:0.7,txt:'+5 маны',big:false,col:'#6fd0ff'})}
     if(g.start==='wood'&&e.poison>0&&g.pl>=3)heal(g.S.maxHp*0.01);
     if(g.start==='wood'&&e.poison>0){for(const o of g.en){if(!o.dead&&o!==e&&(o.x-e.x)**2+(o.y-e.y)**2<85*85)applySt(o,{poison:[e.poisonDps*0.6,3]},1/(g.cls.dot||1))}ring(e.x,e.y,85,'#a6e07a',0.4)}
   }
@@ -3093,12 +3107,23 @@ function castSlot(i){
   const a=AB[s.id];
   if(s.cd>0)return;
   const pr=skillPr(s);let mana=Math.round(a.mana*pr.manam*((g.cls&&g.cls.manax)||1));
+  if(g.start==='water'&&g.tide!=='ebb')mana=Math.round(mana*0.7);
   const free=g.start==='water'&&g.pl>=3&&(g.castN+1)%10===0;if(free)mana=0;
   if(g.p.mana<mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
   const c=castCtx(a.c1,a.c2);
+  const hot=g.start==='fire'&&(g.heat||0)>=100,oh0=g.ovhT;if(hot)g.ovhT=1.5;
   const r=CAST[a.kind](pr,c);
-  if(r===false)return;
+  if(r===false){if(hot)g.ovhT=oh0;return}
   g.p.mana-=mana;g.castN++;
+  if(g.start==='fire'){
+    g.heatIdle=0;
+    if(hot){
+      const p=g.p;g.heat=0;g.burnSelf=3;g.bsT=0.5;
+      explodeAt(p.x,p.y,150*(1+g.S.area),20+9*g.el.fire,{dt:'magic',col:'#ff7a3a',st:{burn:[4+2*g.el.fire,3]},src:'skill',knock:180,shake:7});
+      ring(p.x,p.y,170,'#ffd36b',0.6);puff(p.x,p.y,'#ffb347',26,260,0.7,3.5);
+      if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-40,t:1,txt:'ПЕРЕГРЕВ ×1.5',big:true,col:'#ffb347'});
+    }else g.heat=Math.min(100,(g.heat||0)+25);
+  }
   if(free&&g.tx.length<50)g.tx.push({x:g.p.x,y:g.p.y-30,t:0.9,txt:'Прилив: без маны',big:false,col:'#6fd0ff'});
   s.cdMax=a.cd*pr.cdm/(1+g.E.cdr);s.cd=s.cdMax;
   if(AFXM[a.id]){const m=AFXM[a.id],R0=(pr.r||100)*(1+g.S.area);g.afx.push({m:m,x:c.px,y:c.py,t:0,life:.9,k:R0/m[1]})}
@@ -3262,36 +3287,58 @@ function weapons(dt){
     }else g.cdw.air=0.1;
   }
   if(e.metal>0){
-    const l=e.metal,sol=!!g.hand;
+    const l=e.metal,sol=!!g.hand,GM=g.gmods||(g.gmods={}),MU=g.gmu||(g.gmu={}),magOn=g.start==='metal',scope=!!MU.scope;
     if(!sol&&!g.guns.length)g.guns.push({t:'pistol',cd:0,aim:0,fl:0,rec:0});
+    const useAmmo=gn=>{if(!magOn)return;gn.am--;if(gn.am<=0){gn.am=0;startReload(gn)}};
     const fireOne=(gn,ps,G0)=>{
-      g.shotN++;const pw=g.start==='metal'&&g.pl>=3&&g.shotN%8===0,gm=(g.start==='metal'&&g.pl>=2?1.1:1)*(pw?2.5:1);
+      g.shotN++;const pw=g.start==='metal'&&g.pl>=3&&g.shotN%8===0,gm=(g.start==='metal'&&g.pl>=2?1.1:1)*(pw?2.5:1)*(gn.boost?1.3:1);
       if(pw){sparks(ps.x,ps.y,'#ffd36b',8,260);ring(ps.x,ps.y,26,'#ffd36b',0.25)}
-      const base=gn.aim,mo=gn.hand?12:G0.mz*G0.sc*1.6,mx=ps.x+Math.cos(base)*mo,my=ps.y+Math.sin(base)*mo;
-      for(let k=0;k<G0.pel;k++){
-        const a=base+(G0.pel>1?(k/(G0.pel-1)-.5)*G0.sp:rnd(-G0.sp,G0.sp)*.5);
-        shoot({vis:G0.pellet?'pellet':'bullet',gun:true,x:mx,y:my,vx:Math.cos(a)*G0.spd,vy:Math.sin(a)*G0.spd,r:(G0.big?6:(G0.pellet?3:4.5))*(pw?1.6:1),dmg:(7+3.5*l)*G0.dm*gm,dt:'phys',life:G0.life,pierce:G0.pierce+(l>=4&&!G0.pierce?1:0)+(g.start==='metal'?1:0)+(pw?2:0),knock:G0.knock,col:pw?'#ffd36b':'#e8eef8',src:'auto'});
+      const md=GM[gn.t]||'',base=gn.aim,mo=gn.hand?12:G0.mz*G0.sc*1.6,mx=ps.x+Math.cos(base)*mo,my=ps.y+Math.sin(base)*mo;
+      let pel=G0.pel,sp=G0.sp*(scope?0.45:1),dm=G0.dm,knock=G0.knock,big=G0.big,spd=G0.spd*(scope?1.2:1),life=G0.life*(scope?1.3:1),pellet=!!G0.pellet,xp=0;
+      if(gn.t==='shotgun'){if(md==='slug'){pel=1;sp=0.03;dm=4.2;knock=330;big=true;pellet=false;xp=2}else if(md==='buck'){pel=11;sp*=1.5;dm=0.42}}
+      if(gn.t==='pistol'&&md==='double')pel=2;
+      for(let k=0;k<pel;k++){
+        let a,ox=0,oy=0;
+        if(gn.t==='pistol'&&pel===2){a=base+rnd(-sp,sp)*0.5;const sg=k?1:-1;ox=-Math.sin(base)*6*sg;oy=Math.cos(base)*6*sg}
+        else if(pellet)a=base+(Math.random()-0.5)*sp;
+        else a=base+(pel>1?(k/(pel-1)-0.5)*sp:rnd(-sp,sp)*0.5);
+        const sv=spd*(pellet?rnd(0.82,1.1):1),lf=life*(pellet?rnd(0.85,1.1):1);
+        let st=null,shock=false,col=pw?'#ffd36b':(gn.boost?'#fff0b0':'#e8eef8');
+        if(gn.t==='smg'&&md==='shock'){g.smgN=(g.smgN||0)+1;if(g.smgN%6===0){st={stun:0.45};shock=true;col='#f4f08a'}}
+        if(gn.t==='rifle'&&md==='tracer'){g.rflN=(g.rflN||0)+1;if(g.rflN%4===0){st={burn:[4+1.5*l,3]};col='#ff9a3c'}}
+        shoot({vis:pellet?'pellet':'bullet',gun:true,gt:gn.t,gmod:md,x:mx+ox,y:my+oy,vx:Math.cos(a)*sv,vy:Math.sin(a)*sv,r:(big?6:(pellet?3:4.5))*(pw?1.6:1),dmg:(7+3.5*l)*dm*gm,dt:'phys',life:lf,l0:life,pierce:G0.pierce+xp+(l>=4&&!G0.pierce?1:0)+(g.start==='metal'?1:0)+(pw?2:0),knock:knock,col:col,st:st,shock:shock,src:'auto'});
       }
       gn.fl=1;
       puff(mx,my,'#fff2b0',2,70,0.14,2);
-      if(G0.pellet){g.shake=Math.max(g.shake,2)}
+      if(G0.pellet){g.shake=Math.max(g.shake,md==='slug'?3:2)}
+      if(gn.t==='rifle'){gn.heat=(gn.heat||0)+(md==='cool'?0.021:0.035);if(gn.heat>=1){gn.oh=1.3;gn.heat=0;gn.spin=0;puff(ps.x,ps.y,'#d6dde8',8,90,0.7,3);sfx(300,0.2,'sawtooth',0.03,-200);if(g.tx.length<50)g.tx.push({x:ps.x,y:ps.y-20,t:0.8,txt:'Перегрев',big:false,col:'#ffb0a0'})}}
+      useAmmo(gn);
     };
     const tick=(gn,ps)=>{
-      const G0=GUNS[gn.t];
+      const G0=GUNS[gn.t],md=GM[gn.t]||'';
       gn.cd-=dt*cdm;gn.fl=Math.max(0,(gn.fl||0)-dt*9);gn.rec=gn.fl*5;
-      const t=nearest(ps.x,ps.y,G0.rng);
+      if(magOn){if(gn.am===undefined)gn.am=gunMag(gn);if(gn.rl>0){gn.rl-=dt*cdm;if(gn.rl<=0){gn.rl=0;gn.am=gunMag(gn);gn.boost=0;gn.qte=false;sfx(520,0.05,'square',0.02,100)}}}
+      const t=nearest(ps.x,ps.y,G0.rng*(scope?1.3:1));
       gn.hasT=!!t;
       if(t)gn.aim=Math.atan2(t.y-ps.y,t.x-ps.x);
       else if(gn.aim===undefined||!g.en.length)gn.aim=Math.atan2(Math.sin(g.t*.5),Math.cos(g.t*.5));
-      if(gn.bl>0){gn.bt-=dt;if(gn.bt<=0){fireOne(gn,ps,G0);gn.bl--;gn.bt=G0.bi}}
-      if(t&&gn.cd<=0&&!(gn.bl>0)){
+      if(gn.t==='rifle'){
+        if(t&&t===gn.tg)gn.spin=Math.min(1,(gn.spin||0)+dt*0.55);else if(t)gn.spin=(gn.spin||0)*0.9;else gn.spin=Math.max(0,(gn.spin||0)-dt);
+        gn.tg=t;gn.heat=Math.max(0,(gn.heat||0)-dt*(md==='cool'?0.7:0.35));
+        if(gn.oh>0){gn.oh-=dt;if(Math.random()<0.35)puff(ps.x,ps.y-8,'#d6dde8',1,30,0.6,2.6)}
+      }
+      const ready=(!magOn||(!(gn.rl>0)&&gn.am>0))&&!(gn.oh>0);
+      if(gn.bl>0){if(!ready)gn.bl=0;else{gn.bt-=dt;if(gn.bt<=0){fireOne(gn,ps,G0);gn.bl--;gn.bt=G0.bi}}}
+      if(t&&gn.cd<=0&&!(gn.bl>0)&&ready){
         if(G0.burst){gn.bl=G0.burst;gn.bt=0}
         else if(G0.gren){
           const d=Math.hypot(t.x-ps.x,t.y-ps.y),fl=Math.max(.45,d/520),mo=G0.mz*G0.sc*1.6;
-          g.gren.push({x0:ps.x+Math.cos(gn.aim)*mo,y0:ps.y+Math.sin(gn.aim)*mo,x1:t.x,y1:t.y,t:0,life:fl,l:l});
-          gn.fl=1;g.shake=Math.max(g.shake,2);sfx(150,0.12,'square',0.04,60);
+          g.gren.push({x0:ps.x+Math.cos(gn.aim)*mo,y0:ps.y+Math.sin(gn.aim)*mo,x1:t.x,y1:t.y,t:0,life:fl,l:l*(gn.boost?1.3:1),md:md});
+          gn.fl=1;g.shake=Math.max(g.shake,2);sfx(150,0.12,'square',0.04,60);useAmmo(gn);
         }else fireOne(gn,ps,G0);
-        gn.cd=G0.cd*(1-.04*(l-1));
+        let c0=G0.cd*(1-.04*(l-1))*(MU.mag&&!magOn?0.88:1);
+        if(gn.t==='rifle')c0/=1+1.6*(gn.spin||0);
+        gn.cd=c0;
       }
     };
     if(g.hand){g.hand.hand=true;tick(g.hand,handPs(g))}
@@ -3299,7 +3346,7 @@ function weapons(dt){
   }
   for(let i=g.gren.length-1;i>=0;i--){
     const q=g.gren[i];q.t+=dt;
-    if(q.t>=q.life){explodeAt(q.x1,q.y1,66+8*q.l,18+9*q.l,{dt:'phys',col:'#ffb347',knock:230,src:'auto',shake:4});g.gren.splice(i,1)}
+    if(q.t>=q.life){g.gren.splice(i,1);gExplode(q)}
   }
   if(e.wood>0&&cd('wood')){
     const l=e.wood,t=nearest(p.x,p.y,460);
@@ -3495,9 +3542,12 @@ function updPlayerSide(dt){
       const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+(b.hr||b.r);
       if(dx*dx+dy*dy<rr*rr){
         if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
-        hitEnemy(e,b.dmg,{dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true});
+        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock};let bd=b.dmg,kn=b.knock||0;
+        if(b.gt){const gr=gunHit(b,e,bo);bd=gr[0];kn*=gr[1]}
+        if(g.impR&&g.start==='air'){bd*=2.5;bo.fcrit=true;kn=Math.max(kn,300);g.imp=0;g.impR=false;ring(e.x,e.y,34,'#e6fff7',0.3);sparks(e.x,e.y,'#e6fff7',8,280);g.shake=Math.max(g.shake,3)}
+        hitEnemy(e,bd,bo);
         projHitFx(b,b.x,b.y);
-        if(b.knock&&!e.dead){const a=Math.atan2(b.vy,b.vx);knockE(e,Math.cos(a),Math.sin(a),b.knock)}
+        if(kn&&!e.dead){const a=Math.atan2(b.vy,b.vx);knockE(e,Math.cos(a),Math.sin(a),kn)}
         if(!b.hit)b.hit=new Set();
         b.hit.add(e);
         if(b.bounce>0){let nx=null,nd=280*280;for(const o of g.en){if(o.dead||o===e||b.hit.has(o))continue;const q=(o.x-b.x)**2+(o.y-b.y)**2;if(q<nd){nd=q;nx=o}}
@@ -3607,7 +3657,7 @@ function hurtPlayer(d,dt,att){
   puff(p.x,p.y,DT[dt].c,8,160,0.35,3);
   if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-22,t:0.75,txt:'-'+Math.round(d),big:true,col:'#ff6b7a'});
   sfx(130,0.18,'sawtooth',0.06,-60);
-  if(att&&att.e&&att.melee&&g.S.thorns>0)hitEnemy(att.e,d*g.S.thorns,{dt:'pure',src:'dot',quiet:true});
+  {const th=g.S.thorns+(g.start==='wood'&&g.season===2?0.3:0);if(att&&att.e&&att.melee&&th>0)hitEnemy(att.e,d*th,{dt:'pure',src:'dot',quiet:true})}
   if(p.hp<=0){
     const ae=g.bag.findIndex(b=>b&&b.id==='aegis');
     if(ae>=0){g.bag[ae]=null;recalc();reviveP(0.5,'Эгида спасла вас');return}
@@ -3976,7 +4026,8 @@ function compact(a){let j=0;for(let i=0;i<a.length;i++){if(!a[i].dead)a[j++]=a[i
 /* ---------- волны ---------- */
 function startWave(w){
   const g=G;
-  g.wave=w;g.phase='fight';g.wt=0;g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
+  g.wave=w;g.phase='fight';g.wt=0;
+  if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
   g.bossRef=null;g.bossDead=false;
   g.waveDur=Math.min(75,56+w);
   g.merch=[];
@@ -4149,6 +4200,11 @@ function buildChoices(){
     const have=new Set(g.guns.map(x=>x.t));if(g.hand)have.add(g.hand.t);
     for(const k of GUN_IDS)if(!have.has(k))pool.push({w:3.4,kind:'gun',key:k,tag:'Оружие · Металл',title:GUNS[k].n,sub:'Парит вокруг вас и стреляет само',desc:GUNS[k].d,c1:EL.metal.c,c2:EL.metal.c2});
   }
+  if(g.el.metal>0){
+    const own=g.guns.map(x=>x.t);if(g.hand)own.push(g.hand.t);const GM=g.gmods||{},MU=g.gmu||{};
+    for(const t of new Set(own))if(!GM[t]&&GMOD[t]){const L=GMOD[t];for(const m of L)pool.push({w:3.6/L.length,kind:'gunmod',key:t,mk:m.k,tag:'Модификация · '+GUNS[t].n,title:m.n,sub:'Одна модификация на ствол',desc:m.d,c1:EL.metal.c,c2:'#ffd36b'})}
+    for(const q in GMODU)if(!MU[q])pool.push({w:1.1,kind:'gmodule',key:q,tag:'Модуль · все стволы',title:GMODU[q].n,sub:'Ставится на все орудия',desc:GMODU[q].d,c1:EL.metal.c,c2:EL.metal.c2});
+  }
   const free=freeSlot()>=0;
   const lvOf=id=>{const s=g.slots.find(x=>x&&x.id===id);return s?s.lv:0};
   const mc=a=>'Мана '+a.mana+' · Перезарядка '+a.cd+' с';
@@ -4183,6 +4239,8 @@ function buildChoices(){
 function applyChoice(c){
   const g=G,p=g.p;
   if(c.kind==='gun'){g.guns.push({t:c.key,cd:0,aim:0,fl:0,rec:0});toast('Оружие: '+GUNS[c.key].n,'Теперь вокруг вас парят '+g.guns.length+' ствола')}
+  else if(c.kind==='gunmod'){(g.gmods||(g.gmods={}))[c.key]=c.mk;toast(GUNS[c.key].n+': '+c.title,c.desc);sfx(640,0.15,'triangle',0.05,200)}
+  else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;if(c.key==='mag')for(const gn of allGuns(g))if(gn.am!==undefined&&!(gn.rl>0))gn.am=gunMag(gn);toast('Модуль: '+c.title,c.desc)}
   else if(c.kind==='el'){
     g.el[c.key]++;
     if(g.el[c.key]===1)toast(EL[c.key].n,'Открыт навык «'+AB[ELSK[c.key]].n+'»');
@@ -4227,7 +4285,7 @@ function tryDash(){
   if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
   g.dashHit=null;g.dashSp=0;
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
-  if(g.start==='earth'){explodeAt(p.x,p.y,78,22+7*g.el.earth,{dt:'phys',col:'#c9974f',knock:320,st:{stun:0.5},src:'skill',spike:true});g.shake=Math.max(g.shake,5)}
+  if(g.start==='earth'){const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
   sfx(420,0.14,'triangle',0.05,500);
 }
@@ -4300,6 +4358,25 @@ function movePlayer(dt){
   cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);
   cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
 }
+function heroMech(dt){
+  const g=G,p=g.p,k=g.start;if(!g.cls)return;
+  if(k==='fire'){
+    if(g.ovhT>0)g.ovhT-=dt;
+    if(g.burnSelf>0){g.burnSelf-=dt;g.bsT-=dt;if(g.bsT<=0){g.bsT=0.5;const d=g.S.maxHp*0.012;p.hp=Math.max(1,p.hp-d);puff(p.x,p.y,'#ff7a3a',5,90,0.4,2.6);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-22,t:0.5,txt:'-'+Math.round(d),big:false,col:'#ff9a5a'})}}
+    g.heatIdle=(g.heatIdle||0)+dt;if(g.heatIdle>3)g.heat=Math.max(0,(g.heat||0)-6*dt);
+    if(g.heat>=100&&Math.random()<0.4)puff(p.x+rnd(-8,8),p.y-10,'#ffb347',1,60,0.4,2.2);
+  }else if(k==='earth'){
+    const sp=Math.hypot(p.vx,p.vy);
+    if(g.phase==='fight'&&sp<18&&!(g.dashT>0)){g.stillT=(g.stillT||0)+dt;if(g.stillT>=1&&(g.plates||0)<5){g.stillT=0;g.plates=(g.plates||0)+1;tickBuffs(0);ring(p.x,p.y,30+g.plates*5,'#c9974f',0.35);puff(p.x,p.y+6,'#a4825a',6,90,0.4,3);sfx(160+g.plates*30,0.08,'square',0.025,40)}}
+    else g.stillT=0;
+  }else if(k==='air'){
+    const sp=Math.hypot(p.vx,p.vy);
+    g.imp=clamp((g.imp||0)+(sp>90?32:-45)*dt,0,100);
+    if(g.imp>=100&&!g.impR){g.impR=true;ring(p.x,p.y,40,'#e6fff7',0.35);sfx(720,0.08,'triangle',0.03,300)}
+    if(g.imp<100)g.impR=false;
+    if(g.impR&&Math.random()<0.5&&g.pt.length<470)g.pt.push({x:p.x+rnd(-6,6),y:p.y+rnd(-6,6),vx:-p.vx*0.3,vy:-p.vy*0.3,life:0.3,max:0.3,col:'#e6fff7',size:2});
+  }
+}
 function update(dt){
   const g=G,p=g.p,S=g.S;
   if(g.slowmo>0){g.slowmo-=dt;dt*=0.35}
@@ -4317,6 +4394,7 @@ function update(dt){
   for(const b of g.bag)if(b&&b.cd>0)b.cd=Math.max(0,b.cd-dt);
   if(g.ult.cd>0)g.ult.cd=Math.max(0,g.ult.cd-dt);
   movePlayer(dt);
+  heroMech(dt);
   poolsTick(dt);
   envTick(dt);
   if(g.start==='earth'&&g.pl>=3){g.pasT-=dt;if(g.pasT<=0){g.pasT=20;g.shield=Math.max(g.shield,3);ring(g.p.x,g.p.y,60,'#c9974f',0.6);toast('Каменная кожа','Щит на 3 секунды')}}
@@ -4653,7 +4731,7 @@ function cardPrev(c){
       x.save();x.globalAlpha=.8;x.fillStyle=c.c1;x.beginPath();x.arc(w*.1,h*.56,3,0,TAU);x.fill();x.restore();
     };
   }
-  if(c.kind==='gun'&&SP[c.key]&&PVG[c.key]){
+  if((c.kind==='gun'||c.kind==='gunmod')&&SP[c.key]&&PVG[c.key]){
     const m=PVG[c.key],G0=GUNS[c.key],k=Math.min(1.5,185/m[1]);
     return (x,w,h,t)=>{
       const cyc=Math.max(1.1,G0.cd+.35),u=t%cyc;
@@ -5111,7 +5189,7 @@ function playTab(){
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
+    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
     +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
     +'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
@@ -5253,6 +5331,7 @@ addEventListener('keydown',e=>{
   else if(act==='tree')openTree();
   else if(act==='use')interact();
   else if(act==='skip')skipWave();
+  else if(act==='reload')activeReload();
   else if(act&&act.length===2&&act[0]==='s')castSlot(parseInt(act[1],10)-1);
   else if(act&&act.length===2&&act[0]==='i')useItem(parseInt(act[1],10)-1);
 });
@@ -6286,14 +6365,100 @@ function turretSpr(s){
   }
 }
 const GUNS={
-  pistol:{n:'Пистолет',d:'Точные одиночные выстрелы. Надёжно и далеко.',cd:.5,pel:1,sp:.04,spd:760,dm:1,pierce:0,life:.7,rng:440,sc:.7,mz:17},
-  shotgun:{n:'Дробовик',d:'Залп картечи вблизи: пуль много, отбрасывает врагов.',cd:1.15,pel:6,sp:.6,spd:640,dm:.55,pierce:0,life:.38,rng:230,sc:.55,mz:45,knock:150,pellet:true},
-  rifle:{n:'Автомат',d:'Очередь с высокой скорострельностью.',cd:.17,pel:1,sp:.12,spd:820,dm:.42,pierce:0,life:.7,rng:470,sc:.5,mz:57},
-  smg:{n:'Пистолет-пулемёт',d:'Короткие очереди по 6 пуль: много урона по одной цели.',cd:1.25,pel:1,sp:.1,spd:800,dm:.34,pierce:0,life:.6,rng:380,sc:.5,mz:66,burst:6,bi:.065},
-  launcher:{n:'Гранатомёт',d:'Навесом метает гранату: взрыв бьёт по площади и отбрасывает врагов.',cd:2.1,pel:0,sp:0,spd:0,dm:1,pierce:0,life:1,rng:420,sc:.5,mz:96,gren:true},
-  sniper:{n:'Снайперка',d:'Редкий, но мощный выстрел, пробивает до 4 врагов.',cd:1.9,pel:1,sp:0,spd:1250,dm:5.2,pierce:4,life:.9,rng:640,sc:.46,mz:86,big:true}
+  pistol:{n:'Пистолет',d:'Точные одиночные выстрелы. Вблизи (до 100) урон ×2, каждое 5-е попадание рикошетит.',cd:.5,pel:1,sp:.04,spd:760,dm:1,pierce:0,life:.7,rng:440,sc:.7,mz:17},
+  shotgun:{n:'Дробовик',d:'Настоящий разлёт дроби: в упор полный урон и сильный отброс, вдали дробь слабеет.',cd:1.15,pel:7,sp:.62,spd:640,dm:.5,pierce:0,life:.42,rng:240,sc:.55,mz:45,knock:150,pellet:true},
+  rifle:{n:'Автомат',d:'Раскручивается: чем дольше бьёт одну цель, тем быстрее стреляет. На пике может перегреться.',cd:.17,pel:1,sp:.12,spd:820,dm:.42,pierce:0,life:.7,rng:470,sc:.5,mz:57,spin:true},
+  smg:{n:'Пистолет-пулемёт',d:'Очереди по 6 почти мгновенных пуль: много урона по одной цели.',cd:1.25,pel:1,sp:.1,spd:1150,dm:.34,pierce:0,life:.42,rng:380,sc:.5,mz:66,burst:6,bi:.06},
+  launcher:{n:'Гранатомёт',d:'Навесом метает гранату: взрыв бьёт по площади и отбрасывает. Можно поставить спецбоеприпасы.',cd:2.1,pel:0,sp:0,spd:0,dm:1,pierce:0,life:1,rng:420,sc:.5,mz:96,gren:true},
+  sniper:{n:'Снайперка',d:'Пробивает всех на линии, каждый следующий враг получает +25% урона. По элитам и боссам 25% шанс крита ×3.',cd:1.9,pel:1,sp:0,spd:1250,dm:5.2,pierce:99,life:.9,rng:640,sc:.46,mz:86,big:true}
 };
 const GUN_IDS=Object.keys(GUNS);
+/* ---- модификации стволов (одна на ствол) и общие модули ---- */
+const GMOD={
+  pistol:[{k:'double',n:'Двойной выстрел',d:'Пистолет стреляет двумя параллельными пулями.'},{k:'chain',n:'Цепной рикошет',d:'Рикошет каждое 3-е попадание, и пуля отскакивает дважды.'}],
+  shotgun:[{k:'slug',n:'Жакан',d:'Одна тяжёлая пуля вместо дроби: пробивает 2 врагов, мощный отброс, не слабеет с дистанцией.'},{k:'buck',n:'Картечь',d:'11 дробин вместо 7, разлёт шире: косит толпу вблизи.'}],
+  rifle:[{k:'cool',n:'Охлаждение',d:'Нагрев на 40% меньше, остывание вдвое быстрее.'},{k:'tracer',n:'Зажигательные трассеры',d:'Каждая 4-я пуля поджигает врага.'}],
+  smg:[{k:'rubber',n:'Резиновые пули',d:'Каждое попадание замедляет цель ещё на 5% (до 40%).'},{k:'shock',n:'Шоковые пули',d:'Каждая 6-я пуля оглушает и бьёт током: по мокрым врагам электрошок.'}],
+  launcher:[{k:'acid',n:'Кислотные гранаты',d:'Оставляют лужу кислоты: урон и ржавчина (−14 брони врагам).'},{k:'emp',n:'ЭМИ-гранаты',d:'Оглушают на 1.2 с и ломают щиты: 5 с броня врагов не работает. Щитоносцы и железные призраки получают доп. урон.'},{k:'inc',n:'Зажигательные гранаты',d:'Поджигают врагов и оставляют горящую землю на 4 с.'},{k:'cluster',n:'Кассетные гранаты',d:'После взрыва разлетаются ещё 3 малых заряда.'}],
+  sniper:[{k:'ap',n:'Бронебойные',d:'Снайперка игнорирует броню врагов.'},{k:'expl',n:'Разрывные',d:'Первое попадание взрывается: 40% урона по площади.'}]
+};
+const GMODU={
+  sil:{n:'Глушитель',d:'+12% шанса крита для всех стволов.'},
+  scope:{n:'Лазерный прицел',d:'Стволы видят на 30% дальше, разброс меньше, пули летят на 20% быстрее и дальше.'},
+  mag:{n:'Расширенный магазин',d:'Солдат: магазины +50%. Другие герои: стволы стреляют на 12% чаще.'}
+};
+const MAG={pistol:[12,1.0],shotgun:[6,1.6],rifle:[30,1.6],smg:[24,1.4],launcher:[3,2.0],sniper:[5,2.2]};
+const RW=[.42,.62];
+function gunMag(gn){return Math.round(MAG[gn.t][0]*(G&&G.gmu&&G.gmu.mag?1.5:1))}
+function allGuns(g){const a=g.guns.slice();if(g.hand)a.unshift(g.hand);return a}
+function startReload(gn){gn.rlMax=MAG[gn.t][1];gn.rl=gn.rlMax;gn.boost=0;gn.qte=true;gn.bl=0;sfx(220,0.06,'square',0.02,-40)}
+function activeReload(){
+  const g=G;if(!g||mode!=='play'||uiOpen()||g.start!=='metal')return;
+  const L=allGuns(g);let ok=0,bad=0,man=0;
+  for(const gn of L){
+    if(gn.am===undefined)continue;
+    if(gn.rl>0){
+      if(!gn.qte)continue;
+      const k=1-gn.rl/gn.rlMax;
+      if(k>=RW[0]&&k<=RW[1]){gn.rl=0;gn.am=gunMag(gn);gn.boost=1;gn.qte=false;ok++}
+      else{gn.qte=false;gn.rl+=0.4;gn.rlMax+=0.4;bad++}
+    }else if(gn.am<gunMag(gn)){startReload(gn);man++}
+  }
+  const p=g.p;
+  if(ok){ring(p.x,p.y,46,'#ffd36b',0.35);sparks(p.x,p.y,'#ffd36b',8,240);sfx(880,0.08,'triangle',0.04,300);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-34,t:0.9,txt:'Идеальная перезарядка!',big:true,col:'#ffd36b'})}
+  else if(bad){sfx(120,0.12,'square',0.03,-30);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-34,t:0.8,txt:'Заминка',big:false,col:'#ff8a7a'})}
+}
+function gunHit(b,e,o){
+  const g=G,t=b.gt,m=b.gmod;let d=b.dmg,km=1;b.nh=(b.nh||0)+1;
+  if(g.gmu&&g.gmu.sil)o.cc=0.12;
+  if(t==='sniper'){
+    d*=1+0.25*(b.nh-1);
+    if(m==='ap')o.dt='pure';
+    if((e.elite||e.boss)&&Math.random()<0.25){d*=3;o.fcrit=true;sparks(e.x,e.y,'#ffd36b',10,300);ring(e.x,e.y,30,'#ffd36b',0.3)}
+    if(m==='expl'&&b.nh===1)explodeAt(e.x,e.y,62,d*0.4,{dt:'phys',col:'#ffb347',src:'auto',shake:3});
+  }else if(t==='shotgun'){
+    if(m!=='slug'){const f=clamp(b.life/(b.l0||1),0,1);d*=0.35+0.65*f;km=0.3+1.2*f}
+  }else if(t==='pistol'){
+    if(Math.hypot(e.x-g.p.x,e.y-g.p.y)<100+e.r){d*=2;if(g.pt.length<430)puff(e.x,e.y,'#ffd36b',3,120,0.25,2)}
+    g.pisN=(g.pisN||0)+1;
+    if(g.pisN%(m==='chain'?3:5)===0)b.bounce=(b.bounce||0)+(m==='chain'?2:1);
+  }else if(t==='smg'&&m==='rubber'){
+    e.rbs=e.slow>0?Math.min(8,(e.rbs||0)+1):1;const f=1-0.05*e.rbs*(e.boss?0.5:1);
+    e.slowF=e.slow>0?Math.min(e.slowF,f):f;e.slow=Math.max(e.slow,1.5);
+  }
+  return [d,km];
+}
+function gExplode(q){
+  const g=G,md=q.md||'',R=66+8*q.l,D=18+9*q.l,x=q.x1,y=q.y1;
+  if(md==='cluster'){
+    explodeAt(x,y,R*0.8,D*0.8,{dt:'phys',col:'#ffb347',knock:200,src:'auto',shake:4});
+    for(let j=0;j<3;j++){const a=rnd(0,TAU),dd=rnd(45,85),cx=x+Math.cos(a)*dd,cy=y+Math.sin(a)*dd;
+      g.later.push({t:0.16+j*0.12,fn:()=>explodeAt(cx,cy,R*0.55,D*0.65,{dt:'phys',col:'#ffd36b',knock:120,src:'auto',shake:2})})}
+    return;
+  }
+  const o={dt:'phys',col:'#ffb347',knock:230,src:'auto',shake:4};
+  if(md==='emp'){o.dt='magic';o.col='#7fe6ff';o.st={stun:1.2};o.knock=60}
+  else if(md==='acid'){o.col='#9be04a'}
+  else if(md==='inc'){o.col='#ff7a3a';o.st={burn:[4+2*q.l,3]}}
+  if(md==='emp'){for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-x)**2+(e.y-y)**2<(R+e.r)**2){e.empU=g.t+5;if(e.type==='shield'||e.type==='ironwraith')hitEnemy(e,D*1.5,{dt:'pure',src:'auto',col:'#7fe6ff',aoe:true})}}
+    for(let j=0;j<5;j++){const a=rnd(0,TAU);sparks(x+Math.cos(a)*R*0.6,y+Math.sin(a)*R*0.6,'#bff4ff',3,180)}}
+  explodeAt(x,y,R,D,o);
+  if(md==='acid')addZone(x,y,{r:R*0.85,life:4,dps:5+2.5*q.l,dt:'magic',col:'#9be04a',st:{rust:1.5,slow:[0.82,0.5]}});
+  if(md==='inc')addZone(x,y,{vis:'wildfire',r:R*0.8,life:4,dps:6+3*q.l,dt:'magic',col:'#ff7a3a',st:{burn:[3+q.l,2]}});
+}
+function drawAmmo(gn,x,y,w){
+  const mx=gunMag(gn);
+  ctx.save();ctx.fillStyle='rgba(6,8,14,.72)';ctx.fillRect(x-w/2-1,y-1,w+2,4.6);
+  if(gn.rl>0){
+    const k=clamp(1-gn.rl/gn.rlMax,0,1);
+    ctx.fillStyle='rgba(255,255,255,.14)';ctx.fillRect(x-w/2,y,w,2.6);
+    if(gn.qte){ctx.fillStyle='rgba(110,255,140,.6)';ctx.fillRect(x-w/2+w*RW[0],y,w*(RW[1]-RW[0]),2.6)}
+    ctx.fillStyle='#ffffff';ctx.fillRect(x-w/2+w*k-0.8,y-1.2,1.6,5);
+  }else{
+    ctx.fillStyle=gn.boost?'#ffd36b':'#e8eef8';ctx.fillRect(x-w/2,y,w*clamp(gn.am/mx,0,1),2.6);
+  }
+  ctx.restore();
+}
 function gunPos(g,i){
   const n=g.guns.length,a=g.t*0.9+i*TAU/Math.max(1,n);
   return {x:g.p.x+Math.cos(a)*34,y:g.p.y-4+Math.sin(a)*24};
@@ -6301,7 +6466,7 @@ function gunPos(g,i){
 function drawGren(g){
   for(const q of g.gren){
     const k=clamp(q.t/q.life,0,1),x=q.x0+(q.x1-q.x0)*k,y=q.y0+(q.y1-q.y0)*k,h=Math.sin(k*Math.PI)*70;
-    ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle='#ffb347';ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(q.x1,q.y1,66+8*q.l,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle=({acid:'#9be04a',emp:'#7fe6ff',inc:'#ff7a3a',cluster:'#ffd36b'})[q.md]||'#ffb347';ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(q.x1,q.y1,66+8*q.l,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();
     SP.shadow(ctx,x,y+4,9,.4);
     ctx.save();ctx.translate(x,y-h);ctx.rotate(k*9);ctx.scale(1.1,1.1);SP.grenade(ctx,0);ctx.restore();
   }
@@ -6318,6 +6483,8 @@ function drawGuns(g){
     ctx.translate(-(gn.rec||0),0);ctx.scale(G0.sc,G0.sc);
     SP[gn.t](ctx,gn.fl||0);
     ctx.restore();
+    if(g.start==='metal'&&gn.am!==undefined)drawAmmo(gn,ps.x,ps.y-18,20);
+    if(gn.t==='rifle'&&(gn.heat>0.05||gn.oh>0)){ctx.save();ctx.fillStyle='rgba(6,8,14,.6)';ctx.fillRect(ps.x-10,ps.y-13,20,2.4);ctx.fillStyle=gn.oh>0?'#ff6b5a':'#ffb347';ctx.fillRect(ps.x-10,ps.y-13,20*(gn.oh>0?gn.oh/1.3:gn.heat),2.4);ctx.restore()}
   }
 }
 function drawMeteorSpr(b,pr){
@@ -7732,7 +7899,34 @@ function drawPlayer(g){
   ctx.restore();
   ctx.globalAlpha=1;
   if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
-  drawDashBar(g);
+  drawDashBar(g);drawHeroRes(g);
+}
+function drawHeroRes(g){
+  const p=g.p,k=g.start;if(!g.cls)return;
+  const w=46,x0=p.x-w/2,y0=p.y+38;let f=0,col='#fff',lab='',pulse=false;
+  if(k==='metal'){
+    if(!g.hand||g.hand.am===undefined)return;
+    drawAmmo(g.hand,p.x,y0,w);
+    if(g.hand.rl>0&&g.hand.qte){ctx.save();ctx.font='700 8px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(180,255,190,.95)';ctx.fillText((SAVE.keys.reload||'KeyF').replace('Key','')+' — перезарядка',p.x,y0+13);ctx.restore()}
+    return;
+  }
+  ctx.save();
+  ctx.fillStyle='rgba(6,8,14,.72)';ctx.fillRect(x0-1,y0-1,w+2,5);
+  if(k==='earth'){
+    const n=g.plates||0,sw=(w-4*2)/5;
+    for(let j=0;j<5;j++){ctx.fillStyle=j<n?'#c9974f':'rgba(255,255,255,.12)';ctx.fillRect(x0+j*(sw+2),y0,sw,3)}
+    if(n<5&&g.stillT>0){ctx.fillStyle='rgba(232,195,138,.7)';ctx.fillRect(x0+n*(sw+2),y0,sw*clamp(g.stillT,0,1),3)}
+    ctx.restore();return;
+  }
+  if(k==='fire'){f=(g.heat||0)/100;col=f>=1?'#fff2b0':'#ff7a3a';pulse=f>=1;if(pulse)lab='ПЕРЕГРЕВ'}
+  else if(k==='water'){f=clamp(g.tideT/10,0,1);col=g.tide==='ebb'?'#6fe0b0':'#3aa7ff';lab=g.phase==='fight'?(g.tide==='ebb'?'Отлив':'Прилив'):''}
+  else if(k==='air'){f=(g.imp||0)/100;col=f>=1?'#e6fff7':'#8febd0';pulse=f>=1}
+  else if(k==='wood'){f=g.phase==='fight'?clamp(1-g.wt/(g.waveDur||60),0,1):1;const S0=SEAS[g.season||0];col=S0.c;lab=S0.n}
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(x0,y0,w,3);
+  if(pulse)ctx.globalAlpha=0.7+0.3*Math.sin(anim*12);
+  ctx.fillStyle=col;ctx.fillRect(x0,y0,w*f,3);ctx.globalAlpha=1;
+  if(lab){ctx.font='700 7.5px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle=col;ctx.fillText(lab,p.x,y0+12)}
+  ctx.restore();
 }
 function drawDashBar(g){
   const p=g.p,mx=1+(g.S.dch||0),full=p.dch>=mx;
@@ -8457,6 +8651,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
+    activeReload,GMOD,gunMag,heroMech,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }
