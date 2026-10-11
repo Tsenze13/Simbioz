@@ -21,7 +21,7 @@ function spawnPos(){
 function spawnAt(type,x,y,hm,dm,opts){
   const g=G,d=ET[type],F=MAPS[g.map].foe;
   opts=opts||{};
-  hm*=(F.hp||1)*lvAdj();dm*=F.dmg||1;
+  hm*=(F.hp||1)*lvAdj()*ascMod('hp')*(g.curseW===g.wave?1.3:1);dm*=(F.dmg||1)*ascMod('dmg')*(g.trialW===g.wave?1.15:1);
   const e={type:type,def:d,x:x,y:y,r:d.r,hp:d.hp*hm,max:d.hp*hm,sp:d.sp,dmg:d.dmg*dm,armor:d.armor||0,mres:d.mres||0,col:d.col,shape:d.shape,ai:d.ai,
     hpMul:hm,dmgMul:dm,flash:0,burn:0,burnDps:0,bt:0,poison:0,poisonDps:0,pt:0,slow:0,slowF:1,frz:0,stun:0,root:0,wet:0,rust:0,ovl:0,kx:0,ky:0,kres:1,rockCd:0,slam:0,cc:0,
     cd:rnd(0.6,d.cd||2.2),st:'move',tm:0,dir:0,ang:0,elite:false,boss:false,affix:null,dead:false,hitP:false};
@@ -94,7 +94,7 @@ function hurtPlayer(d,dt,att){
   puff(p.x,p.y,DT[dt].c,8,160,0.35,3);
   if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-22,t:0.75,txt:'-'+Math.round(d),big:true,col:'#ff6b7a'});
   sfx(130,0.18,'sawtooth',0.06,-60);
-  if(g.ifx&&g.ifx.frost&&att&&att.e&&att.melee&&g.t>(g.frU||0)){g.frU=g.t+4;for(const o of g.en){if(!o.dead&&(o.x-p.x)**2+(o.y-p.y)**2<140*140)applySt(o,{frz:1.2},1)}ring(p.x,p.y,140,'#bdf0ff',0.5);puff(p.x,p.y,'#e6fbff',16,200,0.5,3)}
+  if(g.ifx&&g.ifx.frost&&att&&att.e&&att.melee&&g.t>(g.frU||0)){const pf=g.syn.permafrost;g.frU=g.t+(pf?2:4);for(const o of g.en){if(!o.dead&&(o.x-p.x)**2+(o.y-p.y)**2<(pf?180:140)**2)applySt(o,{frz:1.2},1)}ring(p.x,p.y,140,'#bdf0ff',0.5);puff(p.x,p.y,'#e6fbff',16,200,0.5,3)}
   {const th=g.S.thorns+(g.start==='wood'&&g.season===2?0.3:0);if(att&&att.e&&att.melee&&th>0)hitEnemy(att.e,d*th,{dt:'pure',src:'dot',quiet:true})}
   if(p.hp<=0){
     const ae=g.bag.findIndex(b=>b&&b.id==='aegis');
@@ -231,7 +231,7 @@ function bossDodge(e,dt,p){
   if(!th)return;
   if(Math.random()>(e.phase>=3?0.75:0.5)){e.dgCd=0.8;return}
   if((e.x+th.x-g.p.x)**2+(e.y+th.y-g.p.y)**2<(e.x-th.x-g.p.x)**2+(e.y-th.y-g.p.y)**2&&Math.random()<0.5){th.x=-th.x;th.y=-th.y}
-  e.dodge={vx:th.x*720,vy:th.y*720,t:0.24};e.dgCd=e.phase>=3?2.4:3.6;
+  e.dodge={vx:th.x*720,vy:th.y*720,t:0.24};e.dgCd=(e.phase>=3?2.4:3.6)/(ascMod('boss')>1?1.4:1);
   puff(e.x,e.y,e.col,14,180,0.4,4);sfx(520,0.08,'triangle',0.03,300);
   if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-14,t:0.7,txt:'Уворот',big:false,col:'#e8eef8'});
 }
@@ -239,7 +239,7 @@ function bossAI(e,dt,p,d,spMul){
   const g=G;
   const ph=e.hp/e.max<0.34?3:(e.hp/e.max<0.67?2:1);
   if(ph!==e.phase){
-    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier;e.barMax=e.bar;
+    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier*ascMod('boss');e.barMax=e.bar;
     if(ph===3){e.sp*=1.25;if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-30,t:1.4,txt:'ЯРОСТЬ',big:true,col:'#ff4d5e'})}
     g.shake=Math.max(g.shake,12);ring(e.x,e.y,e.r+120,e.col,0.6);puff(e.x,e.y,e.col,30,260,0.6,4);
     toast(e.name,'Фаза '+ph);sfx(80,0.5,'sawtooth',0.07,-20);

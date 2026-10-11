@@ -8,6 +8,8 @@ function recalc(){
     const st=ITEMS[b.id].st;
     if(st)for(const k in st)it[k]=(it[k]||0)+st[k];
   }
+  for(const id of g.relics||[]){const st=RELICS[id].st;if(st)for(const k in st)it[k]=(it[k]||0)+st[k]}
+  synUpdate(g,it);
   {const ms=mapStats(g);for(const k in ms)it[k]=(it[k]||0)+ms[k]}
   g.aff=(AFF[g.map]&&AFF[g.map].h===g.start)?AFF[g.map]:null;
   if(g.aff)for(const k in g.aff.st)it[k]=(it[k]||0)+g.aff.st[k];
@@ -46,6 +48,7 @@ function recalc(){
   p.hp=Math.min(p.hp,S.maxHp);p.mana=Math.min(p.mana,S.maxMana);
   g.dockSig='';
   g.ifx={};for(const b of g.bag)if(b&&ITEMS[b.id].fx)g.ifx[ITEMS[b.id].fx]=1;
+  for(const id of g.relics||[])if(RELICS[id].fx)g.ifx[RELICS[id].fx]=1;
   tickBuffs(0);
 }
 function tickBuffs(dt){

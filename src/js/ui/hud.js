@@ -136,11 +136,11 @@ function hud(){
   const br=g.bossRef&&!g.bossRef.dead;
   if(hc.boss!==br){hc.boss=br;$('boss').hidden=!br}
   if(br){setText('bossN',g.bossRef.name+(g.bossRef.bar>0?' · барьер '+Math.ceil(g.bossRef.bar/g.bossRef.barMax*100)+'%':'')+(g.bossRef.phase>1?' · фаза '+g.bossRef.phase:''));$('bossF').style.transform='scaleX('+clamp(g.bossRef.hp/g.bossRef.max,0,1)+')'}
-  const nm=g.phase==='inter'?nearMerchant():null;
-  const key=!!nm;
+  const nm=g.phase==='inter'?nearMerchant():null,ne=!nm&&g.phase==='inter'?nearEvent():null;
+  const key=nm?'m'+nm.id:(ne?'e'+ne.t:'');
   {const cd=dashCd().toFixed(1),dc=g.p.dch+'/'+(1+(g.S.dch||0))+' · '+cd+'с';if(hc.dc!==dc){hc.dc=dc;$('dashBtn').textContent='Рывок '+dc;$('dashBtn').title='Заряды рывка и время перезарядки одного заряда'}}
-  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;if(nm)$('useBtn').textContent=MERCH[nm.id].n}
-  if(nm&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+MERCH[nm.id].n;
+  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;$('useBtn').textContent=nm?MERCH[nm.id].n:(ne?EVTS[ne.t].n:'')}
+  if((nm||ne)&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+(nm?MERCH[nm.id].n:EVTS[ne.t].n);
   const inter=g.phase==='inter';
   if(hc.inter!==inter){hc.inter=inter;$('skipBtn').hidden=!inter}
 }

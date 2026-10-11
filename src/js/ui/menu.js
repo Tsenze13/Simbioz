@@ -36,7 +36,7 @@ function playTab(){
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
     +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
     +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
-    +'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
+    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -104,6 +104,10 @@ function codexTab(){
   const dtp=Object.keys(DT).map(k=>row('<span style="color:'+DT[k].c+'">'+DT[k].n+'</span>',DT[k].d)).join('');
   return '<section>'+sec('Стихии',el)+sec('Навыки стихий (хотбар 1-5)',sk)+sec('Симбиозы стихий',sy)+sec('Слияния навыков',fu)+sec('Ульты',ul)+sec('Торговцы и предметы',it)+sec('Враги и боссы',en)+sec('Древа навыков',trCodex())+sec('Типы урона',dtp)+sec('Реакции',rx)+'</section>';
 }
+function ascRow(){
+  const mx=SAVE.asc||0,cur=Math.min(SAVE.ascSel||0,mx),A=ASC[cur];
+  return '<div class="ascrow"><button class="btn alt sm" type="button" data-asc="-1"'+(cur>0?'':' disabled')+'>‹</button><div><b>'+A.n+'</b><span class="sub">'+(cur?A.d+(cur>1?' И всё с прошлых уровней.':'')+' Эссенция +'+cur*25+'%.':'Победа открывает «'+ASC[1].n+'».')+(mx<ASC.length-1?' Открыто: '+(mx+1)+' из '+ASC.length+'.':'')+'</span></div><button class="btn alt sm" type="button" data-asc="1"'+(cur<mx?'':' disabled')+'>›</button></div>';
+}
 function keysTab(){
   let h='<section><div><h2 class="sec">Клавиши</h2><div class="kgrid">';
   for(const a of ACTIONS){
@@ -127,6 +131,7 @@ $('mpanel').addEventListener('click',e=>{
   }else if(t.dataset.key){listening=t.dataset.key;renderMenu()}
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
+  else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
   else if(t.dataset.wipe){

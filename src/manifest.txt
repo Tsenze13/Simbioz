@@ -10,6 +10,7 @@ js/data/skills.js
 js/data/enemies.js
 js/data/items.js
 js/data/meta.js
+js/data/relics.js
 js/core/save.js
 js/core/state.js
 js/world/maps.js
@@ -25,6 +26,7 @@ js/enemies/waves.js
 js/game/bag.js
 js/game/leveling.js
 js/game/flow.js
+js/game/runextras.js
 js/ui/hud.js
 js/ui/levelup.js
 js/ui/tree.js

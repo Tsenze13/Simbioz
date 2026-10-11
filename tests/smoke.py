@@ -104,6 +104,24 @@ with sync_playwright() as p:
     check('лавка открывается', r['ok'])
     check('эффекты предметов', r['fx'] == 6 and r['phoenix'], r)
 
+    print('Реликвии, события, комбо, сложность')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(4);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
+        let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<200&&!g.lvlOpen;i++)S.update(1/60);
+        const cards=(g.choices||[]).map(c=>c.kind);if(g.lvlOpen)S.pickCard(0);
+        return {cards,relics:g.relics.slice(),phase:g.phase}}""")
+    check('реликвия после босса', r['cards'] == ['relic'] * 3 and len(r['relics']) == 1, r)
+    r = J("""()=>{const S=window.__sb,g=S.G,out={};g.p.gold=0;
+        for(const t of ['altar','chest','trial']){g.evts=[{t,x:g.p.x+20,y:g.p.y,used:false,bob:0}];g.p.hp=g.S.maxHp;const sp=g.sp,gold=g.p.gold;S.interact();
+          out[t]={used:g.evts[0].used,sp:g.sp-sp,gold:g.p.gold-gold}}
+        out.trialW=g.trialW;out.curseW=g.curseW;S.render();return out}""")
+    check('события между волнами', r['altar']['used'] and r['altar']['sp'] == 1 and r['chest']['gold'] > 0 and r['trial']['used'] and r['trialW'] == r['curseW'], r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air');const g=S.G;S.addToBag('berserk');S.addToBag('bloodpact');S.recalc();return g.synOn}""")
+    check('комбо предметов', r == ['Безумие'], r)
+    r = J("""()=>{const S=window.__sb;S.SAVE.asc=5;S.SAVE.ascSel=5;S.quitToMenu();S.startRun('air');const g=S.G;S.startWave(3);const e=S.spawnEnemy('wisp');
+        const hp5=e.max;S.SAVE.ascSel=0;S.quitToMenu();S.startRun('air');S.startWave(3);const e0=S.spawnEnemy('wisp');const r={asc5:hp5,asc0:e0.max};S.SAVE.asc=0;return r}""")
+    check('сложность V крепче обычной', r['asc5'] > r['asc0'] * 1.2, r)
+
     le = J("()=>window.__le||null")
     check('нет ошибок в отложенных эффектах', not le, le)
     check('нет ошибок JS', not errs, errs[:5])

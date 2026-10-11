@@ -1,7 +1,8 @@
 /* ---------- волны ---------- */
 function startWave(w){
   const g=G;
-  g.wave=w;g.phase='fight';g.wt=0;
+  g.wave=w;g.phase='fight';g.wt=0;g.evts=[];
+  if(g.curseW===w)toast('Проклятие сундука','Враги этой волны на 30% крепче');if(g.trialW===w)toast('Испытание','Врагов больше, и они злее. Выживи!');
   if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
   g.bossRef=null;g.bossDead=false;
   g.waveDur=Math.min(BAL.wave.durMax,BAL.wave.durBase+w);
@@ -26,9 +27,11 @@ function endWave(){
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*BAL.wave.interHeal);p.mana=g.S.maxMana;
+  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;
   {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
   stockMerchants();
+  spawnEvents();trialReward();
+  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead)g.relicQ=bk}
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
   sfx(500,0.4,'triangle',0.06,300);
 }
@@ -37,6 +40,7 @@ function priceOf(id,mid){
   const g=G,d=ITEMS[id];
   let pr=d.price*(1+0.03*(g.wave-1))*(1-0.03*(SAVE.meta.discount||0));
   if(mid==='smug')pr*=1.15;
+  pr*=ascMod('price');
   return Math.max(10,Math.round(pr/5)*5);
 }
 function genStock(mid){

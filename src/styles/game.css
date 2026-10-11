@@ -145,6 +145,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 @keyframes rarGlow{50%{box-shadow:0 0 22px 0 #ffb347}}
 .item[data-r]{border-color:color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),transparent 70px),var(--panel2)}
 .item .rar{font-weight:700}
+#tip .tsyn{margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.04);border:1px dashed var(--line2);font-size:12px;color:var(--dim)}
+#tip .tsyn b{color:#c9b3ff}#tip .tsyn.on{border-style:solid;border-color:#c47bff;color:#e0d4ff}#tip .tsyn.on b{color:#ffd36b}
 #tip .tst{margin-top:6px;display:grid;gap:3px;font-size:12.5px}
 #tip .tst div{display:flex;justify-content:space-between;gap:10px}
 #tip .tst i{font-style:normal;color:var(--dim);white-space:nowrap}#tip .tst i b{color:#e8eef8}
@@ -310,6 +312,8 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 .bagside .hint{font-size:12px;color:var(--dim)}
 @media (max-width:760px){.shop{grid-template-columns:1fr}}
 
+.ascrow{display:flex;align-items:center;gap:12px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.ascrow>div{flex:1;display:grid;gap:2px}.ascrow b{font:700 16px var(--f-display)}
 .gowhy{margin:0;padding:10px 12px;border-radius:8px;background:rgba(255,77,94,.1);border:1px solid rgba(255,77,94,.35);color:#ffc2c8;font-size:14px}
 .gowhy b{color:#fff}
 .dmgl{display:grid;gap:5px;max-height:220px;overflow:auto}

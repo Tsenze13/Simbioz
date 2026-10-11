@@ -23,6 +23,7 @@ function tryDash(){
   if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
   g.dashHit=null;g.dashSp=0;
   if(g.ifx&&g.ifx.shadow)g.shdT=2.5;
+  if(g.ifx&&g.ifx.voidstep){const x=p.x,y=p.y,dm=30+12*g.wave;ring(x,y,95,'#a83bd0',0.3);g.later.push({t:0.25,fn:()=>explodeAt(x,y,95,dm,{dt:'magic',col:'#a83bd0',knock:200,src:'item',sk:'__item',shake:3})})}
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
   if(g.start==='earth'){g.curSk='__dash';const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}g.curSk=null}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
@@ -101,15 +102,15 @@ function itemFx(dt){
   const g=G,p=g.p,F=g.ifx;if(!F)return;
   if(g.shdT>0)g.shdT-=dt;
   if(g.phase!=='fight')return;
-  if(F.thunder){g.thT=(g.thT||0)-dt;if(g.thT<=0){g.thT=2.5;let best=null,bh=0;
+  if(F.thunder){g.thT=(g.thT||0)-dt;if(g.thT<=0){g.thT=g.syn.storm?1.5:2.5;let best=null,bh=0;
     for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2>480*480)continue;if(e.hp>bh){bh=e.hp;best=e}}
     if(best){chainBolt(best.x+rnd(-30,30),best.y-320,best,0,60+14*g.wave,0,{dt:'magic',shock:true,col:'#f4f08a',src:'item'});ring(best.x,best.y,40,'#f4f08a',0.3);g.shake=Math.max(g.shake,3);sfx(900,0.12,'sawtooth',0.03,-600)}}}
-  if(F.aura){g.auT=(g.auT||0)-dt;if(g.auT<=0){g.auT=0.5;for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<(120+e.r)**2)applySt(e,{burn:[5+1.3*g.wave,1.2]},1)}}}
+  if(F.aura){g.auT=(g.auT||0)-dt;if(g.auT<=0){g.auT=0.5;for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<((g.syn.flame?170:120)+e.r)**2)applySt(e,{burn:[(5+1.3*g.wave)*(g.syn.flame?1.5:1),1.2]},1)}}}
   if(F.phoenix&&p.hp<g.S.maxHp*0.3&&g.t>(g.phU||0)){g.phU=g.t+60;heal(g.S.maxHp*0.35);explodeAt(p.x,p.y,230,40+15*g.wave,{dt:'magic',col:'#ffb347',st:{burn:[8+2*g.wave,3]},knock:320,src:'item',shake:9});ring(p.x,p.y,260,'#ffd36b',0.8);puff(p.x,p.y,'#ffb347',30,300,0.8,4);toast('Перо феникса','Вы восстали из пламени')}
 }
 function drawItemFx(g){
   const F=g.ifx,p=g.p;if(!F)return;
-  if(F.aura&&g.phase==='fight'){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,122,58,'+(0.22+0.1*Math.sin(anim*6))+')';ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.lineDashOffset=-anim*20;ctx.beginPath();ctx.arc(p.x,p.y,120,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
+  if(F.aura&&g.phase==='fight'){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,122,58,'+(0.22+0.1*Math.sin(anim*6))+')';ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.lineDashOffset=-anim*20;ctx.beginPath();ctx.arc(p.x,p.y,g.syn.flame?170:120,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
   if(g.shdT>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(183,155,255,'+(0.18*Math.min(1,g.shdT))+')';ctx.beginPath();ctx.arc(p.x,p.y,22,0,TAU);ctx.fill();ctx.restore()}
 }
 function heroMech(dt){
@@ -195,6 +196,7 @@ function update(dt){
   for(const m of g.merch)m.bob+=dt*2;
   compact(g.pch);compact(g.sk);compact(g.deb);compact(g.smk);compact(g.spk);compact(g.fl);compact(g.sc);compact(g.pt);compact(g.fx);compact(g.hfx);compact(g.afx);compact(g.tx);compact(g.pr);compact(g.zn);compact(g.bl);compact(g.tor);compact(g.gem);compact(g.pk);
   compact(g.em);compact(g.cfx);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
+  if(mode==='play')relicTick();
   if(mode==='play'&&g.pending>0&&!g.lvlOpen&&!g.over)openLevelUp();
 }
 function waveLogic(dt){
@@ -212,13 +214,13 @@ function waveLogic(dt){
     const cap=Math.min(180,45+14*w);
     const n=boss?1:1+Math.floor((w-1)/3);
     if(g.en.length<cap)for(let i=0;i<n;i++)spawnEnemy(pickType(w));
-    g.spawnT=Math.max(0.28,(w===1?1.3:1.0-0.045*w))*(boss?2:1)/(MAPS[g.map].foe.cnt||1);
+    g.spawnT=Math.max(0.28,(w===1?1.3:1.0-0.045*w))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
   }
   if(w>=3){
     g.eliteT-=dt;
     if(g.eliteT<=0&&g.en.length<170){
       spawnEnemy(eliteType(w),{elite:true});
-      g.eliteT=rnd(Math.max(8,18-0.4*w),Math.max(12,26-0.6*w));
+      g.eliteT=rnd(Math.max(8,18-0.4*w),Math.max(12,26-0.6*w))*ascMod('elite');
       toast('Элита','Золотая обводка: падает бонус и крупные кристаллы');
     }
   }
@@ -246,7 +248,7 @@ function waveLogic(dt){
   }else if(g.wt>=g.waveDur)endWave();
 }
 function essenceFor(g,win){
-  return Math.round(g.wave*6+g.kills/15+g.bossKills*20+(win||g.endless?120:0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0));
+  return Math.round((g.wave*6+g.kills/15+g.bossKills*20+(win||g.endless?120:0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0))*(1+0.25*(g.asc||0)));
 }
 function payEssence(win){
   const g=G,total=essenceFor(g,win),add=Math.max(0,total-(g.essPaid||0));
@@ -268,7 +270,7 @@ function winRun(){
   const g=G;
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
-  SAVE.runs++;SAVE.wins++;SAVE.best=Math.max(SAVE.best,g.wave);
+  SAVE.runs++;SAVE.wins++;if((g.asc||0)>=(SAVE.asc||0)&&(SAVE.asc||0)<ASC.length-1){SAVE.asc=(g.asc||0)+1;toast('Открыта '+ASC[SAVE.asc].n,ASC[SAVE.asc].d)}SAVE.best=Math.max(SAVE.best,g.wave);
   store();
   showOver(true,add);
   sfx(520,0.6,'triangle',0.06,400);
@@ -305,7 +307,8 @@ function interact(){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
   const m=nearMerchant();
-  if(m)openShop(m);
+  if(m){openShop(m);return}
+  const v=nearEvent();if(v)useEvent(v);
 }
 function togglePause(){
   const g=G;

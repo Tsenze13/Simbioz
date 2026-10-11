@@ -149,6 +149,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 @keyframes rarGlow{50%{box-shadow:0 0 22px 0 #ffb347}}
 .item[data-r]{border-color:color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),transparent 70px),var(--panel2)}
 .item .rar{font-weight:700}
+#tip .tsyn{margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.04);border:1px dashed var(--line2);font-size:12px;color:var(--dim)}
+#tip .tsyn b{color:#c9b3ff}#tip .tsyn.on{border-style:solid;border-color:#c47bff;color:#e0d4ff}#tip .tsyn.on b{color:#ffd36b}
 #tip .tst{margin-top:6px;display:grid;gap:3px;font-size:12.5px}
 #tip .tst div{display:flex;justify-content:space-between;gap:10px}
 #tip .tst i{font-style:normal;color:var(--dim);white-space:nowrap}#tip .tst i b{color:#e8eef8}
@@ -314,6 +316,8 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 .bagside .hint{font-size:12px;color:var(--dim)}
 @media (max-width:760px){.shop{grid-template-columns:1fr}}
 
+.ascrow{display:flex;align-items:center;gap:12px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.ascrow>div{flex:1;display:grid;gap:2px}.ascrow b{font:700 16px var(--f-display)}
 .gowhy{margin:0;padding:10px 12px;border-radius:8px;background:rgba(255,77,94,.1);border:1px solid rgba(255,77,94,.35);color:#ffc2c8;font-size:14px}
 .gowhy b{color:#fff}
 .dmgl{display:grid;gap:5px;max-height:220px;overflow:auto}
@@ -407,7 +411,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.24 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.25 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1246,6 +1250,7 @@ function itemTip(id,own){
     }
     h+='</div>';
   }
+  h+=synTip(id);
   if(own)h+='<div class="tu">Продать: '+Math.round(d.price*0.5)+' золота</div>';
   return h;
 }
@@ -1825,11 +1830,78 @@ const ACTIONS=[
 ];
 const DEFKEYS={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',dash:'Space',s1:'Digit1',s2:'Digit2',s3:'Digit3',s4:'Digit4',s5:'Digit5',ult:'KeyR',i1:'KeyZ',i2:'KeyX',i3:'KeyC',i4:'KeyV',i5:'KeyB',i6:'KeyN',tree:'KeyT',use:'KeyE',skip:'Enter',pause:'KeyP',mute:'KeyM',reload:'KeyF'};
 
+
+/* =====================================================================
+   РЕЛИКВИИ БОССОВ, СЛОЖНОСТЬ, СОБЫТИЯ МЕЖДУ ВОЛНАМИ, КОМБО ПРЕДМЕТОВ
+   ===================================================================== */
+
+/* Реликвии: после победы над боссом выбираешь 1 из 3. Не занимают рюкзак, действуют до конца забега.
+   st — статы (как у предметов), fx — особый эффект (те же флаги, что у предметов, + свои). */
+const RELICS={
+  voidshard:{boss:'guard',n:'Осколок пустоты',st:{dm:0.18,crit:0.06},d:'Чистая сила пустоты.'},
+  voidstep:{boss:'guard',n:'Пустотный шаг',st:{dch:1,drc:0.15},fx:'voidstep',d:'Там, откуда вы рванули, взрывается пустота.'},
+  guardeye:{boss:'guard',n:'Око стража',st:{ultcd:0.25,cdr:0.08},d:'Ульта и навыки восстанавливаются быстрее.'},
+  entcore:{boss:'ent',n:'Сердцевина энта',st:{hp:120,regen:2.5},d:'Древняя живучесть.'},
+  lifeseed:{boss:'ent',n:'Семя жизни',st:{ls:0.03},fx:'sapling',d:'Каждое убийство лечит 0,6% здоровья.'},
+  thornbark:{boss:'ent',n:'Шипастая кора',st:{armor:12,thorns:0.6},d:'Бьющие вас вблизи ранятся сами.'},
+  icecrown:{boss:'queen',n:'Ледяная корона',st:{mres:0.2},fx:'frost',d:'Бьющие вас вблизи замерзают (раз в 4 с).'},
+  queentear:{boss:'queen',n:'Слеза королевы',st:{mana:80,mreg:3},d:'Мана почти бесконечна.'},
+  wintershard:{boss:'queen',n:'Осколок зимы',st:{cdr:0.14,area:0.1},d:'Навыки быстрее и шире.'},
+  ironheart:{boss:'golem',n:'Железное сердце',st:{armor:18,hp:80},d:'Броня колосса.'},
+  magcore:{boss:'golem',n:'Магнитное ядро',st:{magnet:0.8,gold:0.25},d:'Добыча сама летит в руки.'},
+  colfist:{boss:'golem',n:'Кулак колосса',st:{dm:0.22,area:0.12},d:'Тяжёлые удары по площади.'},
+  sandclock:{boss:'sandlord',n:'Часы владыки',st:{drc:0.3,spd:0.12},d:'Рывок и бег быстрее.'},
+  luckscarab:{boss:'sandlord',n:'Скарабей удачи',st:{gold:0.35,crit:0.1},d:'Золото и криты.'},
+  sandheart:{boss:'sandlord',n:'Сердце бури песков',st:{dm:0.08},fx:'aura',d:'Враги рядом с вами горят в раскалённом песке.'},
+  voidmaw:{boss:'devourer',n:'Пасть пустоты',st:{dm:0.3,ls:0.06},d:'Сила Пожирателя.'},
+  starcore:{boss:'devourer',n:'Звёздное ядро',st:{cdr:0.1},fx:'thunder',d:'Каждые 2,5 с молния бьёт самого живучего врага.'},
+  eternity:{boss:'devourer',n:'Вечность',st:{hp:100},fx:'phoenix',d:'Ниже 30% здоровья: огненный взрыв и лечение 35%. Раз в 60 с.'}
+};
+const RELIC_IDS=Object.keys(RELICS);
+
+/* Уровни сложности: каждый включает все предыдущие. Открываются победой на предыдущем. */
+const ASC=[
+  {n:'Обычная',d:'Стандартный забег.'},
+  {n:'Сложность I',d:'Враги: +25% здоровья.',hp:1.25},
+  {n:'Сложность II',d:'Враги: +20% урона.',dmg:1.2},
+  {n:'Сложность III',d:'Элиты приходят на 30% чаще.',elite:0.7},
+  {n:'Сложность IV',d:'Барьер боссов вдвое крепче, уворачиваются чаще.',boss:2},
+  {n:'Сложность V',d:'Между волнами лечит только 10%, торговцы дороже на 20%.',heal:0.1,price:1.2}
+];
+/* суммарные множители выбранной сложности */
+function ascMod(k){
+  const lv=G&&G.asc||0;let m=k==='heal'?BAL.wave.interHeal:1;
+  for(let i=1;i<=lv;i++){const a=ASC[i];if(a[k]!==undefined)m=k==='heal'?a[k]:m*a[k]}
+  return m;
+}
+
+/* События между волнами: появляются в передышке, используются клавишей «Торговец». */
+const EVTS={
+  altar:{n:'Алтарь крови',c:'#ff4d5e',d:'Отдать 20% максимума здоровья: +1 очко навыков и карточка уровня.'},
+  chest:{n:'Проклятый сундук',c:'#c47bff',d:'Золото и случайный предмет. Проклятие: следующая волна на 30% крепче.'},
+  trial:{n:'Обелиск испытания',c:'#ffd36b',d:'Следующая волна злее: врагов больше и бьют сильнее. Награда: золото, очко навыков и лечение.'}
+};
+
+/* Комбо предметов: оба предмета в рюкзаке → бонус. */
+const SYN=[
+  {ids:['flamering','phoenix'],n:'Вечное пламя',d:'Кольцо пожара шире (170) и жжёт в 1,5 раза сильнее.',k:'flame'},
+  {ids:['thundercrown','stormgem'],n:'Гроза',d:'Молния Венца бьёт каждые 1,5 с.',k:'storm'},
+  {ids:['frostheart','wandfrost'],n:'Вечная мерзлота',d:'Ледяное сердце срабатывает раз в 2 с и шире.',k:'permafrost'},
+  {ids:['shadowcloak','blinkd'],n:'Убийца из тени',d:'После рывка урон ×2 вместо ×1,5.',k:'assassin'},
+  {ids:['venomfang','fang'],n:'Двойной клык',d:'Яд Клыка сильнее в 1,5 раза, +8% вампиризма.',k:'fangs',st:{ls:0.08}},
+  {ids:['midasring','luckycoin'],n:'Золотая лихорадка',d:'+25% золота и +10% урона.',st:{gold:0.25,dm:0.1}},
+  {ids:['bloodvial','mace'],n:'Кровопийца',d:'+6% вампиризма и +40 здоровья.',st:{ls:0.06,hp:40}},
+  {ids:['plate','dragonscale'],n:'Несокрушимый',d:'+15 брони и +10% сопротивления магии.',st:{armor:15,mres:0.1}},
+  {ids:['echoorb','chronolens'],n:'Петля времени',d:'Эхо перезаряжает каждый 3-й навык.',k:'loop'},
+  {ids:['berserk','bloodpact'],n:'Безумие',d:'+20% урона.',st:{dm:0.2}},
+  {ids:['hermes','greaves'],n:'Сапоги ветра',d:'+12% скорости и +20% к перезарядке рывка.',st:{spd:0.12,drc:0.2}},
+  {ids:['archstaff','orbmana'],n:'Архимаг',d:'+12% скорости навыков и +60 маны.',st:{cdr:0.12,mana:60}}
+];
 /* =====================================================================
    СОХРАНЕНИЕ, ЗВУК, ВВОД
    ===================================================================== */
 const SAVE_KEY='simbioz-save-v2';
-function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{}}}
+function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0}}
 let SAVE=freshSave();
 (function loadSave(){
   try{
@@ -2320,7 +2392,7 @@ function mkState(start,map){
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
-    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},symKnown:{},bag:[null,null,null,null,null,null],
+    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},relics:[],evts:[],syn:{},synOn:[],asc:Math.min(SAVE.ascSel||0,SAVE.asc||0),symKnown:{},bag:[null,null,null,null,null,null],
     S:{},E:{},bf:{dm:{t:0,v:0},spd:{t:0,v:0},armor:{t:0,v:0},ls:{t:0,v:0},regen:{t:0,v:0}},
     en:[],pr:[],zn:[],gem:[],pt:[],tx:[],bl:[],tor:[],fx:[],pk:[],bolts:[],beams:[],em:[],stc:[],eps:[],tgs:[],gh:[],merch:[],solids:[],pools:[],decors:[],gk:'',deb:[],smk:[],spk:[],fl:[],sc:[],slowmo:0,zk:0,lavaT:0,
     cdw:{},choices:[],pending:0,shake:0,hitFlash:0,rockAng:0,dashT:0,dashAng:0,block:0,shield:0,vac:0,slowAll:0,slowAllF:1,
@@ -2343,6 +2415,8 @@ function recalc(){
     const st=ITEMS[b.id].st;
     if(st)for(const k in st)it[k]=(it[k]||0)+st[k];
   }
+  for(const id of g.relics||[]){const st=RELICS[id].st;if(st)for(const k in st)it[k]=(it[k]||0)+st[k]}
+  synUpdate(g,it);
   {const ms=mapStats(g);for(const k in ms)it[k]=(it[k]||0)+ms[k]}
   g.aff=(AFF[g.map]&&AFF[g.map].h===g.start)?AFF[g.map]:null;
   if(g.aff)for(const k in g.aff.st)it[k]=(it[k]||0)+g.aff.st[k];
@@ -2381,6 +2455,7 @@ function recalc(){
   p.hp=Math.min(p.hp,S.maxHp);p.mana=Math.min(p.mana,S.maxMana);
   g.dockSig='';
   g.ifx={};for(const b of g.bag)if(b&&ITEMS[b.id].fx)g.ifx[ITEMS[b.id].fx]=1;
+  for(const id of g.relics||[])if(RELICS[id].fx)g.ifx[RELICS[id].fx]=1;
   tickBuffs(0);
 }
 function tickBuffs(dt){
@@ -2488,7 +2563,7 @@ function applySt(e,st,dm){
 const OUT_MODS=[
   (e,o,g,dot)=>e.burn>0&&g.start==='fire'&&g.pl?1+PV('fire',[0,.08,.15,.25]):1, /* пассивка Пироманта по горящим */
   (e,o,g,dot)=>g.ovhT>0&&!dot?1.5:1,  /* Перегрев Пироманта */
-  (e,o,g,dot)=>g.shdT>0&&!dot?1.5:1   /* Плащ тени после рывка */
+  (e,o,g,dot)=>g.shdT>0&&!dot?(g.syn.assassin?2:1.5):1   /* Плащ тени после рывка (комбо «Убийца из тени» — ×2) */
 ];
 function outMods(e,o,g,dot){let m=1;for(const f of OUT_MODS)m*=f(e,o,g,dot);return m}
 /* Защита босса: барьер фазы, лимит урона за удар, троттлинг плотного урона (числа в BAL.boss).
@@ -2550,7 +2625,7 @@ function hitEnemy(e,dmg,o){
   }
   if(e.hp>0){
     if(o.st)applySt(e,o.st,E.dm);
-    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[3+0.6*g.wave,3]},1);
+    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[(3+0.6*g.wave)*(g.syn.fangs?1.5:1),3]},1);
     if(overload){
       g.shake=Math.max(g.shake,3);
       explodeAt(e.x,e.y,70,eff*0.8/Math.max(0.01,E.dm),{dt:'magic',col:'#ffb347',src:'skill',noReact:true});
@@ -2621,6 +2696,7 @@ function killEnemy(e,o){
     if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true,sk:'__mech'});g.inChain=false}
     if(g.start==='water'&&e.wet>0&&o&&o.shock){g.p.mana=Math.min(g.S.maxMana,g.p.mana+5);if(g.tx.length<40&&Math.random()<0.5)g.tx.push({x:e.x,y:e.y-16,t:0.7,txt:'+5 маны',big:false,col:'#6fd0ff'})}
     if(g.start==='wood'&&e.poison>0&&g.pl>=3)heal(g.S.maxHp*0.01);
+    if(g.ifx&&g.ifx.sapling)heal(g.S.maxHp*0.006);
     if(g.start==='wood'&&e.poison>0){for(const o of g.en){if(!o.dead&&o!==e&&(o.x-e.x)**2+(o.y-e.y)**2<85*85)applySt(o,{poison:[e.poisonDps*0.6,3]},1/(g.cls.dot||1))}ring(e.x,e.y,85,'#a6e07a',0.4)}
   }
   if(e.def.onDeath){const lv=e.def.onDeath==='lava';addPatch(e.x,e.y,lv?52:40,lv?4:3,e.dmg*(lv?1.1:0.9),lv?'lava':'fire')}
@@ -3257,7 +3333,7 @@ function castSlot(i){
   const r=CAST[a.kind](pr,c);
   if(r===false){if(hot)g.ovhT=oh0;g.curSk=null;return}
   g.p.mana-=mana;g.castN++;
-  const echo=g.ifx&&g.ifx.echo&&g.castN%4===0;
+  const echo=g.ifx&&g.ifx.echo&&g.castN%(g.syn.loop?3:4)===0;
   if(g.start==='fire'){
     g.heatIdle=0;
     if(hot){
@@ -3743,7 +3819,7 @@ function spawnPos(){
 function spawnAt(type,x,y,hm,dm,opts){
   const g=G,d=ET[type],F=MAPS[g.map].foe;
   opts=opts||{};
-  hm*=(F.hp||1)*lvAdj();dm*=F.dmg||1;
+  hm*=(F.hp||1)*lvAdj()*ascMod('hp')*(g.curseW===g.wave?1.3:1);dm*=(F.dmg||1)*ascMod('dmg')*(g.trialW===g.wave?1.15:1);
   const e={type:type,def:d,x:x,y:y,r:d.r,hp:d.hp*hm,max:d.hp*hm,sp:d.sp,dmg:d.dmg*dm,armor:d.armor||0,mres:d.mres||0,col:d.col,shape:d.shape,ai:d.ai,
     hpMul:hm,dmgMul:dm,flash:0,burn:0,burnDps:0,bt:0,poison:0,poisonDps:0,pt:0,slow:0,slowF:1,frz:0,stun:0,root:0,wet:0,rust:0,ovl:0,kx:0,ky:0,kres:1,rockCd:0,slam:0,cc:0,
     cd:rnd(0.6,d.cd||2.2),st:'move',tm:0,dir:0,ang:0,elite:false,boss:false,affix:null,dead:false,hitP:false};
@@ -3816,7 +3892,7 @@ function hurtPlayer(d,dt,att){
   puff(p.x,p.y,DT[dt].c,8,160,0.35,3);
   if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-22,t:0.75,txt:'-'+Math.round(d),big:true,col:'#ff6b7a'});
   sfx(130,0.18,'sawtooth',0.06,-60);
-  if(g.ifx&&g.ifx.frost&&att&&att.e&&att.melee&&g.t>(g.frU||0)){g.frU=g.t+4;for(const o of g.en){if(!o.dead&&(o.x-p.x)**2+(o.y-p.y)**2<140*140)applySt(o,{frz:1.2},1)}ring(p.x,p.y,140,'#bdf0ff',0.5);puff(p.x,p.y,'#e6fbff',16,200,0.5,3)}
+  if(g.ifx&&g.ifx.frost&&att&&att.e&&att.melee&&g.t>(g.frU||0)){const pf=g.syn.permafrost;g.frU=g.t+(pf?2:4);for(const o of g.en){if(!o.dead&&(o.x-p.x)**2+(o.y-p.y)**2<(pf?180:140)**2)applySt(o,{frz:1.2},1)}ring(p.x,p.y,140,'#bdf0ff',0.5);puff(p.x,p.y,'#e6fbff',16,200,0.5,3)}
   {const th=g.S.thorns+(g.start==='wood'&&g.season===2?0.3:0);if(att&&att.e&&att.melee&&th>0)hitEnemy(att.e,d*th,{dt:'pure',src:'dot',quiet:true})}
   if(p.hp<=0){
     const ae=g.bag.findIndex(b=>b&&b.id==='aegis');
@@ -3953,7 +4029,7 @@ function bossDodge(e,dt,p){
   if(!th)return;
   if(Math.random()>(e.phase>=3?0.75:0.5)){e.dgCd=0.8;return}
   if((e.x+th.x-g.p.x)**2+(e.y+th.y-g.p.y)**2<(e.x-th.x-g.p.x)**2+(e.y-th.y-g.p.y)**2&&Math.random()<0.5){th.x=-th.x;th.y=-th.y}
-  e.dodge={vx:th.x*720,vy:th.y*720,t:0.24};e.dgCd=e.phase>=3?2.4:3.6;
+  e.dodge={vx:th.x*720,vy:th.y*720,t:0.24};e.dgCd=(e.phase>=3?2.4:3.6)/(ascMod('boss')>1?1.4:1);
   puff(e.x,e.y,e.col,14,180,0.4,4);sfx(520,0.08,'triangle',0.03,300);
   if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-14,t:0.7,txt:'Уворот',big:false,col:'#e8eef8'});
 }
@@ -3961,7 +4037,7 @@ function bossAI(e,dt,p,d,spMul){
   const g=G;
   const ph=e.hp/e.max<0.34?3:(e.hp/e.max<0.67?2:1);
   if(ph!==e.phase){
-    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier;e.barMax=e.bar;
+    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier*ascMod('boss');e.barMax=e.bar;
     if(ph===3){e.sp*=1.25;if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-30,t:1.4,txt:'ЯРОСТЬ',big:true,col:'#ff4d5e'})}
     g.shake=Math.max(g.shake,12);ring(e.x,e.y,e.r+120,e.col,0.6);puff(e.x,e.y,e.col,30,260,0.6,4);
     toast(e.name,'Фаза '+ph);sfx(80,0.5,'sawtooth',0.07,-20);
@@ -4255,7 +4331,8 @@ function compact(a){let j=0;for(let i=0;i<a.length;i++){if(!a[i].dead)a[j++]=a[i
 /* ---------- волны ---------- */
 function startWave(w){
   const g=G;
-  g.wave=w;g.phase='fight';g.wt=0;
+  g.wave=w;g.phase='fight';g.wt=0;g.evts=[];
+  if(g.curseW===w)toast('Проклятие сундука','Враги этой волны на 30% крепче');if(g.trialW===w)toast('Испытание','Врагов больше, и они злее. Выживи!');
   if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
   g.bossRef=null;g.bossDead=false;
   g.waveDur=Math.min(BAL.wave.durMax,BAL.wave.durBase+w);
@@ -4280,9 +4357,11 @@ function endWave(){
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*BAL.wave.interHeal);p.mana=g.S.maxMana;
+  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;
   {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
   stockMerchants();
+  spawnEvents();trialReward();
+  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead)g.relicQ=bk}
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
   sfx(500,0.4,'triangle',0.06,300);
 }
@@ -4291,6 +4370,7 @@ function priceOf(id,mid){
   const g=G,d=ITEMS[id];
   let pr=d.price*(1+0.03*(g.wave-1))*(1-0.03*(SAVE.meta.discount||0));
   if(mid==='smug')pr*=1.15;
+  pr*=ascMod('price');
   return Math.max(10,Math.round(pr/5)*5);
 }
 function genStock(mid){
@@ -4468,6 +4548,7 @@ function buildChoices(){
 function applyChoice(c){
   const g=G,p=g.p;
   if(c.kind==='gun'){g.guns.push({t:c.key,cd:0,aim:0,fl:0,rec:0});toast('Оружие: '+GUNS[c.key].n,'Теперь вокруг вас парят '+g.guns.length+' ствола')}
+  else if(c.kind==='relic'){g.relics.push(c.key);recalc();toast('Реликвия: '+c.title,c.desc);ring(p.x,p.y,150,'#ffd36b',0.8);puff(p.x,p.y,'#ffd36b',30,260,0.8,3.5)}
   else if(c.kind==='gunmod'){(g.gmods||(g.gmods={}))[c.key]=c.mk;toast(GUNS[c.key].n+': '+c.title,c.desc);sfx(640,0.15,'triangle',0.05,200)}
   else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;if(c.key==='mag')for(const gn of allGuns(g))if(gn.am!==undefined&&!(gn.rl>0))gn.am=gunMag(gn);toast('Модуль: '+c.title,c.desc)}
   else if(c.kind==='el'){
@@ -4514,6 +4595,7 @@ function tryDash(){
   if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
   g.dashHit=null;g.dashSp=0;
   if(g.ifx&&g.ifx.shadow)g.shdT=2.5;
+  if(g.ifx&&g.ifx.voidstep){const x=p.x,y=p.y,dm=30+12*g.wave;ring(x,y,95,'#a83bd0',0.3);g.later.push({t:0.25,fn:()=>explodeAt(x,y,95,dm,{dt:'magic',col:'#a83bd0',knock:200,src:'item',sk:'__item',shake:3})})}
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
   if(g.start==='earth'){g.curSk='__dash';const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}g.curSk=null}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
@@ -4592,15 +4674,15 @@ function itemFx(dt){
   const g=G,p=g.p,F=g.ifx;if(!F)return;
   if(g.shdT>0)g.shdT-=dt;
   if(g.phase!=='fight')return;
-  if(F.thunder){g.thT=(g.thT||0)-dt;if(g.thT<=0){g.thT=2.5;let best=null,bh=0;
+  if(F.thunder){g.thT=(g.thT||0)-dt;if(g.thT<=0){g.thT=g.syn.storm?1.5:2.5;let best=null,bh=0;
     for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2>480*480)continue;if(e.hp>bh){bh=e.hp;best=e}}
     if(best){chainBolt(best.x+rnd(-30,30),best.y-320,best,0,60+14*g.wave,0,{dt:'magic',shock:true,col:'#f4f08a',src:'item'});ring(best.x,best.y,40,'#f4f08a',0.3);g.shake=Math.max(g.shake,3);sfx(900,0.12,'sawtooth',0.03,-600)}}}
-  if(F.aura){g.auT=(g.auT||0)-dt;if(g.auT<=0){g.auT=0.5;for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<(120+e.r)**2)applySt(e,{burn:[5+1.3*g.wave,1.2]},1)}}}
+  if(F.aura){g.auT=(g.auT||0)-dt;if(g.auT<=0){g.auT=0.5;for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<((g.syn.flame?170:120)+e.r)**2)applySt(e,{burn:[(5+1.3*g.wave)*(g.syn.flame?1.5:1),1.2]},1)}}}
   if(F.phoenix&&p.hp<g.S.maxHp*0.3&&g.t>(g.phU||0)){g.phU=g.t+60;heal(g.S.maxHp*0.35);explodeAt(p.x,p.y,230,40+15*g.wave,{dt:'magic',col:'#ffb347',st:{burn:[8+2*g.wave,3]},knock:320,src:'item',shake:9});ring(p.x,p.y,260,'#ffd36b',0.8);puff(p.x,p.y,'#ffb347',30,300,0.8,4);toast('Перо феникса','Вы восстали из пламени')}
 }
 function drawItemFx(g){
   const F=g.ifx,p=g.p;if(!F)return;
-  if(F.aura&&g.phase==='fight'){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,122,58,'+(0.22+0.1*Math.sin(anim*6))+')';ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.lineDashOffset=-anim*20;ctx.beginPath();ctx.arc(p.x,p.y,120,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
+  if(F.aura&&g.phase==='fight'){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,122,58,'+(0.22+0.1*Math.sin(anim*6))+')';ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.lineDashOffset=-anim*20;ctx.beginPath();ctx.arc(p.x,p.y,g.syn.flame?170:120,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
   if(g.shdT>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(183,155,255,'+(0.18*Math.min(1,g.shdT))+')';ctx.beginPath();ctx.arc(p.x,p.y,22,0,TAU);ctx.fill();ctx.restore()}
 }
 function heroMech(dt){
@@ -4686,6 +4768,7 @@ function update(dt){
   for(const m of g.merch)m.bob+=dt*2;
   compact(g.pch);compact(g.sk);compact(g.deb);compact(g.smk);compact(g.spk);compact(g.fl);compact(g.sc);compact(g.pt);compact(g.fx);compact(g.hfx);compact(g.afx);compact(g.tx);compact(g.pr);compact(g.zn);compact(g.bl);compact(g.tor);compact(g.gem);compact(g.pk);
   compact(g.em);compact(g.cfx);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
+  if(mode==='play')relicTick();
   if(mode==='play'&&g.pending>0&&!g.lvlOpen&&!g.over)openLevelUp();
 }
 function waveLogic(dt){
@@ -4703,13 +4786,13 @@ function waveLogic(dt){
     const cap=Math.min(180,45+14*w);
     const n=boss?1:1+Math.floor((w-1)/3);
     if(g.en.length<cap)for(let i=0;i<n;i++)spawnEnemy(pickType(w));
-    g.spawnT=Math.max(0.28,(w===1?1.3:1.0-0.045*w))*(boss?2:1)/(MAPS[g.map].foe.cnt||1);
+    g.spawnT=Math.max(0.28,(w===1?1.3:1.0-0.045*w))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
   }
   if(w>=3){
     g.eliteT-=dt;
     if(g.eliteT<=0&&g.en.length<170){
       spawnEnemy(eliteType(w),{elite:true});
-      g.eliteT=rnd(Math.max(8,18-0.4*w),Math.max(12,26-0.6*w));
+      g.eliteT=rnd(Math.max(8,18-0.4*w),Math.max(12,26-0.6*w))*ascMod('elite');
       toast('Элита','Золотая обводка: падает бонус и крупные кристаллы');
     }
   }
@@ -4737,7 +4820,7 @@ function waveLogic(dt){
   }else if(g.wt>=g.waveDur)endWave();
 }
 function essenceFor(g,win){
-  return Math.round(g.wave*6+g.kills/15+g.bossKills*20+(win||g.endless?120:0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0));
+  return Math.round((g.wave*6+g.kills/15+g.bossKills*20+(win||g.endless?120:0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0))*(1+0.25*(g.asc||0)));
 }
 function payEssence(win){
   const g=G,total=essenceFor(g,win),add=Math.max(0,total-(g.essPaid||0));
@@ -4759,7 +4842,7 @@ function winRun(){
   const g=G;
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
-  SAVE.runs++;SAVE.wins++;SAVE.best=Math.max(SAVE.best,g.wave);
+  SAVE.runs++;SAVE.wins++;if((g.asc||0)>=(SAVE.asc||0)&&(SAVE.asc||0)<ASC.length-1){SAVE.asc=(g.asc||0)+1;toast('Открыта '+ASC[SAVE.asc].n,ASC[SAVE.asc].d)}SAVE.best=Math.max(SAVE.best,g.wave);
   store();
   showOver(true,add);
   sfx(520,0.6,'triangle',0.06,400);
@@ -4796,7 +4879,8 @@ function interact(){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
   const m=nearMerchant();
-  if(m)openShop(m);
+  if(m){openShop(m);return}
+  const v=nearEvent();if(v)useEvent(v);
 }
 function togglePause(){
   const g=G;
@@ -4805,6 +4889,106 @@ function togglePause(){
   if(g.paused){fillStats();for(const k in codes)codes[k]=false}
 }
 
+
+/* =====================================================================
+   РЕЛИКВИИ, СОБЫТИЯ, КОМБО — логика (данные в data/relics.js)
+   ===================================================================== */
+
+/* ---------- реликвии ---------- */
+function relicChoices(bk){
+  const g=G,own=new Set(g.relics);
+  const pool=shuffle(RELIC_IDS.filter(id=>RELICS[id].boss===bk&&!own.has(id)));
+  const extra=shuffle(RELIC_IDS.filter(id=>RELICS[id].boss!==bk&&!own.has(id)));
+  const out=pool.slice(0,3);while(out.length<3&&extra.length)out.push(extra.shift());
+  return out.map(id=>{const R=RELICS[id];return {kind:'relic',key:id,w:1,tag:'Реликвия · '+BOSS[R.boss].n,title:R.n,sub:R.st?statLine(R.st):'',desc:R.d,c1:'#ffd36b',c2:BOSS[R.boss].col}});
+}
+function relicTick(){
+  const g=G;
+  if(!g.relicQ||g.lvlOpen||g.over||g.shopOpen||g.treeOpen||g.paused)return;
+  const bk=g.relicQ;g.relicQ=null;
+  const ch=relicChoices(bk);if(!ch.length)return;
+  g.pending++;openLevelUp(ch);$('luT').textContent='Трофей: '+BOSS[bk].n+' повержен — выбери реликвию';
+}
+
+/* ---------- комбо предметов ---------- */
+function synActive(g){const ids=new Set(g.bag.filter(Boolean).map(b=>b.id));return SYN.filter(s=>s.ids.every(i=>ids.has(i)))}
+function synUpdate(g,it){
+  const on=synActive(g),prev=g.synOn||[];g.syn={};
+  for(const s of on){if(s.k)g.syn[s.k]=1;if(s.st)for(const k in s.st)it[k]=(it[k]||0)+s.st[k]}
+  for(const s of on)if(!prev.includes(s.n)&&g.t>0){toast('Комбо: '+s.n,s.d);sfx(880,0.25,'triangle',0.05,600)}
+  g.synOn=on.map(s=>s.n);
+}
+function synTip(id){
+  const g=G,L=SYN.filter(s=>s.ids.includes(id));if(!L.length)return '';
+  return L.map(s=>{const o=ITEMS[s.ids.find(x=>x!==id)],on=g&&g.synOn&&g.synOn.includes(s.n);
+    return '<div class="tsyn'+(on?' on':'')+'"><b>Комбо «'+s.n+'»</b>'+(on?' · активно':' · вместе с «'+o.n+'»')+'<br>'+s.d+'</div>'}).join('');
+}
+
+/* ---------- события между волнами ---------- */
+function spawnEvents(){
+  const g=G;g.evts=[];
+  if(g.wave<2||Math.random()>0.6)return;
+  const types=shuffle(Object.keys(EVTS)),n=g.wave>=10&&Math.random()<0.3?2:1;
+  for(let i=0;i<n;i++){const a=rnd(0,TAU),q=freeSpot(g.p.x+Math.cos(a)*300,g.p.y+Math.sin(a)*300,40,170);g.evts.push({t:types[i],x:q.x,y:q.y,used:false,bob:rnd(0,TAU)})}
+}
+function nearEvent(){
+  const g=G;if(g.phase!=='inter'||!g.evts)return null;
+  for(const v of g.evts)if(!v.used&&(v.x-g.p.x)**2+(v.y-g.p.y)**2<85*85)return v;
+  return null;
+}
+function useEvent(v){
+  const g=G,p=g.p,w=g.wave;
+  if(v.t==='altar'){
+    const cost=g.S.maxHp*0.2;
+    if(p.hp<=cost+1){toast('Алтарь молчит','Нужно больше здоровья');return}
+    p.hp-=cost;g.sp++;g.pending++;
+    ring(v.x,v.y,120,'#ff4d5e',0.6);puff(p.x,p.y,'#ff4d5e',20,200,0.6,3);toast('Алтарь крови','+1 очко навыков и карточка уровня');
+  }else if(v.t==='chest'){
+    const gold=Math.round(120+30*w);p.gold+=gold;
+    const ids=[];for(const k of ['smith','alch','mage','smug'])for(const id of MERCH[k].pool){const d=ITEMS[id];if(!d.scroll&&!d.ch&&d.price<500&&!g.bag.some(b=>b&&b.id===id))ids.push(id)}
+    const id=pickOf(ids);let got='';
+    if(id&&addToBag(id)){recalc();got=' и «'+ITEMS[id].n+'»'}else if(id){p.gold+=Math.round(ITEMS[id].price*0.5);got=' (рюкзак полон — ещё золото)'}
+    g.curseW=w+1;
+    ring(v.x,v.y,120,'#c47bff',0.6);puff(v.x,v.y,'#ffd36b',24,220,0.6,3);toast('Проклятый сундук','+'+gold+' золота'+got+'. Следующая волна крепче');
+  }else if(v.t==='trial'){
+    g.trialW=w+1;
+    ring(v.x,v.y,140,'#ffd36b',0.6);toast('Испытание принято','Переживите следующую волну — получите награду');
+  }
+  v.used=true;sfx(520,0.3,'triangle',0.05,300);
+}
+function trialReward(){
+  const g=G;if(g.trialW!==g.wave)return;
+  const gold=Math.round(150+40*g.wave);g.p.gold+=gold;g.sp++;heal(g.S.maxHp*0.5);g.trialW=0;
+  toast('Испытание пройдено','+'+gold+' золота, +1 очко навыков, лечение');
+}
+function drawEvents(g){
+  if(!g.evts||!g.evts.length)return;
+  const ne=nearEvent();
+  for(const v of g.evts){
+    if(!vis(v.x,v.y,90))continue;
+    const E=EVTS[v.t],a=v.used?0.35:1,bob=Math.sin(anim*2+v.bob)*2;
+    ctx.save();ctx.translate(v.x,v.y);ctx.globalAlpha=a;
+    ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(0,16,26,8,0,0,TAU);ctx.fill();
+    if(!v.used){ctx.globalCompositeOperation='lighter';glow(0,0,60,E.c,0.35+0.1*Math.sin(anim*3));ctx.globalCompositeOperation='source-over';ctx.globalAlpha=a}
+    if(v.t==='altar'){
+      ctx.fillStyle='#4a4550';ctx.fillRect(-22,-4,44,20);ctx.fillStyle='#5d5866';ctx.fillRect(-26,-10,52,8);
+      ctx.fillStyle=v.used?'#5a2a30':'#c2263a';ctx.beginPath();ctx.ellipse(0,-10,14,4,0,0,TAU);ctx.fill();
+      if(!v.used){ctx.fillStyle='#ff4d5e';for(let i=0;i<3;i++){const k=(anim*0.8+i/3)%1;ctx.globalAlpha=1-k;ctx.beginPath();ctx.arc(rnd(-6,6)*0+(i-1)*6,-14-k*26,2,0,TAU);ctx.fill()}ctx.globalAlpha=a}
+    }else if(v.t==='chest'){
+      ctx.translate(0,bob*0.3);
+      ctx.fillStyle='#3a2a4a';ctx.fillRect(-20,-6,40,22);ctx.fillStyle='#4e3866';ctx.beginPath();ctx.moveTo(-21,-6);ctx.quadraticCurveTo(0,-24,21,-6);ctx.fill();
+      ctx.fillStyle='#c9a24a';ctx.fillRect(-21,-7,42,3);ctx.fillRect(-3,-12,6,12);ctx.fillStyle='#c47bff';ctx.beginPath();ctx.arc(0,-2,3,0,TAU);ctx.fill();
+    }else{
+      ctx.fillStyle='#55555f';ctx.beginPath();ctx.moveTo(-10,16);ctx.lineTo(-7,-34);ctx.lineTo(0,-42);ctx.lineTo(7,-34);ctx.lineTo(10,16);ctx.closePath();ctx.fill();
+      ctx.fillStyle=v.used?'#7a6a3a':'#ffd36b';ctx.globalAlpha=a*(0.7+0.3*Math.sin(anim*4));ctx.fillRect(-2,-30,4,16);ctx.fillRect(-6,-24,12,3);ctx.globalAlpha=a;
+    }
+    ctx.restore();
+    ctx.save();ctx.textAlign='center';ctx.font='700 12px "Golos Text",system-ui,sans-serif';ctx.lineWidth=3;ctx.strokeStyle='rgba(10,12,18,.85)';
+    const t=E.n+(v.used?' (использовано)':'');ctx.strokeText(t,v.x,v.y-52);ctx.fillStyle=v.used?'#8a90a2':E.c;ctx.fillText(t,v.x,v.y-52);
+    if(v===ne){ctx.font='12px "Golos Text",system-ui,sans-serif';ctx.strokeText(E.d,v.x,v.y+34);ctx.fillStyle='#dfe5f3';ctx.fillText(E.d,v.x,v.y+34)}
+    ctx.restore();
+  }
+}
 /* ---------- подсказки новичку: показываются по одному разу, выключаются в «Управлении» ---------- */
 const kb=a=>'<kbd>'+keyName(SAVE.keys[a])+'</kbd>';
 const TUT={
@@ -4943,11 +5127,11 @@ function hud(){
   const br=g.bossRef&&!g.bossRef.dead;
   if(hc.boss!==br){hc.boss=br;$('boss').hidden=!br}
   if(br){setText('bossN',g.bossRef.name+(g.bossRef.bar>0?' · барьер '+Math.ceil(g.bossRef.bar/g.bossRef.barMax*100)+'%':'')+(g.bossRef.phase>1?' · фаза '+g.bossRef.phase:''));$('bossF').style.transform='scaleX('+clamp(g.bossRef.hp/g.bossRef.max,0,1)+')'}
-  const nm=g.phase==='inter'?nearMerchant():null;
-  const key=!!nm;
+  const nm=g.phase==='inter'?nearMerchant():null,ne=!nm&&g.phase==='inter'?nearEvent():null;
+  const key=nm?'m'+nm.id:(ne?'e'+ne.t:'');
   {const cd=dashCd().toFixed(1),dc=g.p.dch+'/'+(1+(g.S.dch||0))+' · '+cd+'с';if(hc.dc!==dc){hc.dc=dc;$('dashBtn').textContent='Рывок '+dc;$('dashBtn').title='Заряды рывка и время перезарядки одного заряда'}}
-  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;if(nm)$('useBtn').textContent=MERCH[nm.id].n}
-  if(nm&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+MERCH[nm.id].n;
+  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;$('useBtn').textContent=nm?MERCH[nm.id].n:(ne?EVTS[ne.t].n:'')}
+  if((nm||ne)&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+(nm?MERCH[nm.id].n:EVTS[ne.t].n);
   const inter=g.phase==='inter';
   if(hc.inter!==inter){hc.inter=inter;$('skipBtn').hidden=!inter}
 }
@@ -5399,13 +5583,15 @@ function buildChips(g){
     const d=ITEMS[b.id];
     h+='<span class="chip stat"><b>'+d.n+'</b>'+(d.ch?' ×'+b.ch:'')+'</span>';
   }
+  for(const id of g.relics||[])h+='<span class="chip" style="--c1:#ffd36b" title="'+RELICS[id].d+'"><span class="orb sm" style="--c1:#ffd36b;--c2:'+BOSS[RELICS[id].boss].col+'"></span><b>'+RELICS[id].n+'</b></span>';
+  for(const n of g.synOn||[])h+='<span class="chip stat" style="border-color:#c47bff"><b style="color:#c9b3ff">Комбо: '+n+'</b></span>';
   for(const k in g.pass){if(g.pass[k]>0)h+='<span class="chip stat"><b>'+STCM[k].n+'</b> '+g.pass[k]+'</span>'}
   return h;
 }
 function fillStats(){
   const g=G,S=g.S,E=g.E;
   const rows=[
-    ['Карта',MAPS[g.map].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
+    ['Карта',MAPS[g.map].n],['Сложность',ASC[g.asc||0].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
     ['Мана',Math.round(S.maxMana)],['Восстановление маны',S.mreg.toFixed(1)+' в с'],
     ['Радиус подбора',Math.round(S.magnet)],['Урон','+'+Math.round((E.dm-1)*100)+'%'],
     ['Скорость бега','+'+Math.round((E.spd-1+0.03*g.el.air)*100)+'%'],['Скорость навыков','+'+Math.round(S.cdr*100)+'%'],
@@ -5496,7 +5682,7 @@ function playTab(){
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
     +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
     +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
-    +'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
+    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -5564,6 +5750,10 @@ function codexTab(){
   const dtp=Object.keys(DT).map(k=>row('<span style="color:'+DT[k].c+'">'+DT[k].n+'</span>',DT[k].d)).join('');
   return '<section>'+sec('Стихии',el)+sec('Навыки стихий (хотбар 1-5)',sk)+sec('Симбиозы стихий',sy)+sec('Слияния навыков',fu)+sec('Ульты',ul)+sec('Торговцы и предметы',it)+sec('Враги и боссы',en)+sec('Древа навыков',trCodex())+sec('Типы урона',dtp)+sec('Реакции',rx)+'</section>';
 }
+function ascRow(){
+  const mx=SAVE.asc||0,cur=Math.min(SAVE.ascSel||0,mx),A=ASC[cur];
+  return '<div class="ascrow"><button class="btn alt sm" type="button" data-asc="-1"'+(cur>0?'':' disabled')+'>‹</button><div><b>'+A.n+'</b><span class="sub">'+(cur?A.d+(cur>1?' И всё с прошлых уровней.':'')+' Эссенция +'+cur*25+'%.':'Победа открывает «'+ASC[1].n+'».')+(mx<ASC.length-1?' Открыто: '+(mx+1)+' из '+ASC.length+'.':'')+'</span></div><button class="btn alt sm" type="button" data-asc="1"'+(cur<mx?'':' disabled')+'>›</button></div>';
+}
 function keysTab(){
   let h='<section><div><h2 class="sec">Клавиши</h2><div class="kgrid">';
   for(const a of ACTIONS){
@@ -5587,6 +5777,7 @@ $('mpanel').addEventListener('click',e=>{
   }else if(t.dataset.key){listening=t.dataset.key;renderMenu()}
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
+  else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
   else if(t.dataset.wipe){
@@ -8876,7 +9067,7 @@ function render(){
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-(cx+VW/2),-(cy+VH/2));
   drawGround(g,MP,cx,cy);
   drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
-  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawStructs(g);drawEnemies(g);drawDebris(g);drawSmoke(g)}
+  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawDebris(g);drawSmoke(g)}
   drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g)}
   if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
   else drawFx(g);
@@ -8970,7 +9161,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    activeReload,GMOD,gunMag,heroMech,bossPattern,itemTip,ultCanUp,BOSS,
+    activeReload,GMOD,gunMag,heroMech,interact,bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

@@ -354,7 +354,7 @@ function castSlot(i){
   const r=CAST[a.kind](pr,c);
   if(r===false){if(hot)g.ovhT=oh0;g.curSk=null;return}
   g.p.mana-=mana;g.castN++;
-  const echo=g.ifx&&g.ifx.echo&&g.castN%4===0;
+  const echo=g.ifx&&g.ifx.echo&&g.castN%(g.syn.loop?3:4)===0;
   if(g.start==='fire'){
     g.heatIdle=0;
     if(hot){

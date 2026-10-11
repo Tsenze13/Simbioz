@@ -182,6 +182,7 @@ function itemTip(id,own){
     }
     h+='</div>';
   }
+  h+=synTip(id);
   if(own)h+='<div class="tu">Продать: '+Math.round(d.price*0.5)+' золота</div>';
   return h;
 }

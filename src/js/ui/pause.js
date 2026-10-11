@@ -16,13 +16,15 @@ function buildChips(g){
     const d=ITEMS[b.id];
     h+='<span class="chip stat"><b>'+d.n+'</b>'+(d.ch?' ×'+b.ch:'')+'</span>';
   }
+  for(const id of g.relics||[])h+='<span class="chip" style="--c1:#ffd36b" title="'+RELICS[id].d+'"><span class="orb sm" style="--c1:#ffd36b;--c2:'+BOSS[RELICS[id].boss].col+'"></span><b>'+RELICS[id].n+'</b></span>';
+  for(const n of g.synOn||[])h+='<span class="chip stat" style="border-color:#c47bff"><b style="color:#c9b3ff">Комбо: '+n+'</b></span>';
   for(const k in g.pass){if(g.pass[k]>0)h+='<span class="chip stat"><b>'+STCM[k].n+'</b> '+g.pass[k]+'</span>'}
   return h;
 }
 function fillStats(){
   const g=G,S=g.S,E=g.E;
   const rows=[
-    ['Карта',MAPS[g.map].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
+    ['Карта',MAPS[g.map].n],['Сложность',ASC[g.asc||0].n],['Здоровье',Math.round(S.maxHp)],['Регенерация',E.regen.toFixed(1)+' в с'],
     ['Мана',Math.round(S.maxMana)],['Восстановление маны',S.mreg.toFixed(1)+' в с'],
     ['Радиус подбора',Math.round(S.magnet)],['Урон','+'+Math.round((E.dm-1)*100)+'%'],
     ['Скорость бега','+'+Math.round((E.spd-1+0.03*g.el.air)*100)+'%'],['Скорость навыков','+'+Math.round(S.cdr*100)+'%'],

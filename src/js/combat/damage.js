@@ -42,7 +42,7 @@ function applySt(e,st,dm){
 const OUT_MODS=[
   (e,o,g,dot)=>e.burn>0&&g.start==='fire'&&g.pl?1+PV('fire',[0,.08,.15,.25]):1, /* пассивка Пироманта по горящим */
   (e,o,g,dot)=>g.ovhT>0&&!dot?1.5:1,  /* Перегрев Пироманта */
-  (e,o,g,dot)=>g.shdT>0&&!dot?1.5:1   /* Плащ тени после рывка */
+  (e,o,g,dot)=>g.shdT>0&&!dot?(g.syn.assassin?2:1.5):1   /* Плащ тени после рывка (комбо «Убийца из тени» — ×2) */
 ];
 function outMods(e,o,g,dot){let m=1;for(const f of OUT_MODS)m*=f(e,o,g,dot);return m}
 /* Защита босса: барьер фазы, лимит урона за удар, троттлинг плотного урона (числа в BAL.boss).
@@ -104,7 +104,7 @@ function hitEnemy(e,dmg,o){
   }
   if(e.hp>0){
     if(o.st)applySt(e,o.st,E.dm);
-    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[3+0.6*g.wave,3]},1);
+    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[(3+0.6*g.wave)*(g.syn.fangs?1.5:1),3]},1);
     if(overload){
       g.shake=Math.max(g.shake,3);
       explodeAt(e.x,e.y,70,eff*0.8/Math.max(0.01,E.dm),{dt:'magic',col:'#ffb347',src:'skill',noReact:true});
@@ -175,6 +175,7 @@ function killEnemy(e,o){
     if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true,sk:'__mech'});g.inChain=false}
     if(g.start==='water'&&e.wet>0&&o&&o.shock){g.p.mana=Math.min(g.S.maxMana,g.p.mana+5);if(g.tx.length<40&&Math.random()<0.5)g.tx.push({x:e.x,y:e.y-16,t:0.7,txt:'+5 маны',big:false,col:'#6fd0ff'})}
     if(g.start==='wood'&&e.poison>0&&g.pl>=3)heal(g.S.maxHp*0.01);
+    if(g.ifx&&g.ifx.sapling)heal(g.S.maxHp*0.006);
     if(g.start==='wood'&&e.poison>0){for(const o of g.en){if(!o.dead&&o!==e&&(o.x-e.x)**2+(o.y-e.y)**2<85*85)applySt(o,{poison:[e.poisonDps*0.6,3]},1/(g.cls.dot||1))}ring(e.x,e.y,85,'#a6e07a',0.4)}
   }
   if(e.def.onDeath){const lv=e.def.onDeath==='lava';addPatch(e.x,e.y,lv?52:40,lv?4:3,e.dmg*(lv?1.1:0.9),lv?'lava':'fire')}
