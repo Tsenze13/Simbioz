@@ -365,7 +365,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.18.1 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.19 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1103,7 +1103,7 @@ const GL={
   mana:'<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>',
   leaf:'<path d="M5 19C5 10 10 5 20 4c0 10-5 15-14 15zM5 19l8-8"/>'
 };
-const GLK={nova:'nova',blast:'blast',rain:'rain',zone:'zone',zones:'zone',proj:'proj',chain:'chain',beam:'beam',tornado:'tornado',spiral:'spiral',struct:'struct',buff:'buff',blink:'blink',heal:'heal',mana:'mana',block:'shield',vacuum:'magnet',slowAll:'clock',nuke:'bomb'};
+const GLK={boomer:'proj',cone:'blast',dash:'blink',leap:'nova',wall:'zone',strikes:'chain',barrage:'rain',trap:'bomb',summon:'struct',orbit:'spiral',grab:'beam',nova:'nova',blast:'blast',rain:'rain',zone:'zone',zones:'zone',proj:'proj',chain:'chain',beam:'beam',tornado:'tornado',spiral:'spiral',struct:'struct',buff:'buff',blink:'blink',heal:'heal',mana:'mana',block:'shield',vacuum:'magnet',slowAll:'clock',nuke:'bomb'};
 function icon(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(GL[name]||GL.gem)+'</svg>'}
 
 /* ---------- способности (хотбар 1-5) ---------- */
@@ -1213,6 +1213,104 @@ def('thornfield',{cat:'skill',n:'Терновая поляна',els:['wood'],kin
   up:['Шире','Яд сильнее','Шире','Дольше держит'],
   p:l=>({r:110+12*l,life:5+0.4*l,dps:16+9*l,dt:'magic',vis:'thorns',col:'#62c15a',st:{root:0.45+0.08*l,poison:[6+3*l,3]}})});
 
+/* вторые варианты ролей: новые механики */
+def('fboomer',{cat:'skill',n:'Пылающий бумеранг',els:['fire'],kind:'boomer',mana:26,cd:4.5,
+  d:'Огненный бумеранг летит в прицел и возвращается, обжигая всех дважды.',
+  up:['Урон выше','Горение сильнее','+1 бумеранг','Урон выше'],
+  p:l=>({n:1+(l>=4?1:0),spread:0.5,spd:520,r:12,dmg:30+15*l,dt:'magic',life:0.95,col:'#ff8a3d',st:{burn:[5+3*l,3]},knock:80})});
+def('fdash',{cat:'skill',n:'Огненный рывок',els:['fire'],kind:'dash',mana:26,cd:5,
+  d:'Рывок сквозь врагов в сторону прицела: обжигает всех на пути и оставляет полосу огня.',
+  up:['Дальше','Урон выше','След горячее','Урон выше'],
+  p:l=>({dist:230+20*l,w:30,dmg:36+18*l,dt:'magic',col:'#ff7a2b',st:{burn:[6+3*l,3]},knock:200,spd:1100,trail:{r:30,life:2+0.3*l,dps:10+5*l,dt:'magic',vis:'lava',col:'#ff4a2a'}})});
+def('frain',{cat:'skill',n:'Огненный дождь',els:['fire'],kind:'barrage',mana:40,cd:11,
+  d:'Несколько секунд на область у прицела падают огненные капли.',
+  up:['+1 волна','Урон выше','Капель больше','Урон выше'],
+  p:l=>({waves:3+Math.floor(l/2),wgap:0.7,rain:{n:4+l,spread:130,r:46,dmg:24+11*l,dt:'magic',delay:0.4,gap:0.08,vis:'meteor',col:'#ff6a2b',knock:80,st:{burn:[5+2*l,3]}}})});
+def('fwall',{cat:'skill',n:'Стена огня',els:['fire'],kind:'wall',mana:32,cd:10,
+  d:'Поперёк пути врагов встаёт стена пламени: жжёт и замедляет всех, кто идёт сквозь неё.',
+  up:['Длиннее','Жарче','Дольше горит','Жарче'],
+  p:l=>({n:6+l,gap:34,r:28,life:4+0.5*l,dps:22+10*l,dt:'magic',vis:'wildfire',col:'#ff7a2b',st:{burn:[6+3*l,3],slow:[0.7,0.5]},range:260})});
+def('bubble',{cat:'skill',n:'Пузырь',els:['water'],kind:'proj',mana:26,cd:5,
+  d:'Водяной пузырь лопается на цели: запирает врагов рядом в воде и оглушает.',
+  up:['Дольше держит','Урон выше','+1 пузырь','Шире всплеск'],
+  p:l=>({n:1+(l>=3?1:0),spread:0.3,spd:380,r:14,dmg:24+12*l,dt:'magic',life:1.4,vis:'bubble',col:'#6fd0ff',blast:46+6*l,st:{stun:1.2+0.2*l,wet:3}})});
+def('wwhip',{cat:'skill',n:'Водяной хлыст',els:['water'],kind:'cone',mana:22,cd:3.5,
+  d:'Широкий взмах водяным хлыстом перед вами: отбрасывает и мочит всех в дуге.',
+  up:['Дальше','Урон выше','Шире','Урон выше'],
+  p:l=>({range:150+10*l,arc:2.2,dmg:30+15*l,dt:'magic',knock:200,st:{wet:3,slow:[0.6,1]},col:'#6fd0ff',vis:'arc'})});
+def('whirl',{cat:'skill',n:'Водоворот',els:['water'],kind:'tornado',mana:36,cd:11,
+  d:'У прицела раскручивается огромная воронка: затягивает всех к центру и крутит.',
+  up:['Шире','Сильнее тянет','Дольше','Урон выше'],
+  p:l=>({n:1,r:70+6*l,pull:3,life:5+0.5*l,dps:18+8*l,dt:'magic',vis:'water'})});
+def('iceprison',{cat:'skill',n:'Ледяная тюрьма',els:['water'],kind:'zone',mana:34,cd:12,
+  d:'Область у прицела промерзает: все внутри замерзают, физический удар их раскалывает.',
+  up:['Шире','Дольше морозит','Шире','Урон выше'],
+  p:l=>({r:100+10*l,life:2.5+0.2*l,dps:10+5*l,dt:'magic',vis:'frostz',col:'#bdf0ff',st:{frz:0.6+0.15*l,wet:2}})});
+def('pebbles',{cat:'skill',n:'Каменная дробь',els:['earth'],kind:'proj',mana:22,cd:3.5,
+  d:'Веер каменных осколков в прицел, как выстрел дробовика: вблизи страшно бьёт.',
+  up:['+1 осколок','Урон выше','+1 осколок','Урон выше'],
+  p:l=>({n:5+l,spread:0.7,spd:620,r:6,dmg:14+7*l,dt:'phys',pierce:0,life:0.45,vis:'rock',col:'#c9974f',knock:160,st:{stun:0.15}})});
+def('hammer',{cat:'skill',n:'Удар молотом',els:['earth'],kind:'leap',mana:30,cd:7,
+  d:'Прыжок к прицелу и удар о землю при приземлении: оглушает и раскидывает всех вокруг.',
+  up:['Дальше прыжок','Урон выше','Шире удар','Урон выше'],
+  p:l=>({dist:260+20*l,r:90+8*l,dmg:46+22*l,dt:'phys',st:{stun:0.7+0.1*l},col:'#c9974f',knock:280,T:0.5})});
+def('meteorite',{cat:'skill',n:'Метеорит',els:['earth'],kind:'blast',mana:40,cd:12,
+  d:'С неба падает огромный камень: один сокрушительный удар по области.',
+  up:['Шире','Урон выше','Оглушение дольше','Урон выше'],
+  p:l=>({r:120+10*l,dmg:90+40*l,dt:'phys',delay:1.1,vis:'meteor',col:'#c9974f',knock:380,st:{stun:1+0.1*l},range:430})});
+def('golem',{cat:'skill',n:'Каменный голем',els:['earth'],kind:'summon',mana:40,cd:18,
+  d:'Призывает каменного голема: враги рядом бросаются на него, а он бьёт их кулаками.',
+  up:['Прочнее','Бьёт сильнее','Дольше живёт','Бьёт сильнее'],
+  p:l=>({who:'golem',life:12+l,dmg:30+14*l,acd:1.2,rng:110,taunt:true,col:'#c9974f'})});
+def('ballbolt',{cat:'skill',n:'Шаровая молния',els:['air'],kind:'proj',mana:28,cd:7,
+  d:'Медленный шар молнии плывёт в прицел и бьёт током всех вокруг себя по пути.',
+  up:['Чаще разряды','Урон выше','Дальше летит','Урон выше'],
+  p:l=>({n:1,spread:0,spd:170,r:9,dmg:30+12*l,dt:'magic',life:2.6,vis:'orb',col:'#f4f08a',pierce:99,zap:{every:0.36-0.02*l,dmg:14+7*l,range:150,jumps:1+Math.floor(l/2)}})});
+def('galedash',{cat:'skill',n:'Шквальный рывок',els:['air'],kind:'dash',mana:24,cd:4.5,
+  d:'Мгновенный перенос к прицелу: режет всех на линии, на выходе разлетаются клинки.',
+  up:['Дальше','Урон выше','+клинки','Урон выше'],
+  p:l=>({blink:true,dist:220+15*l,w:34,dmg:30+15*l,dt:'phys',col:'#8febd0',knock:160,burst:{r:70+6*l,dmg:20+10*l,dt:'phys',knock:200,col:'#8febd0',shards:{n:6+l,spd:480,dmg:14+7*l,dt:'phys',life:0.4,pierce:2,vis:'blade',col:'#8febd0'}}})});
+def('hurricane',{cat:'skill',n:'Ураган',els:['air'],kind:'tornado',mana:38,cd:11,
+  d:'Большой смерч срывается с места и идёт по прямой в сторону прицела, сметая всех.',
+  up:['Шире','Урон выше','Дольше','Урон выше'],
+  p:l=>({n:1,r:64+6*l,pull:2.2,life:3.5+0.3*l,dps:30+12*l,dt:'phys',vis:'air',straight:150})});
+def('gust',{cat:'skill',n:'Отталкивающий порыв',els:['air'],kind:'cone',mana:22,cd:6,
+  d:'Мощный порыв ветра конусом: отшвыривает всех врагов далеко назад.',
+  up:['Дальше','Сильнее сносит','Шире','Урон выше'],
+  p:l=>({range:210+15*l,arc:1.6,dmg:16+8*l,dt:'phys',knock:650+50*l,col:'#e6fff7',vis:'wind',st:{slow:[0.6,1]}})});
+def('saw',{cat:'skill',n:'Дисковая пила',els:['metal'],kind:'proj',mana:24,cd:4,
+  d:'Пила летит в прицел и рикошетит от врага к врагу.',
+  up:['+1 рикошет','Урон выше','+1 рикошет','Урон выше'],
+  p:l=>({n:1,spread:0,spd:600,r:10,dmg:30+13*l,dt:'phys',life:1.6,vis:'saw',col:'#e8eef8',pierce:1,bounce:3+l})});
+def('steelwhirl',{cat:'skill',n:'Стальной вихрь',els:['metal'],kind:'orbit',mana:30,cd:9,
+  d:'Вокруг вас несколько секунд кружат пилы и режут всех, кто подойдёт.',
+  up:['+1 пила','Урон выше','Дольше','Шире'],
+  p:l=>({n:3+Math.floor(l/2),R:52+4*l,dmg:16+8*l,dt:'phys',life:3+0.3*l,vis:'saw',col:'#e8eef8',spd:5})});
+def('orbital',{cat:'skill',n:'Орбитальный удар',els:['metal'],kind:'strikes',mana:38,cd:11,
+  d:'Лучи с орбиты бьют по области у прицела один за другим.',
+  up:['+1 луч','Урон выше','+1 луч','Урон выше'],
+  p:l=>({n:4+l,spread:120,r:56,dmg:50+22*l,dt:'phys',delay:0.5,gap:0.18,col:'#9fd0ff',st:{stun:0.3},knock:120})});
+def('mines',{cat:'skill',n:'Минное поле',els:['metal'],kind:'trap',mana:28,cd:9,
+  d:'Разбрасывает мины у прицела: каждая взрывается, когда враг наступит на неё.',
+  up:['+1 мина','Урон выше','+1 мина','Шире взрыв'],
+  p:l=>({n:3+l,spread:90,life:20,dmg:50+22*l,rad:70+5*l,dt:'phys',st:{stun:0.5},col:'#ffb347'})});
+def('fruit',{cat:'skill',n:'Шипастый плод',els:['wood'],kind:'proj',mana:26,cd:5,
+  d:'Колючий плод лопается на цели и разбрасывает ядовитые семена, которые сами ищут врагов.',
+  up:['+семена','Яд сильнее','Шире взрыв','Урон выше'],
+  p:l=>({n:1,spread:0,spd:360,r:11,dmg:30+14*l,dt:'magic',life:1,vis:'fruit',col:'#9ad16a',blast:60+6*l,st:{poison:[6+3*l,4]},burst:{n:6+l,dmg:12+6*l,vis:'seed',col:'#9ad16a',st:{poison:[5+2*l,3]},homing:true,spd:280,life:1.2}})});
+def('choke',{cat:'skill',n:'Удушающие лозы',els:['wood'],kind:'grab',mana:26,cd:6,
+  d:'Лозы хватают ближайших врагов, тянут к вам и опутывают. Каждый пойманный лечит вас.',
+  up:['+1 лоза','Урон выше','Дольше держит','Лечит сильнее'],
+  p:l=>({n:3+l,range:240+10*l,dmg:26+12*l,dt:'magic',pull:420,st:{root:1+0.15*l,poison:[4+2*l,3]},col:'#62c15a',healHit:2+l})});
+def('swarm',{cat:'skill',n:'Рой ос',els:['wood'],kind:'proj',mana:30,cd:8,
+  d:'Выпускает рой ос: они сами находят врагов и жалят ядом.',
+  up:['+2 осы','Яд сильнее','+2 осы','Урон выше'],
+  p:l=>({n:8+2*l,spread:2.4,spd:260,r:4,dmg:8+4*l,dt:'magic',life:3,pierce:0,vis:'wasp',homing:true,col:'#ffd36b',st:{poison:[4+2*l,3]}})});
+def('treant',{cat:'skill',n:'Древень-страж',els:['wood'],kind:'summon',mana:40,cd:18,
+  d:'Призывает древня: он стреляет ядовитыми шипами, а рядом с ним вы восстанавливаете здоровье.',
+  up:['Лечит сильнее','Бьёт сильнее','Дольше живёт','Бьёт сильнее'],
+  p:l=>({who:'treant',life:12+l,dmg:14+7*l,acd:0.8,rng:330,heal:2+0.8*l,col:'#62c15a'})});
+
 /* симбиозы стихий */
 def('steam',{cat:'sym',pair:['fire','water'],n:'Пар',kind:'zone',mana:42,cd:12,
   d:'Облако пара накрывает область: жжёт и замедляет врагов.',
@@ -1308,7 +1406,13 @@ const ROLE={fireball:'бросок',flamejet:'ближний',nova:'массов
   boulder:'бросок',quake:'ближний',spikes:'массовый',stoneward:'контроль',
   gale:'бросок',bladestorm:'ближний',bolt:'массовый',tailwind:'контроль',
   volley:'бросок',magnet:'ближний',shrapnel:'массовый',bastion:'контроль',
-  parasites:'бросок',whip:'ближний',thornfield:'массовый',sprout:'контроль'};
+  parasites:'бросок',whip:'ближний',thornfield:'массовый',sprout:'контроль',
+  fboomer:'бросок',fdash:'ближний',frain:'массовый',fwall:'контроль',
+  bubble:'бросок',wwhip:'ближний',whirl:'массовый',iceprison:'контроль',
+  pebbles:'бросок',hammer:'ближний',meteorite:'массовый',golem:'контроль',
+  ballbolt:'бросок',galedash:'ближний',hurricane:'массовый',gust:'контроль',
+  saw:'бросок',steelwhirl:'ближний',orbital:'массовый',mines:'контроль',
+  fruit:'бросок',choke:'ближний',swarm:'массовый',treant:'контроль'};
 const ROLEO=['бросок','ближний','массовый','контроль'];
 const ROLEC={'бросок':'#ffd36b','ближний':'#ff8a6a','массовый':'#c9a6ff','контроль':'#7fe0c0'};
 for(const k in ROLE)if(AB[k])AB[k].role=ROLE[k];
@@ -2053,7 +2157,7 @@ function mapStats(g){
 }
 function mkState(start,map){
   return {
-    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,pl:0,castN:0,shotN:0,pasT:20,cls:CLS[start]||null,tideT:9,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
+    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,cfx:[],leap:null,leapH:0,dashSp:0,dashHit:null,pl:0,castN:0,shotN:0,pasT:20,cls:CLS[start]||null,tideT:9,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
@@ -2352,6 +2456,7 @@ function explodeAt(x,y,r,dmg,o){
   if(!o.quiet)boomFx(x,y,r,gcol(col));
   if(o.shake)g.shake=Math.max(g.shake,o.shake);
 }
+function burstAt(b,x,y){const q=b.burst,off=rnd(0,TAU);for(let i=0;i<q.n;i++){const a=off+i*TAU/q.n;shoot({vis:q.vis||'seed',x:x,y:y,vx:Math.cos(a)*(q.spd||300),vy:Math.sin(a)*(q.spd||300),r:5,dmg:q.dmg,dt:b.dt,life:q.life||0.8,pierce:1,col:q.col||b.col,st:q.st||b.st,homing:!!q.homing,src:'proj'})}}
 function shoot(o){
   o.pierce=o.pierce||0;o.hit=null;G.pr.push(o);
   if((o.src==='auto'||o.src==='skill')&&!o.gun&&o.vis!=='bullet'&&o.vis!=='pellet')heroAtk(Math.atan2(o.vy,o.vx));
@@ -2478,11 +2583,84 @@ CAST.beam=(pr,c)=>{
   g.shake=Math.max(g.shake,pr.vis==='rail'?7:2);
   puff(c.px,c.py,pr.col||c.col,6,120,0.3,2.4);
 };
+CAST.boomer=(pr,c)=>{
+  const n=pr.n||1;
+  for(let i=0;i<n;i++){const a=c.ang+(n===1?0:(i/(n-1)-0.5)*(pr.spread||0.5));
+    shoot({vis:pr.vis||'boomer',x:c.px,y:c.py,vx:Math.cos(a)*pr.spd,vy:Math.sin(a)*pr.spd,r:pr.r,dmg:pr.dmg,dt:pr.dt,life:pr.life,life0:pr.life,ret:true,spd0:pr.spd,pierce:99,col:pr.col||c.col,st:pr.st,knock:pr.knock,trail:pr.trail,src:'proj'})}
+};
+CAST.cone=(pr,c)=>{
+  const g=G,R=pr.range*(1+g.S.area*0.5);let hits=0;
+  for(const e of g.en){if(e.dead||e.sub)continue;const dx=e.x-c.px,dy=e.y-c.py,d=Math.hypot(dx,dy);if(d>R+e.r)continue;
+    if(Math.abs(angd(Math.atan2(dy,dx),c.ang))>pr.arc/2+0.15)continue;
+    hitEnemy(e,pr.dmg,{dt:pr.dt,st:pr.st,col:pr.col,src:'skill',aoe:true});hits++;
+    if(!e.dead&&pr.knock)knockE(e,dx,dy,pr.knock*(1.2-d/R*0.4))}
+  g.lastHits=hits;
+  g.cfx.push({x:c.px,y:c.py,ang:c.ang,range:R,arc:pr.arc,t:0,life:0.32,col:pr.col||c.col,vis:pr.vis||'arc'});
+  g.shake=Math.max(g.shake,pr.knock>300?6:3);
+};
+CAST.dash=(pr,c)=>{
+  const g=G,p=g.p,t=clampRange(c,pr.dist);
+  const dx=t.x-p.x,dy=t.y-p.y,L=Math.hypot(dx,dy)||1;
+  if(pr.blink){
+    const x0=p.x,y0=p.y;g.gh.push({x:x0,y:y0,t:0.4,max:0.4});
+    for(const e of g.en){if(e.dead||e.sub)continue;if(distSeg(e.x,e.y,x0,y0,t.x,t.y)<pr.w+e.r){hitEnemy(e,pr.dmg,{dt:pr.dt,st:pr.st,col:pr.col,src:'skill',aoe:true,proj:true});if(!e.dead&&pr.knock)knockE(e,e.x-t.x,e.y-t.y,pr.knock)}}
+    g.beams.push({x1:x0,y1:y0,x2:t.x,y2:t.y,w:pr.w,t:0.25,max:0.25,col:pr.col,vis:'rail'});
+    p.x=t.x;p.y=t.y;p.inv=Math.max(p.inv,0.3);
+    if(pr.burst)CAST.nova(pr.burst,Object.assign({},c,{px:p.x,py:p.y}));
+    puff(p.x,p.y,pr.col,14,200,0.4,3);return;
+  }
+  g.dashAng=Math.atan2(dy,dx);g.dashSp=pr.spd||1000;g.dashT=L/g.dashSp;p.inv=Math.max(p.inv,g.dashT+0.15);
+  g.dashHit={dmg:pr.dmg,dt:pr.dt,st:pr.st,col:pr.col,w:pr.w,knock:pr.knock||0,trail:pr.trail||null,tt:0,hit:new Set(),end:pr.end||null};
+};
+CAST.leap=(pr,c)=>{
+  const g=G,p=g.p,t=clampRange(c,pr.dist);
+  g.leap={x0:p.x,y0:p.y,x1:t.x,y1:t.y,t:0,T:pr.T||0.5,pr:pr};p.inv=Math.max(p.inv,(pr.T||0.5)+0.2);
+  ring(t.x,t.y,pr.r,pr.col,pr.T||0.5);
+};
+CAST.wall=(pr,c)=>{
+  const g=G,t=clampRange(c,pr.range||300),px=-Math.sin(c.ang),py=Math.cos(c.ang),n=pr.n;
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st})}
+};
+CAST.strikes=(pr,c)=>{
+  const g=G,t=clampRange(c,440);
+  for(let i=0;i<pr.n;i++){const a=rnd(0,TAU),d=i?Math.sqrt(Math.random())*pr.spread:0,x=t.x+Math.cos(a)*d,y=t.y+Math.sin(a)*d;
+    ring(x,y,pr.r,pr.col,pr.delay+i*pr.gap);
+    later(pr.delay+i*pr.gap,()=>{skyStrike(x,y,pr.col,i===0);explodeAt(x,y,pr.r,pr.dmg,{dt:pr.dt,col:pr.col,st:pr.st,knock:pr.knock||0,quiet:true,shake:5})})}
+};
+CAST.barrage=(pr,c)=>{
+  const t=clampRange(c,440),cf=Object.assign({},c,{x:t.x,y:t.y});
+  for(let i=0;i<pr.waves;i++)later(i*pr.wgap,()=>{const c2=Object.assign({},cf,{px:G.p.x,py:G.p.y});CAST.rain(pr.rain,c2)});
+};
+CAST.trap=(pr,c)=>{
+  const g=G,t=clampRange(c,360);
+  for(let i=0;i<pr.n;i++){const a=i/pr.n*TAU+rnd(0,0.4),d=pr.n>1?pr.spread*(0.5+0.5*Math.random()):0;
+    const q=freeSpot(t.x+Math.cos(a)*d,t.y+Math.sin(a)*d,10);
+    g.stc.push({kind:'mine',x:q.x,y:q.y,r:10,arm:0.6,life:pr.life,max:pr.life,dmg:pr.dmg,rad:pr.rad,dt:pr.dt,st:pr.st,col:pr.col,dead:false})}
+  puff(t.x,t.y,'#ffd36b',8,120,0.3,2);
+};
+CAST.summon=(pr,c)=>{
+  const g=G,t=clampRange(c,160),q=freeSpot(t.x,t.y,24);
+  for(const s of g.stc)if(s.kind===pr.who){s.dead=true}
+  g.stc.push({kind:pr.who,x:q.x,y:q.y,r:22,life:pr.life,max:pr.life,dmg:pr.dmg,cd:0.5,acd:pr.acd,rng:pr.rng,heal:pr.heal||0,st:pr.st||null,taunt:!!pr.taunt,col:pr.col,t0:anim,dead:false});
+  ring(q.x,q.y,70,pr.col,0.5);puff(q.x,q.y,pr.col,18,180,0.5,3);g.shake=Math.max(g.shake,4);
+};
+CAST.orbit=(pr,c)=>{G.em.push({kind:'orbit',life:pr.life,max:pr.life,tm:0,n:pr.n,R:pr.R*(1+G.S.area*0.5),dmg:pr.dmg,dt:pr.dt,st:pr.st,col:pr.col,vis:pr.vis,spd:pr.spd||5,ang:0,hit:new Map()})};
+CAST.grab=(pr,c)=>{
+  const g=G,p=g.p,near=nearList(p.x,p.y,pr.range).sort((a,b)=>dist2(a,p)-dist2(b,p)).slice(0,pr.n);
+  if(!near.length)return false;
+  for(const e of near){
+    g.beams.push({x1:p.x,y1:p.y,x2:e.x,y2:e.y,w:12,t:0.35,max:0.35,col:pr.col,vis:'vine'});
+    hitEnemy(e,pr.dmg,{dt:pr.dt,st:pr.st,col:pr.col,src:'skill',proj:true});
+    if(!e.dead&&!e.boss)knockE(e,p.x-e.x,p.y-e.y,pr.pull);
+  }
+  g.lastHits=near.length;
+  if(pr.healHit)heal(pr.healHit*near.length);
+};
 CAST.tornado=(pr,c)=>{
-  const g=G,t=clampRange(c,420),area=1+g.S.area;
+  const g=G,t=pr.straight?{x:c.px,y:c.py}:clampRange(c,420),area=1+g.S.area;
   for(let i=0;i<pr.n;i++){
     const a=rnd(0,TAU),d=i?60:0;
-    g.tor.push({x:t.x+Math.cos(a)*d,y:t.y+Math.sin(a)*d,r:pr.r*area,pullR:pr.r*area*pr.pull,life:pr.life,tick:0.25,ang:rnd(0,TAU),dps:pr.dps,dt:pr.dt,vis:pr.vis,zap:pr.zap||null,flames:pr.flames||null,zt:0.3,ft:0.2,dead:false});
+    g.tor.push({x:t.x+Math.cos(a)*d,y:t.y+Math.sin(a)*d,r:pr.r*area,pullR:pr.r*area*pr.pull,life:pr.life,tick:0.25,ang:rnd(0,TAU),dps:pr.dps,dt:pr.dt,vis:pr.vis,zap:pr.zap||null,flames:pr.flames||null,zt:0.3,ft:0.2,dead:false,vx:pr.straight?Math.cos(c.ang+(i-(pr.n-1)/2)*0.3)*pr.straight:0,vy:pr.straight?Math.sin(c.ang+(i-(pr.n-1)/2)*0.3)*pr.straight:0});
   }
 };
 CAST.spiral=(pr,c)=>{
@@ -2534,6 +2712,102 @@ const NS=(n,d,pr,hk)=>({n:n,d:d,pr:pr||null,hk:hk||null});
 const mulK=(p,ks,f)=>{for(const k of ks)if(typeof p[k]==='number')p[k]*=f};
 const addSt=(p,st)=>{p.st=Object.assign({},p.st||{},st)};
 const TREE={
+ fboomer:[
+  NS('Двойной бумеранг','Летит ещё один бумеранг.',(p,r)=>{p.n+=r;p.spread=0.6}),
+  NS('Огненный след','Бумеранг оставляет за собой полосу огня.',(p,r)=>{p.trail={every:0.08,zone:{r:26,life:1.6+0.4*r,dps:10+6*r,dt:'magic',vis:'lava',col:'#ff4a2a'}}}),
+  NS('Раскалённый','Крупнее и бьёт сильнее.',(p,r)=>{p.r*=1+0.2*r;mulK(p,['dmg'],1+0.3*r)})],
+ fdash:[
+  NS('Взрыв в конце','В конце рывка — огненный взрыв.',(p,r)=>{p.end={r:80+10*r,dmg:40+25*r,dt:'magic',col:'#ff7a2b',knock:260,st:{burn:[8,3]}}}),
+  NS('Пламенная ярость','Рывок восстанавливается быстрее.',(p,r)=>{p.cdm*=1-0.18*r}),
+  NS('Огненный щит','После рывка вы неуязвимы ещё мгновение.',null,r=>[{t:'buff',shield:true,dur:0.6+0.4*r}])],
+ frain:[
+  NS('Долгий дождь','Больше волн огня.',(p,r)=>{p.waves+=r}),
+  NS('Пепелище','На месте дождя горит земля.',null,r=>[{t:'zone',r:120,life:3+r,dps:12+7*r,col:'#ff4a2a',vis:'lava',st:{burn:[6,2]}}]),
+  NS('Метеорит','В конце падает метеорит.',null,r=>[{t:'quake',d:2.2,r:110,dmg:80+40*r,dt:'magic',col:'#ff6a2b',knock:300}])],
+ fwall:[
+  NS('Длинная стена','Стена намного длиннее.',(p,r)=>{p.n+=3*r}),
+  NS('Кольцо огня','Вокруг вас вспыхивает кольцо пламени.',null,r=>[{t:'cast',self:true,kind:'nova',pr:{r:120,dmg:20+10*r,dt:'magic',col:'#ff7a2b',knock:150,ring:{n:8,zone:{r:30,life:3+r,dps:14+7*r,dt:'magic',vis:'wildfire',col:'#ff7a2b'}}}}]),
+  NS('Жар стены','Стена жжёт сильнее и сильнее замедляет.',(p,r)=>{mulK(p,['dps'],1+0.3*r);addSt(p,{slow:[0.6-0.08*r,0.6]})})],
+ bubble:[
+  NS('Пузырьки','Лопнувший пузырь разлетается мелкими пузырями.',(p,r)=>{p.burst={n:4+2*r,dmg:14+8*r,vis:'ice',col:'#9fe0ff',st:{wet:2,slow:[0.6,1]}}}),
+  NS('Глубокая вода','Держит намного дольше.',(p,r)=>{p.st=Object.assign({},p.st,{stun:p.st.stun+0.4*r})}),
+  NS('Двойной пузырь','Летит больше пузырей.',(p,r)=>{p.n+=r;p.spread=0.45})],
+ wwhip:[
+  NS('Двойной взмах','Сразу следом второй взмах.',null,r=>[{t:'echo',d:0.25,s:0.6+0.15*r}]),
+  NS('Широкий взмах','Шире и дальше.',(p,r)=>{p.arc*=1+0.2*r;p.range*=1+0.15*r}),
+  NS('Цунами','Отбрасывает намного дальше и бьёт сильнее.',(p,r)=>{p.knock*=1+0.6*r;mulK(p,['dmg'],1+0.2*r)})],
+ whirl:[
+  NS('Глубина','Шире и сильнее тянет.',(p,r)=>{p.pull*=1+0.3*r;p.r*=1+0.15*r}),
+  NS('Шторм','Из воронки бьют молнии по мокрым врагам.',(p,r)=>{p.zap={every:0.6-0.1*r,jumps:1+r,dmg:20+10*r,dt:'magic',range:160}}),
+  NS('Разлив','Вокруг остаётся вязкая вода.',null,r=>[{t:'zone',r:150,life:4+r,dps:6+4*r,col:'#3aa7ff',vis:'bog',st:{slow:[0.45,1],wet:3}}])],
+ iceprison:[
+  NS('Раскол','Когда тюрьма тает, лёд взрывается и раскалывает врагов.',null,r=>[{t:'quake',d:2.4,r:120,dmg:60+30*r,dt:'phys',col:'#bdf0ff'}]),
+  NS('Шире','Тюрьма больше.',(p,r)=>{p.r*=1+0.25*r}),
+  NS('Ледяные шипы','Из тюрьмы вылетают ледяные осколки.',null,r=>[{t:'shards',n:8+2*r,dmg:18+9*r,col:'#bdf0ff',st:{frz:0.3},at:'tp'}])],
+ pebbles:[
+  NS('Крупная дробь','Осколки крупнее и бьют сильнее.',(p,r)=>{p.r*=1+0.3*r;mulK(p,['dmg'],1+0.25*r)}),
+  NS('Рикошет','Осколки отскакивают в соседних врагов.',(p,r)=>{p.bounce=r;p.pierce=1}),
+  NS('Обвал','У прицела обрушиваются камни.',null,r=>[{t:'meteor',n:2+r,dmg:36+18*r,r:50,spread:110,vis:'spike',col:'#d9b36a',st:{stun:0.4}}])],
+ hammer:[
+  NS('Разлом','На месте удара остаётся трещина, замедляющая врагов.',(p,r)=>{p.zone={r:100,life:3+r,dps:10+6*r,dt:'phys',vis:'sandz',col:'#c9974f',st:{slow:[0.5,0.8]}}}),
+  NS('Осколки','При приземлении разлетаются осколки камня.',(p,r)=>{p.shards={n:8+2*r,spd:420,dmg:16+8*r,dt:'phys',life:0.5,pierce:2,vis:'rock',col:'#d9b36a'}}),
+  NS('Тяжёлое приземление','Удар шире и сильнее.',(p,r)=>{p.r*=1+0.2*r;mulK(p,['dmg'],1+0.25*r)})],
+ meteorite:[
+  NS('Кратер','Остаётся кратер, где враги вязнут.',null,r=>[{t:'zone',r:130,life:4+r,dps:8+5*r,col:'#c9974f',vis:'sandz',st:{slow:[0.45,0.8]},at:'tp'}]),
+  NS('Град камней','Вокруг падают ещё камни.',null,r=>[{t:'meteor',n:3+2*r,dmg:40+20*r,r:50,spread:170,vis:'spike',col:'#d9b36a',st:{stun:0.3}}]),
+  NS('Звезда','Огромный и сокрушительный.',(p,r)=>{p.r*=1+0.15*r;mulK(p,['dmg'],1+0.35*r)})],
+ golem:[
+  NS('Гранитная шкура','Голем живёт дольше.',(p,r)=>{p.life*=1+0.35*r}),
+  NS('Сотрясение','Удары голема оглушают дольше и бьют сильнее.',(p,r)=>{p.st={stun:0.4+0.2*r};mulK(p,['dmg'],1+0.25*r)}),
+  NS('Каменный союз','Пока голем стоит, у вас больше брони.',null,r=>[{t:'buff',armor:4+3*r,dur:10}])],
+ ballbolt:[
+  NS('Взрыв шара','В конце пути шар взрывается.',null,r=>[{t:'quake',d:2.4,r:100,dmg:60+30*r,dt:'magic',col:'#f4f08a',st:{stun:0.4}}]),
+  NS('Двойная','Летят два шара.',(p,r)=>{p.n+=r;p.spread=0.5}),
+  NS('Частые разряды','Бьёт током чаще и сильнее.',(p,r)=>{p.zap=Object.assign({},p.zap,{every:p.zap.every*(1-0.2*r),dmg:p.zap.dmg*(1+0.25*r)})})],
+ galedash:[
+  NS('Ветер в спину','Рывок восстанавливается быстрее, после него вы быстрее.',(p,r)=>{p.cdm*=1-0.15*r},r=>[{t:'buff',spd:0.15+0.1*r,dur:2.5}]),
+  NS('Острые ветра','Шире полоса и сильнее урон.',(p,r)=>{p.w*=1+0.3*r;mulK(p,['dmg'],1+0.25*r)}),
+  NS('Невидимость','После переноса вы неуязвимы.',null,r=>[{t:'buff',shield:true,dur:0.5+0.3*r}])],
+ hurricane:[
+  NS('Два урагана','Идут два урагана веером.',(p,r)=>{p.n+=r}),
+  NS('Грозовой','Ураган бьёт молниями.',(p,r)=>{p.zap={every:0.55-0.08*r,jumps:1+r,dmg:20+10*r,dt:'magic',range:160}}),
+  NS('Тяжёлый ураган','Медленнее, но дольше и шире.',(p,r)=>{p.straight*=1-0.15*r;p.life+=r;p.r*=1+0.12*r})],
+ gust:[
+  NS('Удар о стену','Сильнее урон от порыва.',(p,r)=>{mulK(p,['dmg'],1+0.6*r)}),
+  NS('Шире','Порыв шире и дальше.',(p,r)=>{p.arc*=1+0.2*r;p.range*=1+0.12*r}),
+  NS('Ошеломление','Сбитые с ног враги оглушены.',(p,r)=>{addSt(p,{stun:0.5+0.2*r})})],
+ saw:[
+  NS('Две пилы','Летит ещё пила.',(p,r)=>{p.n+=r;p.spread=0.4}),
+  NS('Зубастая','Пила оставляет кровоточащие раны.',(p,r)=>{addSt(p,{poison:[8+5*r,3]})}),
+  NS('Бесконечный рикошет','Намного больше рикошетов.',(p,r)=>{p.bounce+=3*r})],
+ steelwhirl:[
+  NS('Больше пил','Пил больше.',(p,r)=>{p.n+=r}),
+  NS('Шире','Пилы кружат дальше от вас.',(p,r)=>{p.R*=1+0.2*r}),
+  NS('Долгий вихрь','Вихрь держится дольше.',(p,r)=>{p.life+=1.2*r})],
+ orbital:[
+  NS('Залп спутника','Больше лучей.',(p,r)=>{p.n+=2*r}),
+  NS('Перегрев','Лучи поджигают.',(p,r)=>{addSt(p,{burn:[8+4*r,3]})}),
+  NS('Фокус','Лучи шире и мощнее.',(p,r)=>{p.r*=1+0.2*r;mulK(p,['dmg'],1+0.25*r)})],
+ mines:[
+  NS('Больше мин','Мин больше.',(p,r)=>{p.n+=2*r}),
+  NS('Шоковые','Взрыв надолго оглушает.',(p,r)=>{p.st={stun:1+0.3*r}}),
+  NS('Мощный заряд','Взрыв шире и сильнее.',(p,r)=>{p.rad*=1+0.2*r;mulK(p,['dmg'],1+0.3*r)})],
+ fruit:[
+  NS('Урожай','Летит больше плодов.',(p,r)=>{p.n+=r;p.spread=0.5}),
+  NS('Ядовитый сок','Яд намного сильнее.',(p,r)=>{addSt(p,{poison:[10+6*r,4]})}),
+  NS('Росток','На месте взрыва вырастают колючки.',null,r=>[{t:'zone',r:80,life:3+r,dps:10+6*r,col:'#62c15a',vis:'thorns',st:{root:0.5}}])],
+ choke:[
+  NS('Больше лоз','Хватает больше врагов.',(p,r)=>{p.n+=2*r}),
+  NS('Сок жизни','Каждый пойманный лечит сильнее.',(p,r)=>{p.healHit+=3*r}),
+  NS('Колючие','Лозы бьют и травят сильнее.',(p,r)=>{mulK(p,['dmg'],1+0.3*r);addSt(p,{poison:[8+4*r,3]})})],
+ swarm:[
+  NS('Улей','Намного больше ос.',(p,r)=>{p.n+=4*r}),
+  NS('Жало','Жалят сильнее.',(p,r)=>{mulK(p,['dmg'],1+0.3*r);addSt(p,{poison:[8+4*r,3]})}),
+  NS('Второй рой','Следом вылетает ещё рой.',null,r=>[{t:'echo',d:0.6,s:0.5+0.15*r}])],
+ treant:[
+  NS('Целитель','Древень лечит сильнее.',(p,r)=>{p.heal*=1+0.5*r}),
+  NS('Шипы','Шипы древня бьют сильнее.',(p,r)=>{mulK(p,['dmg'],1+0.35*r)}),
+  NS('Долгожитель','Древень живёт дольше.',(p,r)=>{p.life+=3*r})],
  flamejet:[
   NS('Напалм','Пламя оставляет горящую землю перед вами.',null,r=>[{t:'zone',r:70,life:2.5+r,dps:14+9*r,col:'#ff7a2b',vis:'lava',st:{burn:[6,2]},at:'near'}]),
   NS('Длинное пламя','Струя бьёт дальше и шире.',(p,r)=>{p.spd*=1+0.25*r;p.life*=1+0.15*r;p.spread*=1+0.15*r;p.n+=2*r}),
@@ -3024,6 +3298,13 @@ function updPlayerSide(dt){
   for(const m of g.em){
     m.life-=dt;m.tm-=dt;
     if(m.life<=0){m.dead=true;continue}
+    if(m.kind==='orbit'){
+      m.ang+=dt*m.spd;
+      for(let i=0;i<m.n;i++){const a=m.ang+i*TAU/m.n,x=p.x+Math.cos(a)*m.R,y=p.y+Math.sin(a)*m.R;
+        for(const e of g.en){if(e.dead||e.sub)continue;const dx=e.x-x,dy=e.y-y,rr=e.r+12;if(dx*dx+dy*dy>rr*rr)continue;const lt=m.hit.get(e)||0;if(g.t-lt<0.35)continue;m.hit.set(e,g.t);
+          hitEnemy(e,m.dmg,{dt:m.dt,st:m.st,col:m.col,src:'skill',proj:true});if(!e.dead)knockE(e,e.x-p.x,e.y-p.y,120)}}
+      continue;
+    }
     if(m.kind==='spiral'){
       m.ang+=dt*4.4;
       if(m.tm<=0){
@@ -3072,7 +3353,8 @@ function updPlayerSide(dt){
   for(const t of g.tor){
     t.life-=dt;
     if(t.life<=0){t.dead=true;continue}
-    const tg=nearest(t.x,t.y,600);
+    const tg=t.vx||t.vy?null:nearest(t.x,t.y,600);
+    if(t.vx||t.vy){t.x+=t.vx*dt;t.y+=t.vy*dt}
     if(tg){const a=Math.atan2(tg.y-t.y,tg.x-t.x);t.x+=Math.cos(a)*90*dt;t.y+=Math.sin(a)*90*dt}
     t.ang+=dt*8;t.tick-=dt;
     const doTick=t.tick<=0;
@@ -3104,6 +3386,24 @@ function updPlayerSide(dt){
   for(const s of g.stc){
     s.life-=dt;
     if(s.life<=0){s.dead=true;continue}
+    if(s.kind==='mine'){
+      s.arm-=dt;if(s.arm>0)continue;
+      for(const e of g.en){if(e.dead||e.sub)continue;const dx=e.x-s.x,dy=e.y-s.y;if(dx*dx+dy*dy<(24+e.r)*(24+e.r)){s.dead=true;explodeAt(s.x,s.y,s.rad,s.dmg,{dt:s.dt,st:s.st,col:s.col,knock:180,shake:4});break}}
+      continue;
+    }
+    if(s.kind==='golem'||s.kind==='treant'){
+      s.cd-=dt;
+      let touch=0;for(const e of g.en){if(e.dead)continue;const dx=e.x-s.x,dy=e.y-s.y,m=s.r+e.r;if(dx*dx+dy*dy<m*m){touch++;const d=Math.hypot(dx,dy)||1;e.x=s.x+dx/d*m;e.y=s.y+dy/d*m}}
+      s.life-=dt*0.35*touch;
+      if(s.kind==='golem'){
+        if(s.cd<=0){const t=nearest(s.x,s.y,s.rng);if(t){s.cd=s.acd;s.atk=0.35;s.aim=Math.atan2(t.y-s.y,t.x-s.x);explodeAt(s.x+Math.cos(s.aim)*26,s.y+Math.sin(s.aim)*26,64,s.dmg,{dt:'phys',col:'#c9974f',st:s.st||{stun:0.4},knock:240,spike:true,shake:3})}else s.cd=0.2}
+      }else{
+        if(s.heal){const hx=p.x-s.x,hy=p.y-s.y;if(hx*hx+hy*hy<170*170)heal(s.heal*dt)}
+        if(s.cd<=0){const t=nearest(s.x,s.y,s.rng);if(t){s.cd=s.acd;s.atk=0.3;s.aim=Math.atan2(t.y-s.y,t.x-s.x);for(let k=-1;k<=1;k++)shoot({vis:'thorn',x:s.x,y:s.y,vx:Math.cos(s.aim+k*0.18)*520,vy:Math.sin(s.aim+k*0.18)*520,r:6,dmg:s.dmg,dt:'magic',life:0.8,pierce:1,col:'#9ad16a',st:s.st||{poison:[6,3]},src:'proj'})}else s.cd=0.2}
+      }
+      if(s.atk>0)s.atk-=dt;
+      continue;
+    }
     if(s.kind!=='turret')continue;
     s.cd-=dt*(1+E.cdr);
     if(s.cd>0)continue;
@@ -3129,6 +3429,12 @@ function updPlayerSide(dt){
         b.vx=Math.cos(na)*sp;b.vy=Math.sin(na)*sp;
       }
     }
+    if(b.ret){
+      if(!b.back&&b.life<b.life0*0.5){b.back=true;b.hit=null;b.life=b.life0}
+      if(b.back){const dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy)||1;b.vx=dx/d*b.spd0*1.1;b.vy=dy/d*b.spd0*1.1;if(d<18){b.dead=true;continue}}
+      else{const k=Math.max(0.25,b.life/b.life0*2-1);const sp=Math.hypot(b.vx,b.vy)||1;b.vx*=1-(1-k)*dt*1.5;b.vy*=1-(1-k)*dt*1.5}
+    }
+    if(b.zap){b.zt=(b.zt||0)-dt;if(b.zt<=0){b.zt=b.zap.every;const near=nearList(b.x,b.y,b.zap.range);if(near.length)chainBolt(b.x,b.y,pickOf(near),b.zap.jumps,b.zap.dmg,150,{dt:'magic',col:'#f4f08a',shock:true})}}
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     if(b.hfxT>0)b.hfxT-=dt;
     if(b.vis==='fire'&&Math.random()<0.6)puff(b.x,b.y,'#ff9a3c',1,30,0.3,2.4);
@@ -3140,7 +3446,7 @@ function updPlayerSide(dt){
       if(b.trT<=0){b.trT=b.trail.every;addZone(b.x,b.y,b.trail.zone)}
     }
     if(b.life<=0){
-      if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y)}
+      if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y)}
       b.dead=true;continue;
     }
     for(const e of g.en){
@@ -3148,16 +3454,19 @@ function updPlayerSide(dt){
       if(b.hit&&b.hit.has(e))continue;
       const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+b.r;
       if(dx*dx+dy*dy<rr*rr){
-        if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);b.dead=true;break}
+        if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
         hitEnemy(e,b.dmg,{dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true});
         projHitFx(b,b.x,b.y);
         if(b.knock&&!e.dead){const a=Math.atan2(b.vy,b.vx);knockE(e,Math.cos(a),Math.sin(a),b.knock)}
         if(!b.hit)b.hit=new Set();
         b.hit.add(e);
+        if(b.bounce>0){let nx=null,nd=280*280;for(const o of g.en){if(o.dead||o===e||b.hit.has(o))continue;const q=(o.x-b.x)**2+(o.y-b.y)**2;if(q<nd){nd=q;nx=o}}
+          if(nx){b.bounce--;const a=Math.atan2(nx.y-b.y,nx.x-b.x),sp=Math.hypot(b.vx,b.vy);b.vx=Math.cos(a)*sp;b.vy=Math.sin(a)*sp;b.life=Math.max(b.life,0.6);sparks(b.x,b.y,'#e8eef8',5,220);break}}
         if(--b.pierce<0){b.dead=true;break}
       }
     }
   }
+  for(const q of g.cfx){q.t+=dt;if(q.t>=q.life)q.dead=true}
   for(const q of g.hfx){q.t+=dt;if(q.t>=q.life)q.dead=true}
   for(const q of g.afx){q.t+=dt;if(q.t>=q.life)q.dead=true}
   for(const b of g.bolts){b.t-=dt;if(b.t<=0)b.dead=true}
@@ -3390,7 +3699,10 @@ function updEnemies(dt){
     if(e.root>0)e.root-=dt;
     e.x+=e.kx*dt;e.y+=e.ky*dt;
     const kd=Math.exp(-kdr*dt);e.kx*=kd;e.ky*=kd;
-    const dx=p.x-e.x,dy=p.y-e.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
+    const pdx=p.x-e.x,pdy=p.y-e.y,pd2=pdx*pdx+pdy*pdy;
+    let tgx=p.x,tgy=p.y;
+    if(!e.boss&&g.stc.length)for(const s of g.stc){if(s.taunt&&!s.dead){const q=(s.x-e.x)**2+(s.y-e.y)**2;if(q<320*320&&q<pd2){tgx=s.x;tgy=s.y;break}}}
+    const dx=tgx-e.x,dy=tgy-e.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
     e.ang=Math.atan2(dy,dx);
     let spMul=1;
     if(e.slow>0)spMul*=e.slowF;
@@ -3454,7 +3766,7 @@ function updEnemies(dt){
           e.tm-=dt;
           if(e.tm<=0){
             ring(e.x,e.y,95,'#ffb347',0.35);puff(e.x,e.y,'#ffb347',14,200,0.5,3.5);g.shake=Math.max(g.shake,5);
-            if(d<95+p.r)hurtPlayer(e.dmg,'magic',{e:e});
+            if(Math.sqrt(pd2)<95+p.r)hurtPlayer(e.dmg,'magic',{e:e});
             killEnemy(e);continue;
           }
         }else{
@@ -3520,11 +3832,11 @@ function updEnemies(dt){
       }
     }
     /* телепорт далеко отставших */
-    {const lim=spawnR()+450;if(!e.boss&&d2>lim*lim){const pos=spawnPos();e.x=pos.x;e.y=pos.y}}
+    {const lim=spawnR()+450;if(!e.boss&&pd2>lim*lim){const pos=spawnPos();e.x=pos.x;e.y=pos.y}}
     /* контактный урон */
     const rr=e.r+p.r-2;
-    if(d2<rr*rr&&e.ai!=='boss'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
-    else if(e.ai==='boss'&&d2<rr*rr&&!locked)hurtPlayer(e.dmg,'phys',{e:e,melee:true,boss:true});
+    if(pd2<rr*rr&&e.ai!=='boss'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
+    else if(e.ai==='boss'&&pd2<rr*rr&&!locked)hurtPlayer(e.dmg,'phys',{e:e,melee:true,boss:true});
   }
   /* препятствия карты */
   if(g.solids.length)for(const e of en){if(!e.dead&&e.ai!=='specter')obsE(e)}
@@ -3873,6 +4185,7 @@ function tryDash(){
   const i=getInput();
   g.dashAng=i.m>0.05?Math.atan2(i.y,i.x):p.face;
   if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
+  g.dashHit=null;g.dashSp=0;
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
   if(g.start==='earth'){explodeAt(p.x,p.y,78,22+7*g.el.earth,{dt:'phys',col:'#c9974f',knock:320,st:{stun:0.5},src:'skill',spike:true});g.shake=Math.max(g.shake,5)}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
@@ -3901,9 +4214,22 @@ function movePlayer(dt){
   const g=G,p=g.p,inp=getInput(),M=MAPS[g.map];
   if(inp.m>0.05)p.face=Math.atan2(inp.y,inp.x);
   const moving=inp.m>0.05;
+  if(g.leap){
+    const L=g.leap;L.t+=dt;const k=Math.min(1,L.t/L.T),e=k*k*(3-2*k);
+    p.x=L.x0+(L.x1-L.x0)*e;p.y=L.y0+(L.y1-L.y0)*e;g.leapH=Math.sin(k*Math.PI)*60;p.vx=p.vy=0;
+    if(k>=1){g.leap=null;g.leapH=0;const pr=L.pr;explodeAt(p.x,p.y,pr.r,pr.dmg,{dt:pr.dt,col:pr.col,st:pr.st,knock:pr.knock||260,spike:true,shake:9});smokeAt(p.x,p.y,30,4);if(pr.zone)addZone(p.x,p.y,pr.zone);if(pr.shards)CAST.nova({r:20,dmg:0,dt:'phys',col:pr.col,shards:pr.shards},{px:p.x,py:p.y,col:pr.col})}
+    cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
+    return;
+  }
   if(g.dashT>0){
     g.dashT-=dt;
-    p.vx=Math.cos(g.dashAng)*620;p.vy=Math.sin(g.dashAng)*620;
+    const dsp=g.dashSp||620;
+    p.vx=Math.cos(g.dashAng)*dsp;p.vy=Math.sin(g.dashAng)*dsp;
+    if(g.dashHit){const H=g.dashHit;
+      for(const e of g.en){if(e.dead||e.sub||H.hit.has(e))continue;const dx=e.x-p.x,dy=e.y-p.y,rr=H.w+e.r;if(dx*dx+dy*dy<rr*rr){H.hit.add(e);hitEnemy(e,H.dmg,{dt:H.dt,st:H.st,col:H.col,src:'skill',proj:true});if(!e.dead&&H.knock)knockE(e,-Math.sin(g.dashAng)*(angd(Math.atan2(dy,dx),g.dashAng)>0?-1:1),Math.cos(g.dashAng)*(angd(Math.atan2(dy,dx),g.dashAng)>0?-1:1),H.knock)}}
+      if(H.trail){H.tt-=dt;if(H.tt<=0){H.tt=0.05;addZone(p.x,p.y,H.trail)}}
+      if(g.dashT<=0){if(H.end)CAST.nova(H.end,{px:p.x,py:p.y,col:H.col});g.dashHit=null;g.dashSp=0}
+    }
     trailFx(dt,true,true);
   }else{
     const pl=g.pools.length?poolAt(g,p.x,p.y):null;
@@ -3994,7 +4320,7 @@ function update(dt){
   g.hitFlash=Math.max(0,g.hitFlash-dt);
   for(const m of g.merch)m.bob+=dt*2;
   compact(g.pch);compact(g.sk);compact(g.deb);compact(g.smk);compact(g.spk);compact(g.fl);compact(g.sc);compact(g.pt);compact(g.fx);compact(g.hfx);compact(g.afx);compact(g.tx);compact(g.pr);compact(g.zn);compact(g.bl);compact(g.tor);compact(g.gem);compact(g.pk);
-  compact(g.em);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
+  compact(g.em);compact(g.cfx);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
   if(mode==='play'&&g.pending>0&&!g.lvlOpen&&!g.over)openLevelUp();
 }
 function waveLogic(dt){
@@ -5647,6 +5973,188 @@ ab('Терновая поляна','Навык · Дерево · массовы
   for(let i=0;i<12;i++){const q=(t*.7+R(i))%1;c.fillStyle='rgba(170,230,110,'+((1-q)*.7*a)+')';c.beginPath();c.arc(CX+(R(i+3)-.5)*180*e,CY+22-q*60,2+R(i)*2,0,TAU);c.fill()}
 });
 
+const HERO=(c,x,y)=>{shadow(c,x,y+12,16,.5);c.fillStyle='#2a2f44';c.beginPath();c.arc(x,y,13,0,TAU);c.fill();c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1.5;c.stroke()};
+const FOE=(c,x,y,hit,col)=>{shadow(c,x,y+10,12,.4);c.fillStyle=hit?'rgba(214,95,142,.55)':(col||'#d65f8e');c.beginPath();c.arc(x,y,10,0,TAU);c.fill();c.fillStyle='#fff1a8';c.beginPath();c.arc(x-3,y-2,2,0,TAU);c.arc(x+3,y-2,2,0,TAU);c.fill()};
+ab('Пылающий бумеранг','Навык · Огонь · бросок','Огненный бумеранг летит и возвращается.','#ff8a3d',(c,p,t)=>{
+  disc(c,CX,CY+24,140,32,'60,20,5',.3);HERO(c,CX-120,CY+6);
+  const k=p<.5?ez(p/.5):1-ez((p-.5)/.5),x=CX-110+k*230,y=CY-Math.sin(k*Math.PI)*30*(p<.5?1:-1);
+  for(let i=1;i<8;i++){const kk=Math.max(0,k-i*.03*(p<.5?1:-1));glow(c,CX-110+kk*230,CY-Math.sin(kk*Math.PI)*30*(p<.5?1:-1),18-i*2,'#ff7a2b',.4*(1-i/8))}
+  c.save();c.translate(x,y);c.rotate(t*18);c.globalCompositeOperation='lighter';glow(c,0,0,34,'#ff7a2b',.7);
+  c.fillStyle='#ffb347';c.beginPath();c.arc(0,0,22,-1.3,1.3);c.arc(-9,0,17,1.1,-1.1,true);c.closePath();c.fill();
+  c.fillStyle='#fff2b0';c.beginPath();c.arc(0,0,16,-1,1);c.arc(-6,0,13,.8,-.8,true);c.closePath();c.fill();c.restore();
+  FOE(c,CX+60,CY-6,k>.75);FOE(c,CX+100,CY+16,k>.9);
+});
+ab('Огненный рывок','Навык · Огонь · ближний','Рывок сквозь врагов, след пламени.','#ff7a2b',(c,p,t)=>{
+  disc(c,CX,CY+24,150,32,'60,20,5',.35);
+  const k=ez(cl(p/.45,0,1)),x=CX-120+k*240;
+  c.save();c.globalCompositeOperation='lighter';for(let i=0;i<14;i++){const q=i/14;if(q>k)continue;flameAt(c,CX-120+q*240,CY+14,1.1*(1-cl(p-.45,0,1)*.9),t,i)}c.restore();
+  FOE(c,CX-20,CY-14,k>.42);FOE(c,CX+40,CY+20,k>.66);
+  for(let i=0;i<5;i++){c.globalAlpha=.25*(1-i/5);HERO(c,x-i*18,CY+4)}c.globalAlpha=1;HERO(c,x,CY+4);glow(c,x,CY+4,36,'#ff7a2b',.6);
+});
+ab('Огненный дождь','Навык · Огонь · массовый','Огненные капли падают на область.','#ff6a2b',(c,p,t)=>{
+  disc(c,CX,CY+22,130,42,'90,25,5',.45);
+  for(let i=0;i<16;i++){const q=(t*1.1+R(i))%1,x=CX+(R(i+2)-.5)*220,y=CY+22+(R(i+4)-.5)*50;
+    if(q<.7){const k=q/.7,mx=x+(1-k)*40,my=y-(1-k)*170;c.save();c.translate(mx,my);c.rotate(Math.PI*.62);fireS(c,t+i,.55);c.restore()}
+    else{const e=(q-.7)/.3;glow(c,x,y,30*(1-e)+8,'#ffb347',.8*(1-e));ringE(c,x,y,8+30*e,4+12*e,'255,160,60',2,1-e)}}
+});
+ab('Стена огня','Навык · Огонь · контроль','Стена пламени поперёк пути.','#ff7a2b',(c,p,t)=>{
+  const e=ez(cl(p*2,0,1)),a=p>.85?1-(p-.85)/.15:1;
+  disc(c,CX,CY+22,40,110*e,'90,25,5',.4*a);
+  c.save();c.globalCompositeOperation='lighter';for(let i=0;i<12;i++){const y=CY-70+i*14*e+ (1-e)*70;flameAt(c,CX+(R(i)-.5)*10,y+20,(.6+.3*R(i+1))*a,t,i)}c.restore();
+  for(let i=0;i<3;i++){const x=CX+90-((t*30+i*40)%80);FOE(c,x,CY-30+i*30,x<CX+30)}
+});
+ab('Пузырь','Навык · Вода · бросок','Пузырь запирает врагов в воде.','#6fd0ff',(c,p,t)=>{
+  disc(c,CX,CY+22,130,34,'20,60,110',.3);HERO(c,CX-120,CY+6);
+  const fl=cl(p/.5,0,1),x=CX-100+fl*190;
+  if(p<.5){const r=16;const g2=rg(c,x-5,CY-5,r,[[0,'rgba(255,255,255,.9)'],[.4,'rgba(160,220,255,.25)'],[1,'rgba(90,170,255,.6)']]);c.fillStyle=g2;c.beginPath();c.arc(x,CY,r,0,TAU);c.fill();c.strokeStyle='rgba(220,245,255,.9)';c.lineWidth=1.5;c.stroke();FOE(c,CX+90,CY+4,false)}
+  else{const e=ez((p-.5)/.5),bob=Math.sin(t*3)*4;FOE(c,CX+90,CY+4-e*18+bob,false);const r=26;const g2=rg(c,CX+84,CY-14-e*18+bob,r,[[0,'rgba(255,255,255,.5)'],[.5,'rgba(160,220,255,.18)'],[1,'rgba(90,170,255,.55)']]);c.fillStyle=g2;c.beginPath();c.arc(CX+90,CY+4-e*18+bob,r,0,TAU);c.fill();c.strokeStyle='rgba(220,245,255,.8)';c.lineWidth=1.5;c.stroke();
+    for(let i=0;i<6;i++){const q=(t*.8+i/6)%1;c.fillStyle='rgba(220,245,255,'+(1-q)*.7+')';c.beginPath();c.arc(CX+80+R(i)*20,CY+10-q*50,2+R(i+3)*2,0,TAU);c.fill()}}
+});
+ab('Водяной хлыст','Навык · Вода · ближний','Широкий взмах водяным хлыстом.','#6fd0ff',(c,p,t)=>{
+  disc(c,CX,CY+22,120,36,'20,60,110',.3);HERO(c,CX-60,CY+6);
+  const k=ez(cl(p/.5,0,1)),a0=-1.1+k*2.2,a=p>.6?1-(p-.6)/.4:1;
+  c.save();c.translate(CX-60,CY+6);c.globalCompositeOperation='lighter';
+  for(let i=0;i<10;i++){const aa=-1.1+(a0+1.1)*(i/10);c.strokeStyle='rgba(120,200,255,'+(.08+.06*i)*a+')';c.lineWidth=14;c.beginPath();c.arc(0,0,140,aa-.08,aa);c.stroke()}
+  c.strokeStyle='rgba(230,248,255,'+a+')';c.lineWidth=4;c.beginPath();c.arc(0,0,140,-1.1,a0);c.stroke();c.restore();
+  for(let i=0;i<3;i++){const ang=-.8+i*.8,hit=a0>ang;FOE(c,CX-60+Math.cos(ang)*(140+(hit?30*k:0)),CY+6+Math.sin(ang)*(140+(hit?30*k:0))*.55,hit)}
+});
+ab('Водоворот','Навык · Вода · массовый','Воронка затягивает всех к центру.','#3aa7ff',(c,p,t)=>{
+  const e=ez(cl(p*1.6,0,1)),a=p>.85?1-(p-.85)/.15:1;
+  disc(c,CX,CY+22,120*e,44*e,'30,90,200',.5*a);
+  c.save();c.translate(CX,CY+22);c.scale(1,.38);for(let i=0;i<5;i++){c.strokeStyle='rgba(150,215,255,'+(.6-i*.1)*a+')';c.lineWidth=3;c.beginPath();c.arc(0,0,(20+i*20)*e,t*4+i,t*4+i+4);c.stroke()}c.restore();
+  funnel(c,CX,CY+18,70*e,46*e,t,'80,160,255','200,235,255');
+  for(let i=0;i<4;i++){const ang=t*2+i*TAU/4,rr=(110-80*((t*.3+i*.25)%1))*e;FOE(c,CX+Math.cos(ang)*rr,CY+22+Math.sin(ang)*rr*.38,false)}
+});
+ab('Ледяная тюрьма','Навык · Вода · контроль','Область промерзает насквозь.','#bdf0ff',(c,p,t)=>{
+  const e=ez(cl(p*1.8,0,1)),a=p>.85?1-(p-.85)/.15:1;
+  disc(c,CX,CY+22,110*e,40*e,'150,220,255',.5*a);ringE(c,CX,CY+22,110*e,40*e,'220,245,255',2,.8*a);
+  [[-50,6],[10,-6],[60,14],[-10,26]].forEach((q,i)=>{FOE(c,CX+q[0],CY+q[1],false,'#9fc8e0');c.globalAlpha=a;for(let j=0;j<5;j++)crystal(c,CX+q[0]+(R(i*5+j)-.5)*24,CY+q[1]+12,(14+R(j+i)*10)*e,5,-Math.PI/2+(R(j+3)-.5)*.8);c.globalAlpha=1});
+  glow(c,CX,CY,90*e,'#bdf0ff',.3*a);
+});
+ab('Каменная дробь','Навык · Земля · бросок','Веер каменных осколков.','#c9974f',(c,p,t)=>{
+  disc(c,CX,CY+22,120,32,'40,25,10',.35);HERO(c,CX-120,CY+6);
+  const k=cl(p/.4,0,1);
+  for(let i=0;i<8;i++){const a=(i/7-.5)*.7,d=20+200*ez(k),x=CX-110+Math.cos(a)*d,y=CY+4+Math.sin(a)*d;if(k<1)rockBit(c,x,y,4+R(i)*3,t*8+i,i);else puffs(c,x,y,10,'150,120,80',.5*(1-(p-.4)/.6))}
+  if(p<.12)flash(c,CX-100,CY+4,1-p/.12);
+  FOE(c,CX+70,CY-20,k>=1);FOE(c,CX+86,CY+24,k>=1);
+});
+ab('Удар молотом','Навык · Земля · ближний','Прыжок и удар при приземлении.','#c9974f',(c,p,t)=>{
+  disc(c,CX,CY+24,140,36,'40,25,10',.4);
+  const k=cl(p/.5,0,1),x=CX-110+ez(k)*200,h=Math.sin(k*Math.PI)*80;
+  shadow(c,x,CY+18,16-h*.08,.5);
+  c.fillStyle='#2a2f44';c.beginPath();c.arc(x,CY+6-h,13,0,TAU);c.fill();
+  c.save();c.translate(x+10,CY-h-4);c.rotate(-1.2+k*2);c.fillStyle='#6a4a2a';c.fillRect(-2,-26,4,26);c.fillStyle='#8a8070';c.fillRect(-10,-34,20,12);c.restore();
+  if(p>.5){const e=(p-.5)/.5;ringE(c,CX+90,CY+18,20+90*e,8+32*e,'230,200,140',5*(1-e)+1,1-e);for(let i=0;i<8;i++){const ang=i/8*TAU;spikeRock(c,CX+90+Math.cos(ang)*50*e,CY+18+Math.sin(ang)*20*e,(1-e)*24,8,i)}
+    FOE(c,CX+40-e*20,CY-14,true);FOE(c,CX+140+e*20,CY+20,true)}else{FOE(c,CX+50,CY-10,false);FOE(c,CX+130,CY+20,false)}
+});
+ab('Метеорит','Навык · Земля · массовый','Огромный камень падает с неба.','#c9974f',(c,p,t)=>{
+  disc(c,CX+20,CY+22,110,40,'40,25,10',.4);
+  if(p<.6){const k=p/.6;ringE(c,CX+20,CY+22,100,36,'255,120,80',2,.5+.4*k);c.save();c.translate(CX+20+(1-k)*120,CY+10-(1-k)*200);for(let i=0;i<8;i++)glow(c,i*12,-i*20,30-i*3,'#ff9a3c',.4*(1-i/8));earthS(c,t,2.2,3);c.restore()}
+  else{const e=(p-.6)/.4;flash(c,CX+20,CY+10,1-e);glow(c,CX+20,CY+10,140*(1-e*.5),'#ffd070',.8*(1-e));ringE(c,CX+20,CY+22,30+120*e,12+44*e,'255,210,150',6*(1-e)+1,1-e);for(let i=0;i<10;i++){const ang=R(i)*TAU;rockBit(c,CX+20+Math.cos(ang)*110*e,CY+14+Math.sin(ang)*40*e-Math.sin(e*Math.PI)*40,5+R(i)*5,t*6+i,i)}}
+});
+ab('Каменный голем','Навык · Земля · контроль','Голем отвлекает врагов и бьёт их.','#c9974f',(c,p,t)=>{
+  disc(c,CX,CY+26,90,30,'40,25,10',.4);
+  const e=ez(cl(p*2.5,0,1)),sl=Math.sin(t*3);
+  c.save();c.translate(CX,CY+26-(1-e)*20);c.globalAlpha=e;
+  c.fillStyle='#6a5a44';c.beginPath();c.ellipse(0,-30,30,30,0,0,TAU);c.fill();
+  c.fillStyle='#8a7a5e';for(const sgn of[-1,1]){c.beginPath();c.ellipse(sgn*34,-26+sl*sgn*4,14,16,0,0,TAU);c.fill()}
+  c.fillStyle='#4a3e30';c.fillRect(-14,-12,10,14);c.fillRect(4,-12,10,14);
+  c.fillStyle='#ffd36b';glow(c,0,-36,14,'#ffd36b',.7);c.fillRect(-10,-40,20,5);
+  c.strokeStyle='rgba(20,12,6,.6)';c.lineWidth=1.5;c.beginPath();c.moveTo(-10,-54);c.lineTo(-2,-44);c.lineTo(-12,-30);c.stroke();c.restore();c.globalAlpha=1;
+  for(let i=0;i<4;i++){const ang=i/4*TAU+t*.3;FOE(c,CX+Math.cos(ang)*(90-20*e),CY+20+Math.sin(ang)*30,false)}
+  c.fillStyle='#ffd36b';c.font='bold 22px sans-serif';c.textAlign='center';c.fillText('!',CX,CY-50);c.textAlign='left';
+});
+ab('Шаровая молния','Навык · Воздух · бросок','Шар молнии бьёт током по пути.','#f4f08a',(c,p,t)=>{
+  disc(c,CX,CY+22,130,32,'40,40,20',.3);
+  const x=CX-110+p*230,fl=(Math.floor(t*16)%2)?1:.6;
+  [[-40,-30],[10,30],[60,-26],[100,24]].forEach((q,i)=>{const ex=CX+q[0],ey=CY+q[1],near=Math.abs(ex-x)<70;FOE(c,ex,ey,near);if(near)bolt(c,x,CY,ex,ey,Math.floor(t*14)+i,'#f4f08a',1.6,fl)});
+  c.save();c.globalCompositeOperation='lighter';glow(c,x,CY,40,'#f4f08a',.8);glow(c,x,CY,16,'#ffffff',1);c.restore();
+  for(let i=0;i<4;i++){const q=t*20+i*1.7;bolt(c,x,CY,x+Math.cos(q)*24,CY+Math.sin(q*1.3)*24,Math.floor(t*20)+i,'#fff6b0',1,fl)}
+});
+ab('Шквальный рывок','Навык · Воздух · ближний','Перенос с клинками на выходе.','#8febd0',(c,p,t)=>{
+  disc(c,CX,CY+22,140,30,'40,90,80',.25);
+  const jumped=p>.15;
+  if(!jumped)HERO(c,CX-110,CY+6);else{c.globalAlpha=Math.max(0,.4-(p-.15));HERO(c,CX-110,CY+6);c.globalAlpha=1;HERO(c,CX+80,CY+6)}
+  if(p>.12&&p<.45){const a=1-(p-.12)/.33;c.save();c.globalCompositeOperation='lighter';c.strokeStyle='rgba(200,255,240,'+a+')';c.lineWidth=10*a+2;c.beginPath();c.moveTo(CX-110,CY+6);c.lineTo(CX+80,CY+6);c.stroke();c.restore()}
+  FOE(c,CX-30,CY+2,jumped);FOE(c,CX+20,CY+12,jumped);
+  if(jumped){const e=ez(cl((p-.15)/.6,0,1));for(let i=0;i<8;i++){const ang=i/8*TAU;c.save();c.translate(CX+80+Math.cos(ang)*90*e,CY+6+Math.sin(ang)*36*e);c.rotate(ang);c.globalAlpha=1-e;airS(c,t,.42);c.restore()}c.globalAlpha=1}
+});
+ab('Ураган','Навык · Воздух · массовый','Смерч идёт по прямой и сметает всех.','#8febd0',(c,p,t)=>{
+  disc(c,CX,CY+24,150,30,'40,90,80',.3);
+  const x=CX-100+ez(p)*200;
+  funnel(c,x,CY+20,130,60,t,'150,235,215','235,255,250');
+  for(let i=0;i<4;i++){const ex=CX-40+i*50,taken=x>ex-30;if(taken){const ang=t*6+i*1.6;FOE(c,x+Math.cos(ang)*30,CY-10-i*14+Math.sin(ang)*8,true)}else FOE(c,ex,CY+(i%2?16:-6),false)}
+});
+ab('Отталкивающий порыв','Навык · Воздух · контроль','Порыв отшвыривает всех назад.','#e6fff7',(c,p,t)=>{
+  disc(c,CX,CY+22,140,32,'40,90,80',.25);HERO(c,CX-110,CY+6);
+  const k=ez(cl(p/.4,0,1)),a=1-cl((p-.3)/.7,0,1);
+  c.save();c.translate(CX-110,CY+6);c.globalCompositeOperation='lighter';for(let i=0;i<6;i++){const rr=40+i*30*k;c.strokeStyle='rgba(230,255,248,'+(.6-i*.08)*a+')';c.lineWidth=3;c.beginPath();c.arc(0,0,rr,-.7,.7);c.stroke()}c.restore();
+  for(let i=0;i<3;i++){const ex=CX-20+i*30+k*140;FOE(c,ex,CY-30+i*30,k>.3)}
+});
+ab('Дисковая пила','Навык · Металл · бросок','Пила рикошетит между врагами.','#e8eef8',(c,p,t)=>{
+  disc(c,CX,CY+22,130,36,'40,40,50',.35);HERO(c,CX-120,CY+6);
+  const pts=[[CX-110,CY+4],[CX-30,CY-20],[CX+30,CY+24],[CX+80,CY-26],[CX+120,CY+16]];
+  const seg=cl(p*1.2,0,.999)*(pts.length-1),i=Math.floor(seg),f=seg-i,x=pts[i][0]+(pts[i+1][0]-pts[i][0])*f,y=pts[i][1]+(pts[i+1][1]-pts[i][1])*f;
+  for(let j=1;j<pts.length;j++)FOE(c,pts[j][0],pts[j][1],j<=i);
+  c.save();c.globalCompositeOperation='lighter';c.strokeStyle='rgba(230,240,255,.35)';c.lineWidth=2;c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(let j=1;j<=i;j++)c.lineTo(pts[j][0],pts[j][1]);c.lineTo(x,y);c.stroke();c.restore();
+  c.save();c.translate(x,y);c.rotate(t*24);c.fillStyle='#cfd6e4';c.beginPath();for(let j=0;j<16;j++){const a=j/16*TAU,rr=j%2?14:11;c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}c.closePath();c.fill();c.strokeStyle='#2a303e';c.stroke();c.fillStyle='#7a849a';c.beginPath();c.arc(0,0,6,0,TAU);c.fill();c.restore();
+});
+ab('Стальной вихрь','Навык · Металл · ближний','Пилы кружат вокруг героя.','#e8eef8',(c,p,t)=>{
+  disc(c,CX,CY+22,100,36,'40,40,50',.35);HERO(c,CX,CY+6);
+  const e=ez(cl(p*3,0,1)),a=p>.85?1-(p-.85)/.15:1;
+  for(let i=0;i<4;i++){const ang=t*5+i*TAU/4,x=CX+Math.cos(ang)*60*e,y=CY+6+Math.sin(ang)*28*e;c.save();c.globalAlpha=a;c.translate(x,y);c.rotate(t*22+i);c.fillStyle='#cfd6e4';c.beginPath();for(let j=0;j<16;j++){const q=j/16*TAU,rr=j%2?12:9;c.lineTo(Math.cos(q)*rr,Math.sin(q)*rr)}c.closePath();c.fill();c.strokeStyle='#2a303e';c.stroke();c.restore()}
+  c.globalAlpha=1;ringE(c,CX,CY+6,60*e,28*e,'230,240,255',1.5,.4*a);
+  FOE(c,CX+90,CY-10,false);FOE(c,CX-86,CY+20,false);
+});
+ab('Орбитальный удар','Навык · Металл · массовый','Лучи с орбиты бьют по области.','#9fd0ff',(c,p,t)=>{
+  disc(c,CX,CY+22,130,40,'30,40,60',.4);
+  [[-70,10],[-10,-6],[50,16],[100,-4],[20,30]].forEach((q,i)=>{const t0=i*.14,x=CX+q[0],y=CY+q[1];
+    if(p<t0)ringE(c,x,y,22,8,'160,210,255',1.5,.6);
+    else{const e=cl((p-t0)/.25,0,1),a=1-e;c.save();c.globalCompositeOperation='lighter';c.fillStyle=lg(c,x-10,0,x+10,0,[[0,'rgba(120,190,255,0)'],[.5,'rgba(220,240,255,'+a+')'],[1,'rgba(120,190,255,0)']]);c.fillRect(x-10*(1-e*.5),-10,20*(1-e*.5),y+10);glow(c,x,y,50*a+10,'#9fd0ff',a);c.restore();ringE(c,x,y,10+40*e,4+14*e,'200,230,255',3*a+1,a)}});
+});
+ab('Минное поле','Навык · Металл · контроль','Мины взрываются под врагами.','#ffb347',(c,p,t)=>{
+  disc(c,CX,CY+22,130,40,'40,40,50',.35);
+  const mines=[[-70,10],[-10,24],[50,4],[100,22]],ex=CX+130-p*260;
+  mines.forEach((q,i)=>{const x=CX+q[0],y=CY+q[1],boom=ex<x+10;
+    if(!boom){c.fillStyle='#4a5266';c.beginPath();c.arc(x,y,9,0,TAU);c.fill();c.strokeStyle='#0a0c12';c.stroke();const bl=Math.floor(t*4+i)%2;c.fillStyle=bl?'#ff3a2a':'#5a1a14';c.beginPath();c.arc(x,y,3,0,TAU);c.fill();if(bl)glow(c,x,y,14,'#ff3a2a',.6)}
+    else{const e=cl((x+10-ex)/80,0,1);if(e<1){flash(c,x,y,1-e);ringE(c,x,y+4,10+40*e,4+14*e,'255,200,120',3,1-e);glow(c,x,y,40*(1-e),'#ffb347',1-e)}}});
+  FOE(c,ex,CY+10,false);
+});
+ab('Шипастый плод','Навык · Дерево · бросок','Плод разбрасывает ядовитые семена.','#9ad16a',(c,p,t)=>{
+  disc(c,CX,CY+22,130,34,'30,70,30',.3);HERO(c,CX-120,CY+6);
+  const k=cl(p/.45,0,1),x=CX-110+k*200,y=CY-Math.sin(k*Math.PI)*40;
+  if(p<.45){c.save();c.translate(x,y);c.rotate(t*6);c.fillStyle='#7a3a8a';c.beginPath();c.arc(0,0,12,0,TAU);c.fill();c.fillStyle='#d8f0a0';for(let i=0;i<8;i++){const q=i/8*TAU;c.beginPath();c.moveTo(Math.cos(q-.2)*12,Math.sin(q-.2)*12);c.lineTo(Math.cos(q)*18,Math.sin(q)*18);c.lineTo(Math.cos(q+.2)*12,Math.sin(q+.2)*12);c.fill()}c.restore()}
+  else{const e=ez((p-.45)/.55);puffs(c,CX+90,CY+4,40*(1-e)+10,'140,200,90',.6*(1-e));for(let i=0;i<8;i++){const ang=i/8*TAU,d=e*100;c.save();c.translate(CX+90+Math.cos(ang)*d,CY+4+Math.sin(ang)*d*.5);c.rotate(ang);woodS(c,t,.6);c.restore()}}
+  FOE(c,CX+90,CY+4,p>.45,'#c86a9a');
+});
+ab('Удушающие лозы','Навык · Дерево · ближний','Лозы хватают и тянут врагов.','#62c15a',(c,p,t)=>{
+  disc(c,CX,CY+22,120,36,'30,70,30',.35);HERO(c,CX-40,CY+6);
+  const k=ez(cl(p/.35,0,1)),back=cl((p-.4)/.5,0,1);
+  [[90,-30],[110,20],[60,40]].forEach((q,i)=>{const fx=CX-40+q[0]*(1-back*.6),fy=CY+6+q[1]*(1-back*.6);
+    vine(c,CX-40,CY+6,CX-40+(fx-(CX-40))*k,CY+6+(fy-(CY+6))*k,t,4,6,true);FOE(c,fx,fy,back>0);
+    if(back>0){c.strokeStyle='#3f8a36';c.lineWidth=2.5;c.beginPath();c.arc(fx,fy,12,0,TAU);c.stroke()}});
+  if(back>.3)c.fillStyle='#8ff0b0',c.font='bold 16px sans-serif',c.fillText('+',CX-46,CY-20-back*20);
+});
+ab('Рой ос','Навык · Дерево · массовый','Рой ос сам находит врагов.','#ffd36b',(c,p,t)=>{
+  disc(c,CX,CY+22,130,34,'30,70,30',.3);HERO(c,CX-120,CY+6);
+  const foes=[[CX+40,CY-30],[CX+90,CY+10],[CX+20,CY+30]];foes.forEach((f,i)=>FOE(c,f[0],f[1],p>.6));
+  for(let i=0;i<14;i++){const f=foes[i%3],k=cl(p*1.4-R(i)*.3,0,1),sx=CX-110,sy=CY+4,cx=sx+(R(i+1)-.3)*120,cy=sy+(R(i+2)-.5)*140;
+    const x=(1-k)*(1-k)*sx+2*(1-k)*k*cx+k*k*(f[0]+Math.sin(t*20+i)*8),y=(1-k)*(1-k)*sy+2*(1-k)*k*cy+k*k*(f[1]+Math.cos(t*18+i)*8);
+    c.save();c.translate(x,y);c.fillStyle='#ffd36b';c.beginPath();c.ellipse(0,0,5,3,0,0,TAU);c.fill();c.fillStyle='#2a2010';c.fillRect(-1,-3,1.5,6);c.fillRect(2,-3,1.5,6);c.fillStyle='rgba(230,250,255,.6)';c.beginPath();c.ellipse(-1,-4,3,1.5,-.5+Math.sin(t*60+i)*.4,0,TAU);c.fill();c.restore()}
+});
+ab('Древень-страж','Навык · Дерево · контроль','Древень лечит и стреляет шипами.','#62c15a',(c,p,t)=>{
+  disc(c,CX-20,CY+26,90,30,'30,70,30',.4);
+  const e=ez(cl(p*2.5,0,1));
+  c.save();c.translate(CX-20,CY+26);c.scale(e,e);
+  c.strokeStyle='#5a3a1a';c.lineWidth=6;c.lineCap='round';for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.5;c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(Math.cos(a)*20,-30,Math.cos(a)*34+Math.sin(t*1.5+i)*3,-62+Math.abs(i-2)*10);c.stroke()}
+  for(let i=0;i<8;i++){const a=i/8*TAU;c.fillStyle=i%2?'#3a8a3a':'#4aa04a';c.beginPath();c.arc(Math.cos(a)*26,-60+Math.sin(a)*18,16,0,TAU);c.fill()}
+  c.fillStyle='#ffe27a';glow(c,0,-30,14,'#ffe27a',.7);c.beginPath();c.arc(-5,-30,3,0,TAU);c.arc(5,-30,3,0,TAU);c.fill();c.restore();c.lineCap='butt';
+  ringE(c,CX-20,CY+26,90*e,30*e,'140,230,120',1.5,.5);
+  HERO(c,CX-70,CY+18);c.fillStyle='#8ff0b0';c.font='bold 15px sans-serif';for(let i=0;i<3;i++){const q=(t*.8+i/3)%1;c.globalAlpha=1-q;c.fillText('+',CX-78+i*8,CY-q*40)}c.globalAlpha=1;
+  if(p>.4){const k=((p-.4)*3)%1;c.save();c.translate(CX-10+k*140,CY-20+k*20);c.rotate(.15);c.fillStyle='#c8f090';c.beginPath();c.moveTo(8,0);c.lineTo(-5,-3);c.lineTo(-5,3);c.fill();c.restore()}
+  FOE(c,CX+130,CY,p>.6);
+});
+
 const AB={};for(const x of ABL)AB[x.n]=x.f;
 return {R,rg,lg,glow,shadow,ez,cl,AB,CX,CY,bolt,vine,funnel,spikeRock,rockBit,rockPoly,puffs,disc,ringE,crystal,flash,pistol,shotgun,rifle,sniper,smg,launcher,grenade,
  proj:{ice:iceS,fire:fireS,wave:waterS,blade:airS,bullet:metalS,seed:woodS},
@@ -5654,6 +6162,7 @@ return {R,rg,lg,glow,shadow,ez,cl,AB,CX,CY,bolt,vine,funnel,spikeRock,rockBit,ro
  rock:earthS,trail:{fire:fireT,wave:waterT,blade:airT,bullet:metalT,seed:woodT,rock:earthT}};
 })();
 
+const NEWV={boomer:1,saw:1,bubble:1,orb:1,fruit:1,wasp:1};
 const SPV={fire:1,wave:1,tsunami:1,blade:1,bullet:1,seed:1,ice:1,rock:1};
 const HSC={fire:0,wave:.6,blade:.6,bullet:.55,seed:.6,rock:.5};
 SP.hit.spike=(c,x,y,p,seed,h)=>{
@@ -6206,11 +6715,75 @@ function drawMerchants(g){
     ctx.restore();
   }
 }
+function drawSummon(s){
+  if(s.kind==='mine'){
+    const armed=s.arm<=0,bl=armed&&Math.floor(anim*4+s.x)%2===0;
+    ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(s.x+2,s.y+4,11,5,0,0,TAU);ctx.fill();
+    const gr=ctx.createRadialGradient(s.x-3,s.y-3,1,s.x,s.y,11);gr.addColorStop(0,'#9aa6be');gr.addColorStop(1,'#2a303e');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(s.x,s.y,10,0,TAU);ctx.fill();ctx.strokeStyle='#0a0c12';ctx.lineWidth=1.5;ctx.stroke();
+    for(let i=0;i<4;i++){const a=i*TAU/4+0.4;ctx.fillStyle='#c8d0e0';ctx.fillRect(s.x+Math.cos(a)*10-1.5,s.y+Math.sin(a)*10-1.5,3,3)}
+    ctx.fillStyle=bl?'#ff3a2a':'#5a1a14';ctx.beginPath();ctx.arc(s.x,s.y,3,0,TAU);ctx.fill();
+    if(bl){ctx.globalCompositeOperation='lighter';glow(s.x,s.y,16,'#ff3a2a',0.7);ctx.globalCompositeOperation='source-over'}
+    return;
+  }
+  const fade=Math.min(1,s.life/0.6,(anim-s.t0)/0.3);ctx.globalAlpha=Math.max(0,fade);
+  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.aim||0);
+  const sc=1+(s.atk>0?Math.sin(s.atk/0.35*Math.PI)*0.15:0);ctx.scale(sc,sc);
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(3,10,24,10,0,0,TAU);ctx.fill();
+  if(typeof ENS!=='undefined'&&ENS.has(s.kind==='golem'?'boss_golem':'boss_ent'))ENS.draw(ctx,s.kind==='golem'?'boss_golem':'boss_ent',{t:anim,r:19,col:s.kind==='golem'?'#9a8a6a':'#4a8a3a',st:'move',hp:1});
+  else{ctx.fillStyle=s.col;ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fill()}
+  ctx.restore();
+  if(s.kind==='treant'&&s.heal){ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(140,230,120,'+(0.25+0.1*Math.sin(anim*3))+')';ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.lineDashOffset=-anim*12;ctx.beginPath();ctx.arc(s.x,s.y,170,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.globalCompositeOperation='source-over'}
+  if(s.taunt){ctx.fillStyle='#ffd36b';ctx.font='700 13px "Golos Text",system-ui';ctx.textAlign='center';ctx.fillText('!',s.x,s.y-30)}
+  const w=34,k=clamp(s.life/s.max,0,1);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(s.x-w/2,s.y-28,w,4);ctx.fillStyle=s.kind==='golem'?'#e8c98f':'#8ad25a';ctx.fillRect(s.x-w/2,s.y-28,w*k,4);
+  ctx.globalAlpha=1;
+}
+function drawSkillFx(g){
+  for(const f of g.cfx){
+    const k=f.t/f.life,a=1-k;
+    ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.ang);ctx.globalCompositeOperation='lighter';
+    const R=f.range*(0.55+0.45*k);
+    const gr=ctx.createRadialGradient(0,0,R*0.2,0,0,R);gr.addColorStop(0,rgba(gcol(f.col),0));gr.addColorStop(0.7,rgba(gcol(f.col),0.35*a));gr.addColorStop(1,rgba(gcol(f.col),0));
+    ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,-f.arc/2,f.arc/2);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=rgba('#ffffff',0.8*a);ctx.lineWidth=3*a+1;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,0,R,-f.arc/2,f.arc/2);ctx.stroke();
+    if(f.vis==='wind')for(let i=0;i<5;i++){const aa=(i/4-.5)*f.arc,rr=R*(0.4+0.5*((k*2+i*.3)%1));ctx.strokeStyle=rgba('#e6fff7',0.6*a);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,rr,aa-0.15,aa+0.15);ctx.stroke()}
+    ctx.lineCap='butt';ctx.restore();
+  }
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+  for(const m of g.em){
+    if(m.kind!=='orbit')continue;
+    const p=g.p,a0=Math.min(1,m.life/0.4,(m.max-m.life)/0.2);
+    for(let i=0;i<m.n;i++){const a=m.ang+i*TAU/m.n,x=p.x+Math.cos(a)*m.R,y=p.y+Math.sin(a)*m.R;
+      ctx.save();ctx.globalAlpha=a0;ctx.translate(x,y);ctx.rotate(anim*14+i);
+      if(m.vis==='saw')drawSaw(10);else{ctx.rotate(a);SP.proj.blade(ctx,anim,.7)}
+      ctx.restore()}
+  }
+  ctx.globalAlpha=1;
+}
+function drawSaw(r){
+  ctx.fillStyle='#cfd6e4';ctx.beginPath();for(let i=0;i<16;i++){const a=i/16*TAU,rr=i%2?r:r*0.78;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#2a303e';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.fillStyle='#7a849a';ctx.beginPath();ctx.arc(0,0,r*0.45,0,TAU);ctx.fill();ctx.fillStyle='#1a1e28';ctx.beginPath();ctx.arc(0,0,r*0.18,0,TAU);ctx.fill();
+  ctx.globalCompositeOperation='lighter';glow(0,0,r*1.6,'#e8eef8',0.25);ctx.globalCompositeOperation='source-over';
+}
+function drawNewProj(b,a,v){
+  ctx.save();ctx.translate(b.x,b.y);ctx.globalCompositeOperation='source-over';
+  if(v==='boomer'){ctx.rotate(anim*18);ctx.globalCompositeOperation='lighter';glow(0,0,26,'#ff7a2b',.6);
+    ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,14,-1.3,1.3);ctx.arc(-6,0,11,1.1,-1.1,true);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#fff2b0';ctx.beginPath();ctx.arc(0,0,10,-1,1);ctx.arc(-4,0,8,0.8,-0.8,true);ctx.closePath();ctx.fill();}
+  else if(v==='saw'){ctx.rotate(anim*22);drawSaw(b.r+2)}
+  else if(v==='bubble'){const r=b.r;const gr=ctx.createRadialGradient(-r*.35,-r*.35,1,0,0,r);gr.addColorStop(0,'rgba(255,255,255,.85)');gr.addColorStop(.35,'rgba(160,220,255,.25)');gr.addColorStop(1,'rgba(90,170,255,.55)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.strokeStyle='rgba(200,240,255,.9)';ctx.lineWidth=1.5;ctx.stroke()}
+  else if(v==='orb'){ctx.globalCompositeOperation='lighter';glow(0,0,b.r*3,'#f4f08a',.7);glow(0,0,b.r*1.4,'#ffffff',.9);ctx.strokeStyle='rgba(255,250,170,.9)';ctx.lineWidth=1.5;for(let i=0;i<4;i++){const q=anim*20+i*1.7;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(q)*b.r*1.8,Math.sin(q*1.3)*b.r*1.8);ctx.stroke()}}
+  else if(v==='fruit'){ctx.rotate(anim*6);ctx.fillStyle='#7a3a8a';ctx.beginPath();ctx.arc(0,0,b.r,0,TAU);ctx.fill();ctx.fillStyle='#d8f0a0';for(let i=0;i<8;i++){const q=i/8*TAU;ctx.beginPath();ctx.moveTo(Math.cos(q-.2)*b.r,Math.sin(q-.2)*b.r);ctx.lineTo(Math.cos(q)*(b.r+5),Math.sin(q)*(b.r+5));ctx.lineTo(Math.cos(q+.2)*b.r,Math.sin(q+.2)*b.r);ctx.fill()}ctx.fillStyle='rgba(255,255,255,.3)';ctx.beginPath();ctx.arc(-b.r*.3,-b.r*.3,b.r*.35,0,TAU);ctx.fill()}
+  else if(v==='wasp'){ctx.rotate(a);ctx.fillStyle='#ffd36b';ctx.beginPath();ctx.ellipse(0,0,5,3,0,0,TAU);ctx.fill();ctx.fillStyle='#2a2010';ctx.fillRect(-1,-3,1.5,6);ctx.fillRect(2,-3,1.5,6);ctx.fillStyle='rgba(230,250,255,.6)';ctx.beginPath();ctx.ellipse(-1,-4,3,1.6,-.5+Math.sin(anim*60)*.4,0,TAU);ctx.ellipse(-1,4,3,1.6,.5-Math.sin(anim*60)*.4,0,TAU);ctx.fill()}
+  ctx.restore();ctx.globalCompositeOperation='lighter';
+}
 function drawStructs(g){
   for(const s of g.stc){
     if(!vis(s.x,s.y,40))continue;
     const fade=Math.min(1,s.life/0.6);
     ctx.globalAlpha=fade;
+    if(s.kind==='mine'||s.kind==='golem'||s.kind==='treant'){drawSummon(s);ctx.globalAlpha=1;continue}
     if(s.kind==='wall'){
       wallSpr(s);
     }else if(true){
@@ -7069,6 +7642,7 @@ return {draw,keys:Object.keys(H),mkSim,step:simStep};
 
 function drawPlayer(g){
   const p=g.p;
+  if(g.leapH){ctx.save();ctx.translate(0,-g.leapH)}
   for(const q of g.gh){
     ctx.globalAlpha=0.35*clamp(q.t/q.max,0,1);ctx.fillStyle='#8febd0';
     ctx.beginPath();ctx.arc(q.x,q.y,12,0,TAU);ctx.fill();
@@ -7116,6 +7690,7 @@ function drawPlayer(g){
   if(g.bf.spd.t>0){ctx.globalAlpha=0.5;ctx.strokeStyle='#8febd0';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,34,0,TAU);ctx.stroke()}
   ctx.restore();
   ctx.globalAlpha=1;
+  if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
   drawDashBar(g);
 }
 function drawDashBar(g){
@@ -7139,6 +7714,7 @@ function drawProj(g){
   for(const b of g.pr){
     if(!vis(b.x,b.y,180))continue;
     const a=Math.atan2(b.vy,b.vx),v=b.vis;
+    if(NEWV[v]){drawNewProj(b,a,v);continue}
     if(SPV[v]){drawProjSpr(b,a,v);continue}
     if(v!=='tsunami'&&v!=='wave'){const gr=b.r*3.4+6;ctx.globalAlpha=0.5;ctx.drawImage(glowSpr(b.col),b.x-gr,b.y-gr,gr*2,gr*2);ctx.globalAlpha=1}
     if(v==='fire'){
@@ -7193,7 +7769,7 @@ function drawTornados(g){
   for(const t of g.tor){
     if(!vis(t.x,t.y,t.r+20))continue;
     const tc=t.vis==='storm'?'244,230,130':(t.vis==='fire'?'255,140,60':'224,194,122');
-    const cc=t.vis==='storm'?['244,230,130','255,250,210']:(t.vis==='fire'?['255,120,30','255,230,150']:['220,185,120','255,235,190']);
+    const cc=t.vis==='storm'?['244,230,130','255,250,210']:(t.vis==='fire'?['255,120,30','255,230,150']:(t.vis==='water'?['80,160,255','200,235,255']:(t.vis==='air'?['150,235,215','235,255,250']:['220,185,120','255,235,190'])));
     ctx.globalCompositeOperation='source-over';
     SP.disc(ctx,t.x,t.y+6,t.r*1.1,t.r*.5,cc[0],.4);
     SP.funnel(ctx,t.x,t.y+4,t.r*2.5,t.r*.95,anim,cc[0],cc[1]);
@@ -7748,7 +8324,7 @@ function render(){
   drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
   if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawStructs(g);drawEnemies(g);drawDebris(g);drawSmoke(g)}
   drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g)}
-  if(mode!=='menu'){drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
+  if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
   else drawFx(g);
   ctx.restore();
   drawAmb(MP);
@@ -7831,7 +8407,7 @@ renderMenu();
 requestAnimationFrame(frame);
 
 if(DEBUG){
-  window.__x={ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
+  window.__x={SPAB:SP.AB,ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
   window.__pasUp=pasUp;window.__trPas=()=>{trSel='__pas';openTree()};
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,
