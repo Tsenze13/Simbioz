@@ -380,7 +380,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.21 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.21.1 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1408,9 +1408,9 @@ def('ancientroot',{cat:'sym',pair:['earth','wood'],n:'Древний корен�
   up:['Шире','Урон выше','Шире','Урон выше'],
   p:l=>({r:110+10*l,dmg:72+30*l,dt:'phys',delay:0.9,vis:'root',col:'#8a6a3a',st:{root:2+0.3*l},zone:{r:100+8*l,life:3.5,dps:12+5*l,dt:'magic',vis:'thorns',col:'#62c15a',st:{root:0.5}}})});
 def('railgun',{cat:'sym',pair:['air','metal'],n:'Рельсотрон',kind:'beam',mana:50,cd:11,
-  d:'Мгновенный сверхмощный выстрел сквозь всех врагов на линии.',
+  d:'Мгновенный сверхмощный выстрел через весь экран и дальше: прошивает всех врагов на линии.',
   up:['Урон выше','Урон выше','Урон выше','Урон выше'],
-  p:l=>({len:780,w:50,dmg:110+52*l,dt:'phys',vis:'rail',col:'#e8eef8',st:{stun:0.4}})});
+  p:l=>({len:2600,w:50,dmg:110+52*l,dt:'phys',vis:'rail',col:'#e8eef8',st:{stun:0.4}})});
 def('spores',{cat:'sym',pair:['air','wood'],n:'Пыльца',kind:'zones',mana:42,cd:13,
   d:'Облака ядовитой пыльцы дрейфуют вокруг цели и травят врагов.',
   up:['+1 облако','Яд сильнее','+1 облако','Яд сильнее'],
@@ -3009,7 +3009,7 @@ const TREE={
  railgun:[
   NS('Двойной выстрел','Второй выстрел почти сразу.',null,r=>[{t:'echo',d:0.25,s:0.6+0.15*r}]),
   NS('Электроразряд','Луч бьёт молниями в ближайших врагов.',null,r=>[{t:'bolt',n:2+r,dmg:50+30*r,stun:0.3,r:70,range:420,self:true}]),
-  NS('Тяжёлый заряд','Луч шире, длиннее и мощнее.',(p,r)=>{p.w*=1+0.5*r;p.len*=1+0.15*r;p.dmg*=1+0.4*r;p.manam=1+0.1*r})],
+  NS('Тяжёлый заряд','Луч шире и мощнее.',(p,r)=>{p.w*=1+0.5*r;p.len*=1+0.15*r;p.dmg*=1+0.4*r;p.manam=1+0.1*r})],
  spores:[
   NS('Взрывные споры','Споры детонируют после рассеивания.',null,r=>[{t:'quake',d:2.8,r:120,dmg:70+40*r,dt:'magic',col:'#a6e07a'}]),
   NS('Рой','Намного больше облаков спор.',(p,r)=>{p.n+=2*r}),
