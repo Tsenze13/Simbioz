@@ -22,6 +22,7 @@
     </div>
     <div id="biome" hidden></div>
     <div id="toast" class="toast" hidden></div>
+    <div id="hint" class="hint" hidden></div>
     <div id="prompt" hidden></div>
     <button id="useBtn" class="act" type="button" hidden>Торговец</button>
     <button id="dashBtn" class="dashbtn" type="button">Рывок</button>
@@ -49,7 +50,7 @@
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.23 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.24 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -91,6 +92,8 @@
         <div><dt>Убито</dt><dd id="goK">0</dd></div>
         <div><dt>Эссенция</dt><dd id="goE">0</dd></div>
       </dl>
+      <p class="gowhy" id="goWhy" hidden></p>
+      <div><h2 class="sec">Урон по источникам</h2><div class="dmgl" id="goDmg"></div></div>
       <div><h2 class="sec">Твоя сборка</h2><div class="chips" id="goBuild"></div></div>
       <div class="row">
         <button class="btn" id="again" type="button">В меню</button>

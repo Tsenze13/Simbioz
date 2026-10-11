@@ -83,9 +83,10 @@ function castUlt(){
   if(g.p.mana<u.mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
   g.p.mana-=u.mana;
   g.ult.cdMax=u.cd*(1-g.S.ultcd)/(1+g.E.cdr*0.5);g.ult.cd=g.ult.cdMax;
-  const c=castCtx(u.c1,u.c2);
+  const c=castCtx(u.c1,u.c2),L0=lens();g.curSk='__ult';
   const ep=(g.ult.kind&&g.ult.kind.indexOf('sym:')===0?symUlt(g.ult.kind.slice(4),g.ult.lv,c):ULTFN[g.start](g.ult.lv,c))||{x:c.px,y:c.py};
   for(const p of ultMods())ultMod(p,ep.x,ep.y,g.ult.lv);
+  tagNew(L0,'__ult');g.curSk=null;
   g.shake=Math.max(g.shake,8);g.zk=Math.max(g.zk,0.045);
   ring(g.p.x,g.p.y,160,EL[g.start].c,0.6);
   toast(u.n,ultMods().length?('+ '+ultMods().map(p=>ULTMOD[p]).join(', ')):'');

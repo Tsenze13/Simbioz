@@ -29,7 +29,7 @@ function spawnAt(type,x,y,hm,dm,opts){
   if(!opts.boss)e.sp*=1+Math.min(0.18,0.007*(g.wave-1));
   if(F.mres)e.mres=Math.min(0.85,e.mres+F.mres);
   if(opts.elite){
-    e.elite=true;e.r*=1.3;e.hp*=4;e.max=e.hp;e.kres=0.5;e.dmg*=1.2;
+    e.elite=true;tut('elite');e.r*=1.3;e.hp*=4;e.max=e.hp;e.kres=0.5;e.dmg*=1.2;
     e.affix=opts.affix||pickOf(Object.keys(AFFIX));
     if(e.affix==='bulwark')e.armor+=16;
     if(e.affix==='swift')e.sp*=1.45;
@@ -64,19 +64,20 @@ function eliteType(w){
 function enemyShot(x,y,a,spd,dmg,col,dt,r,fx){
   const g=G;
   if(g.eps.length>260)return;
-  g.eps.push({x:x,y:y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,r:r||6,dmg:dmg,dt:dt||'phys',life:4,col:col||'#ff6b6b',dead:false,fx:fx||null});
+  g.eps.push({x:x,y:y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,r:r||6,dmg:dmg,dt:dt||'phys',life:4,col:col||'#ff6b6b',dead:false,fx:fx||null,src:g.atkSrc||null});
 }
 function tgCircle(x,y,r,t,dmg,dt,col,ex){
   const g=G;
   if(g.tgs.length>70)return;
-  const o={shape:'circle',x:x,y:y,r:r,t:t,max:t,dmg:dmg,dt:dt||'phys',col:col||'#ff4d5e'};
+  if(Math.hypot(x-g.p.x,y-g.p.y)<r+160)tut('tele');
+  const o={shape:'circle',x:x,y:y,r:r,t:t,max:t,dmg:dmg,dt:dt||'phys',col:col||'#ff4d5e',src:g.atkSrc||null};
   if(ex)Object.assign(o,ex);
   g.tgs.push(o);
 }
 function tgLine(x,y,a,len,w,t,dmg,dt,col){
   const g=G;
   if(g.tgs.length>70)return;
-  g.tgs.push({shape:'line',x:x,y:y,x2:x+Math.cos(a)*len,y2:y+Math.sin(a)*len,w:w,t:t,max:t,dmg:dmg,dt:dt||'phys',col:col||'#ff4d5e'});
+  g.tgs.push({src:g.atkSrc||null,shape:'line',x:x,y:y,x2:x+Math.cos(a)*len,y2:y+Math.sin(a)*len,w:w,t:t,max:t,dmg:dmg,dt:dt||'phys',col:col||'#ff4d5e'});
 }
 function hurtPlayer(d,dt,att){
   const g=G,p=g.p,E=g.E;
@@ -87,6 +88,7 @@ function hurtPlayer(d,dt,att){
   d*=1-PV('earth',[0,.06,.1,.14]);
   d=Math.max(1,d);
   p.hp-=d;p.inv=(att&&att.melee)?0.45:0.3;
+  g.lastHurt={n:att&&att.e?(att.e.name||att.e.def.n)+(att.e.elite?' (элита)':''):(att&&att.src)||(att&&att.lava?'Опасная земля':'Неизвестно'),d:Math.round(d)};
   if(att&&att.e&&att.melee){const ka=Math.atan2(p.y-att.e.y,p.x-att.e.x),kf=att.boss?420:230;p.kx+=Math.cos(ka)*kf;p.ky+=Math.sin(ka)*kf}
   g.shake=Math.max(g.shake,(att&&att.lava)?1.5:((att&&att.boss)?9:6));g.hitFlash=0.25;
   puff(p.x,p.y,DT[dt].c,8,160,0.35,3);
@@ -281,11 +283,12 @@ function updEnemies(dt){
   }
   for(const e of en){
     if(e.dead)continue;
+    g.atkSrc=e.name||e.def.n;
     e.flash=Math.max(0,e.flash-dt);e.rockCd=Math.max(0,e.rockCd-dt);e.ovl=Math.max(0,e.ovl-dt);e.slam=Math.max(0,e.slam-dt);e.cc=Math.max(0,e.cc-dt);
     if(e.wet>0)e.wet-=dt;
     if(e.rust>0)e.rust-=dt;
-    if(e.burn>0){e.burn-=dt;e.bnt=(e.bnt||0)+dt;if(e.bnt>=0.5){e.bnt=0;hitEnemy(e,e.burnDps*0.5,{dt:'magic',src:'dot',quiet:true});if(e.dead)continue}}
-    if(e.poison>0){e.poison-=dt;if(e.poison<=0)e.pst=0;e.pt+=dt;if(e.pt>=0.5){e.pt=0;hitEnemy(e,e.poisonDps*0.5*(e.pst||1),{dt:'magic',src:'dot',quiet:true});if(e.dead)continue}}
+    if(e.burn>0){e.burn-=dt;e.bnt=(e.bnt||0)+dt;if(e.bnt>=0.5){e.bnt=0;hitEnemy(e,e.burnDps*0.5,{dt:'magic',src:'dot',quiet:true,sk:e.dsk});if(e.dead)continue}}
+    if(e.poison>0){e.poison-=dt;if(e.poison<=0)e.pst=0;e.pt+=dt;if(e.pt>=0.5){e.pt=0;hitEnemy(e,e.poisonDps*0.5*(e.pst||1),{dt:'magic',src:'dot',quiet:true,sk:e.dsk});if(e.dead)continue}}
     if(e.affix==='regen'&&e.hp<e.max)e.hp=Math.min(e.max,e.hp+e.max*0.03*dt);
     if(e.slow>0){e.slow-=dt;if(e.slow<=0)e.slowF=1}
     if(e.frz>0)e.frz-=dt;
@@ -487,7 +490,7 @@ function updEnemyProj(dt){
     if(!blocked)for(const s of g.solids){const dx=b.x-s.x,dy=b.y-s.y;if(dx*dx+dy*dy<(s.r+b.r)*(s.r+b.r)){blocked=true;break}}
     if(blocked){b.dead=true;puff(b.x,b.y,b.col,3,60,0.25,2);continue}
     const dx=p.x-b.x,dy=p.y-b.y,rr=p.r+b.r;
-    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}
+    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{src:b.src||'Вражеский снаряд'});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}
   }
   for(const t of g.tgs){
     t.t-=dt;
@@ -512,7 +515,7 @@ function updEnemyProj(dt){
           immFx(hz==='strike'?'+8 маны':'иммунитет');
           if(hz==='strike'){p.mana=Math.min(g.S.maxMana,p.mana+8);ring(p.x,p.y,50,'#f4f08a',0.4);sparks(p.x,p.y,'#f4f08a',10,220)}
         }else{
-          hurtPlayer(t.dmg,t.dt,{});
+          hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'});
           if(t.fx==='chill'){g.pslow=2.6;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Заморожены ноги',big:false,col:'#bdf0ff'})}
           if(t.fx==='roots'&&g.dashT<=0){g.rootT=1.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.9,txt:'Опутан! Рывок освободит',big:false,col:'#9fe07a'})}
         }
@@ -521,7 +524,7 @@ function updEnemyProj(dt){
       const n=Math.floor(Math.hypot(t.x2-t.x,t.y2-t.y)/40);
       for(let i=0;i<n;i++)puff(t.x+(t.x2-t.x)*i/n,t.y+(t.y2-t.y)*i/n,t.col,2,80,0.35,3);
       g.shake=Math.max(g.shake,5);
-      if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{});
+      if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'});
     }
   }
 }

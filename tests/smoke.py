@@ -43,6 +43,12 @@ with sync_playwright() as p:
           return {kills:g.kills,over:g.over}}""", k)
         check('герой ' + k, r['kills'] > 0 and not r['over'], r)
 
+    r = J("""()=>{const S=window.__sb,g=S.G;const n=Object.keys(g.dmgBy||{}).length;S.endRun(false);
+        return {src:n,rows:document.querySelectorAll('#goDmg .dr').length,over:!document.getElementById('over').hidden}}""")
+    check('итоги забега: урон по источникам', r['src'] > 0 and r['rows'] > 0 and r['over'], r)
+    r = J("()=>{const S=window.__sb;S.SAVE.tut={};S.SAVE.hints=true;S.quitToMenu();S.startRun('fire');S.update(1/60);return document.getElementById('hint').innerText}")
+    check('подсказка новичку', 'Управление' in r, r[:40])
+
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
         S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};

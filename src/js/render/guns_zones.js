@@ -62,7 +62,8 @@ function gunHit(b,e,o){
   }
   return [d,km];
 }
-function gExplode(q){
+function gExplode(q){G.curSk='__gun';try{gExplode0(q)}finally{G.curSk=null}}
+function gExplode0(q){
   const g=G,md=q.md||'',R=66+8*q.l,D=18+9*q.l,x=q.x1,y=q.y1;
   if(md==='cluster'){
     explodeAt(x,y,R*0.8,D*0.8,{dt:'phys',col:'#ffb347',knock:200,src:'auto',shake:4});

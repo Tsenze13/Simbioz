@@ -13,7 +13,7 @@ function addToBag(id){
 }
 function freeSlot(){return G.slots.findIndex(s=>!s)}
 function learnSkill(id){
-  const g=G,a=AB[id];
+  const g=G,a=AB[id];tut('skill');
   const ex=g.slots.find(s=>s&&s.id===id);
   if(ex){if(ex.lv>=5)return false;ex.lv++;g.dockSig='';return true}
   const i=freeSlot();

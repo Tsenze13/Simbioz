@@ -24,7 +24,7 @@ function tryDash(){
   g.dashHit=null;g.dashSp=0;
   if(g.ifx&&g.ifx.shadow)g.shdT=2.5;
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
-  if(g.start==='earth'){const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}}
+  if(g.start==='earth'){g.curSk='__dash';const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}g.curSk=null}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
   sfx(420,0.14,'triangle',0.05,500);
 }
@@ -149,6 +149,7 @@ function update(dt){
   if(g.ult.cd>0)g.ult.cd=Math.max(0,g.ult.cd-dt);
   movePlayer(dt);
   heroMech(dt);
+  hintTick(dt);if(SAVE.hints)hintTriggers();
   itemFx(dt);
   poolsTick(dt);
   envTick(dt);
@@ -287,9 +288,10 @@ function startRun(el){
   buildTopHud();
   startWave(1);
   showBiome(g.map);
+  hintQ=[];hintT=0;$('hint').hidden=true;tut('move');
 }
 function quitToMenu(){
-  mode='menu';G=null;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
+  mode='menu';G=null;hintQ=[];hintT=0;$('hint').hidden=true;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
   $('hud').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
   $('menu').hidden=false;
   renderMenu();

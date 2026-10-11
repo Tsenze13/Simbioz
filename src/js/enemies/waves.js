@@ -8,7 +8,7 @@ function startWave(w){
   g.merch=[];
   if(g.shopOpen)closeShop();
   const bk=bossKeyFor(w);
-  if(bk){
+  if(bk){tut('boss');
     const BB=BAL.boss,bs=(BB.hpBase+BB.hpPerWave*Math.max(0,w-BB.hpFromWave))*(1+(w>24?BB.endlessK*(w-24):0)),pos=spawnPos();
     g.bossRef=spawnAt('boss_'+bk,pos.x,pos.y,bs,dmgMul(w),{boss:bk});
     toast('Волна '+w+' из '+(g.endless?'∞':WAVES_TOTAL),'Босс: '+BOSS[bk].n);
@@ -20,7 +20,7 @@ function startWave(w){
   g.dockSig='';
 }
 function endWave(){
-  const g=G,p=g.p;
+  const g=G,p=g.p;tut('inter');
   g.phase='inter';g.inter=BAL.wave.interTime;
   for(const e of g.en){if(!e.dead){e.dead=true;if(g.pt.length<320)puff(e.x,e.y,e.col,3,80,0.4,2)}}
   g.en.length=0;g.eps.length=0;g.tgs.length=0;

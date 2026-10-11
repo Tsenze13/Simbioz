@@ -350,8 +350,9 @@ function castSlot(i){
   if(g.p.mana<mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
   const c=castCtx(a.c1,a.c2);
   const hot=g.start==='fire'&&(g.heat||0)>=100,oh0=g.ovhT;if(hot)g.ovhT=1.5;
+  const L0=lens();g.curSk=a.id;
   const r=CAST[a.kind](pr,c);
-  if(r===false){if(hot)g.ovhT=oh0;return}
+  if(r===false){if(hot)g.ovhT=oh0;g.curSk=null;return}
   g.p.mana-=mana;g.castN++;
   const echo=g.ifx&&g.ifx.echo&&g.castN%4===0;
   if(g.start==='fire'){
@@ -368,6 +369,7 @@ function castSlot(i){
   if(echo){ring(g.p.x,g.p.y,50,'#9fe0ff',0.4);if(g.tx.length<50)g.tx.push({x:g.p.x,y:g.p.y-34,t:0.8,txt:'Эхо!',big:true,col:'#9fe0ff'})}
   if(AFXM[a.id]){const m=AFXM[a.id],R0=(pr.r||100)*(1+g.S.area);g.afx.push({m:m,x:c.px,y:c.py,t:0,life:.9,k:R0/m[1]})}
   runHooks(pr,c,a);
+  tagNew(L0,a.id);g.curSk=null;
   heroAtk(c.ang);
   sfx(380+i*40,0.12,'triangle',0.04,200);
 }

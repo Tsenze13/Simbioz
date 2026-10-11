@@ -2,7 +2,7 @@
    СОХРАНЕНИЕ, ЗВУК, ВВОД
    ===================================================================== */
 const SAVE_KEY='simbioz-save-v2';
-function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash'}}
+function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{}}}
 let SAVE=freshSave();
 (function loadSave(){
   try{
@@ -11,6 +11,7 @@ let SAVE=freshSave();
       SAVE=Object.assign(freshSave(),j);
       SAVE.keys=Object.assign({},DEFKEYS,j.keys||{});
       SAVE.meta=j.meta||{};
+      if(j.hints===undefined)SAVE.hints=(j.runs||0)<3;SAVE.tut=j.tut||{};
     }
   }catch(_){}
 })();

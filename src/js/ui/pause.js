@@ -42,11 +42,20 @@ $('quit').addEventListener('click',()=>{
   if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store()}
   quitToMenu();
 });
+function dmgRows(g){
+  const D=g.dmgBy||{},ks=Object.keys(D).filter(k=>D[k]>=1).sort((a,b)=>D[b]-D[a]),tot=ks.reduce((s,k)=>s+D[k],0)||1,top=D[ks[0]]||1;
+  if(!ks.length)return '<p class="sub" style="margin:0">Урона не нанесено.</p>';
+  const fmt=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e4?Math.round(v/1e3)+'K':String(Math.round(v));
+  const col=k=>k==='__ult'?'#ffd36b':AB[k]?AB[k].c1:k==='__gun'?'#e8eef8':k==='__dot'?'#ff9a3c':k==='__auto'?EL[g.start].c:'#9cc4ff';
+  return ks.slice(0,8).map(k=>'<div class="dr" style="--c1:'+col(k)+'"><span>'+dmgLabel(k)+'</span><i style="width:'+Math.max(1,D[k]/top*100).toFixed(1)+'%"></i><b>'+fmt(D[k])+' · '+Math.round(D[k]/tot*100)+'%</b></div>').join('');
+}
 function showOver(win,add){
   const g=G;
   $('goT').textContent=win?'Пожиратель повержен':(g.endless?'Бесконечный режим окончен':'Аватар пал');
   $('goW').textContent=g.wave;$('goLv').textContent=g.p.lv;$('goK').textContent=g.kills;$('goE').textContent='+'+add;
   $('goBuild').innerHTML=buildChips(g);
+  {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}
+  $('goDmg').innerHTML=dmgRows(g);
   $('endless').hidden=!win;
   $('again').textContent='В меню';
   $('goBest').textContent='Лучшая волна: '+SAVE.best+' · Всего эссенции: '+SAVE.ess;

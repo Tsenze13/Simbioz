@@ -1,6 +1,10 @@
 /* ---------- обновление объектов стороны игрока ---------- */
 function updPlayerSide(dt){
   const g=G,p=g.p,E=g.E;
+  try{updPlayerSide0(dt)}finally{g.curSk=null}
+}
+function updPlayerSide0(dt){
+  const g=G,p=g.p,E=g.E;
   /* камни земли */
   if(g.el.earth>0){
     g.rockAng+=dt*(2.2+0.12*g.el.earth);
@@ -20,6 +24,7 @@ function updPlayerSide(dt){
   }
   /* эмиттеры */
   for(const m of g.em){
+    g.curSk=m.sk||null;
     m.life-=dt;m.tm-=dt;
     if(m.life<=0){m.dead=true;continue}
     if(m.kind==='orbit'){
@@ -48,6 +53,7 @@ function updPlayerSide(dt){
   }
   /* отложенные взрывы */
   for(const b of g.bl){
+    g.curSk=b.sk||null;
     b.t-=dt;
     if(b.t<=0){
       b.dead=true;blFx(b);
@@ -57,6 +63,7 @@ function updPlayerSide(dt){
   }
   /* зоны */
   for(const z of g.zn){
+    g.curSk=z.sk||null;
     z.life-=dt;z.tick-=dt;
     if(z.life<=0){z.dead=true;continue}
     if(z.follow){z.x=p.x;z.y=p.y}
@@ -75,6 +82,7 @@ function updPlayerSide(dt){
   }
   /* смерчи */
   for(const t of g.tor){
+    g.curSk=t.sk||null;
     t.life-=dt;
     if(t.life<=0){t.dead=true;continue}
     const tg=t.vx||t.vy?null:nearest(t.x,t.y,600);
@@ -108,6 +116,7 @@ function updPlayerSide(dt){
   }
   /* структуры */
   for(const s of g.stc){
+    g.curSk=s.sk||null;
     s.life-=dt;
     if(s.life<=0){s.dead=true;continue}
     if(s.kind==='mine'){
@@ -143,6 +152,7 @@ function updPlayerSide(dt){
   }
   /* снаряды игрока */
   for(const b of g.pr){
+    g.curSk=b.sk||(b.gt?'__gun':b.src==='auto'?'__auto':null);
     if(b.homing){
       const t=nearest(b.x,b.y,320);
       if(t){
@@ -179,7 +189,7 @@ function updPlayerSide(dt){
       const dx=e.x-b.x,dy=e.y-b.y,rr=e.r+(b.hr||b.r);
       if(dx*dx+dy*dy<rr*rr){
         if(b.blast){explodeAt(b.x,b.y,b.blast,b.dmg,{dt:b.dt,st:b.st,col:b.col});projHitFx(b,b.x,b.y);if(b.burst)burstAt(b,b.x,b.y);b.dead=true;break}
-        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock};let bd=b.dmg,kn=b.knock||0;
+        const bo={dt:b.dt,st:b.st,col:b.col,src:b.src||'proj',proj:true,shock:b.shock,sk:b.sk||(b.gt?'__gun':undefined)};let bd=b.dmg,kn=b.knock||0;
         if(b.gt){const gr=gunHit(b,e,bo);bd=gr[0];kn*=gr[1]}
         if(g.impR&&g.start==='air'){bd*=2.5;bo.fcrit=true;kn=Math.max(kn,300);g.imp=0;g.impR=false;ring(e.x,e.y,34,'#e6fff7',0.3);sparks(e.x,e.y,'#e6fff7',8,280);g.shake=Math.max(g.shake,3)}
         hitEnemy(e,bd,bo);

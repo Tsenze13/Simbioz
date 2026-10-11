@@ -58,6 +58,13 @@ function bossDefense(e,eff,o,dot){
   return eff;
 }
 /* o: {dt,src:'skill'|'proj'|'auto'|'zone'|'dot'|'item', st, col, quiet, aoe, shock, icy, proj} */
+/* Учёт урона по источникам для итогов забега: ключ — id навыка или служебная метка (__auto, __gun …). */
+const DMG_LBL={__auto:'Автоатака',__gun:'Стволы',__item:'Предметы',__dot:'Горение и яд',__dash:'Рывок',__mech:'Особенность героя',__other:'Прочее'};
+function dmgKey(o){const g=G,src=o.src||'skill';return o.sk||g.curSk||(src==='auto'?'__auto':src==='item'?'__item':src==='dot'?'__dot':'__other')}
+function dmgLabel(k){if(k==='__ult')return 'Ульта: '+ultInfo().n;return DMG_LBL[k]||(AB[k]?AB[k].n:k)}
+/* Метит сущности, созданные навыком (снаряды, зоны, взрывы, смерчи, постройки), чтобы их урон шёл в зачёт навыку. */
+function tagNew(L0,sk){const g=G;for(const k in L0){const A=g[k];for(let i=L0[k];i<A.length;i++)if(A[i]&&!A[i].sk)A[i].sk=sk}}
+function lens(){const g=G;return {pr:g.pr.length,zn:g.zn.length,bl:g.bl.length,tor:g.tor.length,stc:g.stc.length,em:g.em.length}}
 function hitEnemy(e,dmg,o){
   if(e.dead||e.sub)return 0;
   const g=G,E=g.E;
@@ -82,6 +89,7 @@ function hitEnemy(e,dmg,o){
   if(e.boss){eff=bossDefense(e,eff,o,dot);if(eff<=0)return 0}
   const before=e.hp;
   e.hp-=eff;e.flash=0.09;
+  {const k=dmgKey(o),D=g.dmgBy||(g.dmgBy={});D[k]=(D[k]||0)+Math.min(eff,Math.max(0,before));if(o.st&&(o.st.burn||o.st.poison)&&k!=='__dot')e.dsk=k}
   if(E.ls>0)heal(Math.min(eff,Math.max(0,before))*E.ls*((dot||zone||o.aoe)?0.4:1));
   if(!o.quiet&&g.tx.length<48&&(!zone||Math.random()<0.6)){
     g.tx.push({x:e.x+rnd(-7,7),y:e.y-e.r-2,t:0.65,txt:String(Math.max(1,Math.round(eff))),big:crit||eff>=60,crit:crit,col:DT[dt].c,react:react});
@@ -164,7 +172,7 @@ function killEnemy(e,o){
     for(let i=0;i<e.def.split;i++){const a=rnd(0,TAU);spawnAt('slimelet',e.x+Math.cos(a)*12,e.y+Math.sin(a)*12,e.hpMul,e.dmgMul)}
   }
   if(g.cls&&!g.inChain){
-    if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true});g.inChain=false}
+    if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true,sk:'__mech'});g.inChain=false}
     if(g.start==='water'&&e.wet>0&&o&&o.shock){g.p.mana=Math.min(g.S.maxMana,g.p.mana+5);if(g.tx.length<40&&Math.random()<0.5)g.tx.push({x:e.x,y:e.y-16,t:0.7,txt:'+5 маны',big:false,col:'#6fd0ff'})}
     if(g.start==='wood'&&e.poison>0&&g.pl>=3)heal(g.S.maxHp*0.01);
     if(g.start==='wood'&&e.poison>0){for(const o of g.en){if(!o.dead&&o!==e&&(o.x-e.x)**2+(o.y-e.y)**2<85*85)applySt(o,{poison:[e.poisonDps*0.6,3]},1/(g.cls.dot||1))}ring(e.x,e.y,85,'#a6e07a',0.4)}
@@ -182,7 +190,7 @@ function killEnemy(e,o){
 function explodeAt(x,y,r,dmg,o){
   const g=G;
   o=o||{};
-  const oo={dt:o.dt,src:o.src||'skill',st:o.st,col:o.col,aoe:true,quiet:o.quiet};
+  const oo={dt:o.dt,src:o.src||'skill',st:o.st,col:o.col,aoe:true,quiet:o.quiet,sk:o.sk};
   for(const e of g.en){
     if(e.dead)continue;
     const dx=e.x-x,dy=e.y-y,rr=r+e.r;
@@ -198,7 +206,7 @@ function explodeAt(x,y,r,dmg,o){
   if(o.shake)g.shake=Math.max(g.shake,o.shake);
 }
 function burstAt(b,x,y){const q=b.burst,off=rnd(0,TAU);for(let i=0;i<q.n;i++){const a=off+i*TAU/q.n;shoot({vis:q.vis||'seed',x:x,y:y,vx:Math.cos(a)*(q.spd||300),vy:Math.sin(a)*(q.spd||300),r:5,dmg:q.dmg,dt:b.dt,life:q.life||0.8,pierce:1,col:q.col||b.col,st:q.st||b.st,homing:!!q.homing,src:'proj'})}}
-function shoot(o){if((o.src==='auto'||o.gun)&&!o.hr)o.hr=o.r+8;
+function shoot(o){if(!o.sk&&G.curSk)o.sk=G.curSk;if((o.src==='auto'||o.gun)&&!o.hr)o.hr=o.r+8;
   o.pierce=o.pierce||0;o.hit=null;G.pr.push(o);
   if((o.src==='auto'||o.src==='skill')&&!o.gun&&o.vis!=='bullet'&&o.vis!=='pellet')heroAtk(Math.atan2(o.vy,o.vx));
 }
@@ -230,7 +238,7 @@ function chainBolt(x,y,first,jumps,dmg,range,o){
 }
 function addZone(x,y,z,self){
   const g=G,area=1+g.S.area;
-  g.zn.push({kind:z.vis||'zone',x:x,y:y,r:z.r*area,life:z.life,max:z.life,tick:0.08,dps:z.dps||0,dt:z.dt||'magic',heal:z.heal||0,st:z.st||null,col:z.col||'#ffffff',follow:!!(self||z.follow),dead:false});
+  g.zn.push({sk:g.curSk||undefined,kind:z.vis||'zone',x:x,y:y,r:z.r*area,life:z.life,max:z.life,tick:0.08,dps:z.dps||0,dt:z.dt||'magic',heal:z.heal||0,st:z.st||null,col:z.col||'#ffffff',follow:!!(self||z.follow),dead:false});
 }
 
 /* ---------- прицел ---------- */

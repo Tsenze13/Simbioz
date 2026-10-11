@@ -319,7 +319,7 @@ function mapEvents(dt){
 function envTick(dt){
   const g=G,p=g.p;
   mapEvents(dt);
-  if(g.later.length){const L=g.later;g.later=[];for(const q of L){q.t-=dt;if(q.t<=0){try{q.fn()}catch(e){window.__le=(window.__le||[]).concat(e.message)}}else g.later.push(q)}}
+  if(g.later.length){g.atkSrc=null;const L=g.later;g.later=[];for(const q of L){q.t-=dt;if(q.t<=0){try{q.fn()}catch(e){window.__le=(window.__le||[]).concat(e.message)}}else g.later.push(q)}}
   treeBadge();
   if(g.start==='water'&&g.phase==='fight'){g.tideT-=dt;if(g.tide==='ebb')heal(3*dt);if(g.tideT<=0){g.tideT=10;g.tide=g.tide==='ebb'?'flood':'ebb';if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-40,t:1.1,txt:g.tide==='ebb'?'Отлив: лечение':'Прилив: навыки дешевле',big:true,col:g.tide==='ebb'?'#6fe0b0':'#6fd0ff'});heal(g.S.maxHp*0.06);ring(p.x,p.y,170,'#6fd0ff',0.7);puff(p.x,p.y,'#9fe0ff',20,220,0.6,3);for(const e of g.en){if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<170*170)applySt(e,{slow:[0.55,2],wet:2},1)}}}
   g.flashA=Math.max(0,(g.flashA||0)-dt*2.2);

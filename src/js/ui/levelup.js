@@ -52,7 +52,7 @@ function lvLoop(){
 }
 function openLevelUp(force){
   const g=G;
-  g.pending--;g.lvlOpen=true;g.choices=force||buildChoices();
+  g.pending--;g.lvlOpen=true;tut('level');g.choices=force||buildChoices();
   if(!g.choices.length){g.lvlOpen=false;return}
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
