@@ -1626,7 +1626,7 @@ const STN={dch:'заряд рывка',drc:'скорость перезаряд�
 const STPCT={drc:1,magnet:1,dm:1,spd:1,cdr:1,area:1,crit:1,mres:1,xpm:1,gold:1,ls:1,thorns:1,ultcd:1};
 function statLine(st){
   const out=[];
-  for(const k in st){const v=st[k];out.push((v<0?'−':'+')+(STPCT[k]?Math.round(Math.abs(v)*100)+'%':(v%1?Math.abs(v).toFixed(1):Math.abs(v)))+' '+STN[k]);continue;out.push('+'+(STPCT[k]?Math.round(v*100)+'%':(v%1?v.toFixed(1):v))+' '+STN[k])}
+  for(const k in st){const v=st[k];out.push((v<0?'−':'+')+(STPCT[k]?Math.round(Math.abs(v)*100)+'%':(v%1?Math.abs(v).toFixed(1):Math.abs(v)))+' '+STN[k])}
   return out.join(', ');
 }
 /* Кузнец: пассивные предметы */
@@ -3883,7 +3883,6 @@ function bossDodge(e,dt,p){
   if(Math.random()>(e.phase>=3?0.75:0.5)){e.dgCd=0.8;return}
   if((e.x+th.x-g.p.x)**2+(e.y+th.y-g.p.y)**2<(e.x-th.x-g.p.x)**2+(e.y-th.y-g.p.y)**2&&Math.random()<0.5){th.x=-th.x;th.y=-th.y}
   e.dodge={vx:th.x*720,vy:th.y*720,t:0.24};e.dgCd=e.phase>=3?2.4:3.6;
-  for(let i=0;i<3;i++)g.gh.length<40;
   puff(e.x,e.y,e.col,14,180,0.4,4);sfx(520,0.08,'triangle',0.03,300);
   if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-14,t:0.7,txt:'Уворот',big:false,col:'#e8eef8'});
 }
@@ -4860,7 +4859,6 @@ function tipFor(k,i){
   if(!x)return '<div class="tn">Пустой слот ['+keyName(SAVE.keys['i'+(i+1)])+']</div><div class="td">Рюкзак на 6 предметов. Покупайте у торговцев в паузе между волнами.</div>';
   const d=ITEMS[x.id];
   return itemTip(x.id,true)+'<div class="tu">Клавиша ['+keyName(SAVE.keys['i'+(i+1)])+']</div>';
-  return '<div class="tn">'+d.n+'</div><div class="tm">'+d.tag+(d.mana?' · мана <b>'+d.mana+'</b>':'')+(d.cd&&d.cast?' · откат '+d.cd+' с':'')+' · ['+keyName(SAVE.keys['i'+(i+1)])+']</div><div class="td">'+d.d+'</div>'+(d.st?'<div class="tu">'+statLine(d.st)+'</div>':'');
 }
 (function initDock(){
   const dock=$('dock'),tip=$('tip');

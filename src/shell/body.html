@@ -1,0 +1,106 @@
+</style>
+
+<div id="stage">
+  <canvas id="c"></canvas>
+
+  <div id="hud" hidden>
+    <div class="top">
+      <div class="wavebox">
+        <div class="wl" id="waveL">Волна 1 / 12</div>
+        <div class="wt" id="waveT">1:00</div>
+        <div class="ws" id="waveS"></div>
+        <div class="ws mp" id="mapS"></div>
+      </div>
+      <div class="bossbar" id="boss" hidden><div class="bn" id="bossN"></div><div class="bar boss"><i id="bossF"></i></div></div>
+      <div class="meta">
+        <div class="gold" id="gold"><span class="coin"></span>0</div>
+        <div class="sub" id="kl">0 убито</div>
+        <button id="treeBtn" class="ghost" type="button">Навыки (T)</button>
+        <button id="pauseBtn" class="ghost" type="button">Пауза</button>
+        <button id="skipBtn" class="act" type="button" hidden>Начать волну</button>
+      </div>
+    </div>
+    <div id="biome" hidden></div>
+    <div id="toast" class="toast" hidden></div>
+    <div id="prompt" hidden></div>
+    <button id="useBtn" class="act" type="button" hidden>Торговец</button>
+    <button id="dashBtn" class="dashbtn" type="button">Рывок</button>
+    <div id="dock">
+      <div class="portrait pframe" id="portrait"><canvas id="pc"></canvas><div class="shine"></div><div class="pname"><small id="pel"></small><span id="pname"></span></div><div class="pxp"><i id="pxpF"></i></div><b id="portLv">1</b><span class="orb" id="portOrb" hidden></span></div>
+      <div class="hstats" id="hstats"></div>
+      <div class="dmain">
+        <div class="skrow"><div id="pasw"></div><div class="skills" id="skills"></div></div>
+        <div class="dbars">
+          <div class="bar hp"><i id="hpF"></i><span id="hpT"></span><em id="hpR"></em></div>
+          <div class="bar mp"><i id="mpF"></i><span id="mpT"></span><em id="mpR"></em></div>
+        </div>
+      </div>
+      <div class="bagbox">
+        <div class="bag" id="bag"></div>
+        <div class="gold" id="gold2"><span class="coin"></span>0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="menu">
+    <div class="mnav">
+      <div>
+        <h1>Симбиоз</h1>
+        <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
+      </div>
+      <div class="tabs" id="tabs"></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.22 · тест для друзей</span></div>
+    </div>
+    <div class="mpanel" id="mpanel"></div>
+  </div>
+
+  <div id="levelup" class="overlay" hidden>
+    <div class="lu">
+      <div><h3 id="luT">Новый уровень</h3><p class="s">Выбери одно усиление. Клавиши 1, 2, 3 тоже работают.</p></div>
+      <div class="cards" id="cards"></div>
+    </div>
+  </div>
+
+  <div id="shop" class="overlay" hidden></div>
+
+  <div id="tree" class="overlay" hidden>
+    <div class="tr">
+      <div class="trh"><div><h3>Древо навыков</h3><p class="s" id="trSp"></p></div><button class="btn alt" id="trClose" type="button">Закрыть (T)</button></div>
+      <div class="trb"><div class="trl" id="trList"></div><div class="trr" id="trDet"></div></div>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay" hidden>
+    <div class="pausebox">
+      <h3>Пауза</h3>
+      <div class="sgrid" id="sgrid"></div>
+      <div class="chips" id="pBuild"></div>
+      <div class="playrow">
+        <button class="btn" id="resume" type="button">Продолжить</button>
+        <button class="btn alt" id="quit" type="button">Выйти в меню</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="over" class="overlay" hidden>
+    <div class="go">
+      <h3 id="goT">Аватар пал</h3>
+      <dl>
+        <div><dt>Волна</dt><dd id="goW">1</dd></div>
+        <div><dt>Уровень</dt><dd id="goLv">1</dd></div>
+        <div><dt>Убито</dt><dd id="goK">0</dd></div>
+        <div><dt>Эссенция</dt><dd id="goE">0</dd></div>
+      </dl>
+      <div><h2 class="sec">Твоя сборка</h2><div class="chips" id="goBuild"></div></div>
+      <div class="row">
+        <button class="btn" id="again" type="button">В меню</button>
+        <button class="btn alt" id="endless" type="button" hidden>Продолжить в бесконечном режиме</button>
+        <span id="goBest" class="sub"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="fade"></div>
+  <div id="tip" hidden></div>
+</div>
+<script>

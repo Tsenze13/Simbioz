@@ -1,0 +1,93 @@
+/* ---------- волны ---------- */
+function startWave(w){
+  const g=G;
+  g.wave=w;g.phase='fight';g.wt=0;
+  if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
+  g.bossRef=null;g.bossDead=false;
+  g.waveDur=Math.min(75,56+w);
+  g.merch=[];
+  if(g.shopOpen)closeShop();
+  const bk=bossKeyFor(w);
+  if(bk){
+    const bs=(1.6+0.06*Math.max(0,w-8))*(1+(w>24?0.12*(w-24):0)),pos=spawnPos();
+    g.bossRef=spawnAt('boss_'+bk,pos.x,pos.y,bs,dmgMul(w),{boss:bk});
+    toast('Волна '+w+' из '+(g.endless?'∞':WAVES_TOTAL),'Босс: '+BOSS[bk].n);
+    sfx(70,0.7,'sawtooth',0.07,-20);
+  }else{
+    toast('Волна '+w+(g.endless?'':' из '+WAVES_TOTAL),w===1?'Двигайся, пока оружие бьёт само':'');
+    sfx(300,0.2,'triangle',0.05,300);
+  }
+  g.dockSig='';
+}
+function endWave(){
+  const g=G,p=g.p;
+  g.phase='inter';g.inter=60;
+  for(const e of g.en){if(!e.dead){e.dead=true;if(g.pt.length<320)puff(e.x,e.y,e.col,3,80,0.4,2)}}
+  g.en.length=0;g.eps.length=0;g.tgs.length=0;
+  for(const m of g.gem)m.fly=true;
+  g.vac=4;
+  heal(g.S.maxHp*0.35);p.mana=g.S.maxMana;
+  {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
+  stockMerchants();
+  toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
+  sfx(500,0.4,'triangle',0.06,300);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a}
+function priceOf(id,mid){
+  const g=G,d=ITEMS[id];
+  let pr=d.price*(1+0.03*(g.wave-1))*(1-0.03*(SAVE.meta.discount||0));
+  if(mid==='smug')pr*=1.15;
+  return Math.max(10,Math.round(pr/5)*5);
+}
+function genStock(mid){
+  const g=G,M=MERCH[mid];
+  if(M.special==='swap')return [];
+  const have=id=>ITEMS[id].ch?false:(g.bought[id]||g.bag.some(b=>b&&b.id===id)||(id==='ultscroll'&&g.ult.lv>=3&&ultMods().length>=2));
+  const list=shuffle(M.pool.filter(id=>!have(id))).slice(0,M.cnt);
+  const owned=id=>g.slots.some(s=>s&&s.id===id);
+  if(M.scrolls){
+    const cands=shuffle(SKILL_IDS.concat(SYM_IDS).filter(k=>!owned(k)));
+    for(let i=0;i<M.scrolls&&i<cands.length;i++)list.push('scr:'+cands[i]);
+  }
+  if(M.fscroll){
+    const cands=shuffle(FUSE_IDS.filter(k=>!owned(k)));
+    if(cands.length)list.push('scr:'+cands[0]);
+  }
+  return list.map(id=>({id:id,sold:false}));
+}
+function tycoonNeed2(w){return 200+25*w}
+function tycoonNeed(){return 200+25*G.wave}
+function invPrice(s){return Math.round(s.p*(1+0.55*((G.inv||{})[s.k]||0))/5)*5}
+function awkPrice(){return 380+130*(G.awk||0)}
+function stockMerchants(){
+  const g=G;
+  const ids=['smith','alch','mage'];
+  if(g.wave>=3||Math.random()<0.4)ids.push('smug');
+  shuffle(ids);
+  const n=Math.min(ids.length,3);
+  g.merch=[];
+  const a0=rnd(0,TAU);
+  for(let i=0;i<n;i++){
+    const a=a0+i*TAU/n,d=rnd(180,220);
+    const q=freeSpot(g.p.x+Math.cos(a)*d,g.p.y+Math.sin(a)*d,48,200);
+    g.merch.push({id:ids[i],x:q.x,y:q.y,stock:genStock(ids[i]),bob:rnd(0,TAU)});
+  }
+  if(g.wave%6===0&&g.p.gold>=tycoonNeed()){
+    const a=a0+TAU*(n-0.5)/n,d=rnd(260,300);
+    const q=freeSpot(g.p.x+Math.cos(a)*d,g.p.y+Math.sin(a)*d,48,200);
+    g.merch.push({id:'tycoon',x:q.x,y:q.y,stock:genStock('tycoon'),bob:0});
+  }
+  if(g.wave>=2&&g.wave%2===0&&g.slots.some(s=>s)){
+    const a=a0+TAU/(2*n),d=rnd(240,280);
+    const q=freeSpot(g.p.x+Math.cos(a)*d,g.p.y+Math.sin(a)*d,48,200);
+    g.merch.push({id:'sage',x:q.x,y:q.y,stock:[],bob:0,sel:-1});
+  }
+}
+function nearMerchant(){
+  const g=G;
+  if(g.phase!=='inter')return null;
+  let b=null,bd=95*95;
+  for(const m of g.merch){const dx=m.x-g.p.x,dy=m.y-g.p.y,d=dx*dx+dy*dy;if(d<bd){bd=d;b=m}}
+  return b;
+}
+

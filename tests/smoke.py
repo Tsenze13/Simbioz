@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""Автотест «Симбиоза»: гоняет собранный index.html в headless Chromium.
+
+Запуск:  python3 tests/smoke.py [путь к html]   (по умолчанию index.html)
+Нужно:   pip install playwright  (браузер Chromium)
+Выход с кодом 1, если есть ошибки JS или провалены проверки.
+"""
+import sys, time, json, pathlib
+from playwright.sync_api import sync_playwright
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+HTML = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / 'index.html'
+HEROES = ['fire', 'water', 'earth', 'air', 'metal', 'wood']
+fails = []
+
+
+def check(name, ok, info=''):
+    print(('  ok   ' if ok else '  FAIL ') + name + (('  ' + str(info)) if info != '' else ''))
+    if not ok:
+        fails.append(name)
+
+
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    pg = b.new_page(viewport={'width': 1366, 'height': 768})
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.add_init_script("localStorage.setItem('simbioz-debug','1')")
+    pg.goto(HTML.as_uri())
+    time.sleep(1)
+    J = pg.evaluate
+
+    print('Загрузка')
+    check('меню открылось', J("()=>!!window.__sb&&window.__sb.mode==='menu'"))
+
+    print('Герои: бой, навыки, рывок, отрисовка')
+    for k in HEROES:
+        r = J("""(k)=>{const S=window.__sb;S.quitToMenu();S.startRun(k);const g=S.G;
+          for(let i=0;i<14;i++){g.p.xp=g.p.need;S.gainXp(0)}g.pending=0;
+          const ks=Object.keys(S.AB).filter(x=>S.AB[x].cat==='skill'&&S.AB[x].els[0]===k).slice(0,5);for(const x of ks)S.learnSkill(x);
+          S.startWave(6);
+          for(let i=0;i<1500;i++){g.p.inv=1;if(g.p.hp<60)g.p.hp=g.S.maxHp;if(i%90===0){for(const s of g.slots)if(s)s.cd=0;g.p.mana=999;for(let j=0;j<5;j++)S.castSlot(j);S.tryDash()}S.update(1/60);if(i%250===0)S.render()}
+          return {kills:g.kills,over:g.over}}""", k)
+        check('герой ' + k, r['kills'] > 0 and not r['over'], r)
+
+    print('Все навыки с мутациями')
+    r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
+        S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};
+        for(let i=0;i<4;i++){const e=S.spawnEnemy('wisp');e.x=g.p.x+80+i*30;e.y=g.p.y}
+        g.p.mana=999;S.castSlot(g.slots.indexOf(s));for(let i=0;i<90;i++){g.p.inv=1;S.update(1/60)}S.render()}catch(e){bad.push(id+': '+e.message)}}return bad}""")
+    check('навыки без ошибок', not r, r[:5])
+
+    print('Боссы: все приёмы')
+    for bk, w in [('guard', 4), ('ent', 8), ('queen', 12), ('golem', 16), ('sandlord', 20), ('devourer', 24)]:
+        r = J("""([bk,w])=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;g.p.inv=1e9;S.startWave(w);const e=g.bossRef;
+          const pats=[...new Set(S.BOSS[bk].pats.concat(S.BOSS[bk].p2))];
+          for(const pt of pats){S.bossPattern(e,pt);for(let i=0;i<120;i++){g.p.hp=g.S.maxHp;S.update(1/60)}S.render()}
+          e.hp=e.max*0.5;for(let i=0;i<60;i++)S.update(1/60);
+          return {key:e.bkey,pats:pats.length,phase:e.phase,bar:e.bar>0||e.dead}}""", [bk, w])
+        check('босс ' + bk, r['key'] == bk and r['phase'] >= 2, r)
+
+    print('Оружие и модификации')
+    r = J("""()=>{const S=window.__sb,bad=[];for(const hero of ['metal','fire'])for(const t of Object.keys(S.GUNS))for(const m of ['',...S.GMOD[t].map(x=>x.k)]){
+        S.quitToMenu();S.startRun(hero);const g=S.G;g.el.metal=5;g.guns=[{t:t,cd:0,aim:0,fl:0,rec:0}];if(g.hand)g.hand.t=t;g.gmods[t]=m;g.gmu={sil:1,scope:1,mag:1};S.startWave(5);
+        const e=S.spawnEnemy('shield');e.hp=e.max=1e6;e.sp=0;for(let i=0;i<240;i++){g.p.inv=1;e.x=g.p.x+120;e.y=g.p.y;S.update(1/60)}
+        if(e.hp>=1e6)bad.push(hero+':'+t+':'+m)}return bad}""")
+    check('все стволы и моды наносят урон', not r, r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('metal');const g=S.G;S.startWave(1);const e=S.spawnEnemy('wisp');e.hp=e.max=1e6;
+        let n=0;while(!(g.hand.rl>0)&&n<3000){e.x=g.p.x+100;e.y=g.p.y;g.p.inv=1;S.update(1/60);n++}while(1-g.hand.rl/g.hand.rlMax<0.5)S.update(1/60);S.activeReload();return g.hand.boost}""")
+    check('активная перезарядка', r == 1, r)
+
+    print('Механики героев')
+    r = J("""()=>{const S=window.__sb,o={};let g;
+      S.quitToMenu();S.startRun('earth');g=S.G;S.startWave(1);for(let i=0;i<400;i++){g.p.inv=1;S.update(1/60)}o.plates=g.plates;
+      S.quitToMenu();S.startRun('air');g=S.G;S.startWave(1);S.key('KeyD',true);const x0=g.p.x,y0=g.p.y;let mx=0;for(let i=0;i<300;i++){g.p.inv=1;g.p.x=x0;g.p.y=y0;S.update(1/60);mx=Math.max(mx,g.imp)}S.key('KeyD',false);o.imp=mx;
+      S.quitToMenu();S.startRun('water');g=S.G;S.startWave(1);for(let i=0;i<660;i++){g.p.inv=1;S.update(1/60)}o.tide=g.tide;
+      S.quitToMenu();S.startRun('wood');g=S.G;S.startWave(3);o.season=g.season;return o}""")
+    check('плиты земли', r['plates'] == 5, r['plates'])
+    check('импульс воздуха', r['imp'] >= 100, r['imp'])
+    check('приливы', r['tide'] == 'ebb', r['tide'])
+    check('сезоны', r['season'] == 2, r['season'])
+
+    print('Прокачка, древо, ульта')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air');const g=S.G;for(let i=0;i<61;i++){g.p.xp=g.p.need;S.gainXp(0)}g.pending=0;
+        S.openTree();S.closeTree();const c=S.buildChoices();return {lv:g.p.lv,up:g.up,room:S.ultRoom(),cards:c.length}}""")
+    check('очки ульты не копятся сверх возможного', r['up'] <= r['room'], r)
+    check('карточки уровня', r['cards'] == 3, r['cards'])
+
+    print('Лавка и предметы')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air');const g=S.G;S.startWave(5);S.endWave();g.p.gold=1e5;
+        for(const id of ['thundercrown','flamering','frostheart','shadowcloak','venomfang','phoenix'])S.addToBag(id);S.recalc();
+        for(const m of g.merch){S.openShop(m);S.closeShop()}S.openShop(g.merch[0]);const ok=!document.getElementById('shop').hidden;S.closeShop();
+        S.startWave(6);for(let i=0;i<5;i++){const e=S.spawnEnemy('wisp');e.hp=e.max=1e5;e.x=g.p.x+60;e.y=g.p.y}g.p.hp=g.S.maxHp*0.2;
+        for(let i=0;i<300;i++){g.p.inv=1;S.update(1/60)}return {ok,fx:Object.keys(g.ifx||{}).length,phoenix:!!g.phU}}""")
+    check('лавка открывается', r['ok'])
+    check('эффекты предметов', r['fx'] == 6 and r['phoenix'], r)
+
+    le = J("()=>window.__le||null")
+    check('нет ошибок в отложенных эффектах', not le, le)
+    check('нет ошибок JS', not errs, errs[:5])
+    b.close()
+
+print('\nИТОГ: ' + ('всё в порядке' if not fails else 'провалено ' + str(len(fails)) + ': ' + ', '.join(fails)))
+sys.exit(1 if fails else 0)
