@@ -112,7 +112,12 @@ function ultTreeHtml(){
   }
   d+='<p style="margin:0;color:#c5cbdd"><b style="color:'+ui.c1+'">'+ui.n+'.</b> '+ui.d+'</p>';
   d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div>'+(g.ult.lv<3&&!ultCanUp()?'<span class="rq">Нужен '+ultNeedLv(g.ult.lv+1)+' ур. героя</span>':'')+'<button type="button" data-ultlv="1"'+(ultCanUp()&&g.sp>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко')+'</button></div>';
-  if(!isAva(g)){d+='<p style="margin:0;color:var(--dim)">Печати мастерства своей стихии появятся в следующей версии.</p>';return d}
+  if(!isAva(g)){
+    d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати мастерства — добавляют ульте эффекты стихии</h4>';
+    const ms=g.ult.ms||{};
+    for(const s of MSEAL[g.start]||[]){const has=ms[s.k];d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+hEl(g.start).c+'"><div><strong>Печать: '+s.n+'</strong><p>'+s.d+'.</p></div><button type="button" data-mseal="'+s.k+'"'+(!has&&g.sp>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко')+'</button></div>'}
+    return d;
+  }
   d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати стихий — добавляют ульте эффекты изученных стихий</h4>';
   for(const p of EK){
     if(!g.el[p]&&!g.ult.seals[p])continue;
@@ -129,6 +134,7 @@ $('trDet').addEventListener('click',e=>{
   if(b.hasAttribute('data-pas')){pasUp()}
   else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
   else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
+  else if(b.hasAttribute('data-mseal')){const k=b.getAttribute('data-mseal');g.ult.ms=g.ult.ms||{};if(g.sp>0&&g.ult.kind&&!g.ult.ms[k]){g.sp--;g.ult.ms[k]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);const s=MSEAL[g.start].find(x=>x.k===k);toast('Печать: '+s.n,s.d)}}
   else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&isAva(g)&&g.el[p]>0){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
   else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}

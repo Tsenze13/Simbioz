@@ -87,6 +87,12 @@ with sync_playwright() as p:
       return {kinds:[...k],fm,fa}}""")
     check('карточки форм у мастера, у Аватара их нет', 'form' in r['kinds'] and r['fm'] > 0 and r['fa'] == 0, r)
 
+    r = J("""()=>{const S=window.__sb,bad=[];for(const k of ['fire','water','earth','air','metal','wood']){
+        S.quitToMenu();S.startRun(k);const g=S.G;S.startWave(5);g.p.inv=1e9;g.p.lv=24;g.ult.kind='hero';g.ult.lv=3;g.ult.ms={};for(const s of S.MSEAL[k])g.ult.ms[s.k]=true;
+        for(let i=0;i<6;i++){const e=S.spawnEnemy('wisp');e.hp=e.max=1e6;e.x=g.p.x+100+i*20;e.y=g.p.y}
+        g.p.mana=999;g.ult.cd=0;try{S.castUlt();for(let i=0;i<180;i++)S.update(1/60);S.render()}catch(e){bad.push(k+': '+e.message)}}return bad}""")
+    check('ульта с печатями мастерства у всех мастеров', not r, r)
+
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
         S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};

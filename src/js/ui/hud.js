@@ -156,7 +156,7 @@ function tipFor(k,i){
   if(k==='u'){
     const u=ultInfo(),mods=ultMods();
     if(!g.ult.lv)return '<div class="tn">Ульта закрыта</div><div class="td">С '+ULT_LV+' уровня героя её можно открыть за 1 очко навыков: древо (T) → «Ульта» выберите направление: ульта героя «'+ULT[g.start].n+'» или ульта одного из изученных симбиозов.</div><div class="tu">Уровни ульты открываются на '+ultNeedLv(2)+' и '+ultNeedLv(3)+' уровнях героя, печати — после изучения симбиозов.</div>';
-    return '<div class="tn">'+u.n+'</div><div class="tm">Ульта ур. '+g.ult.lv+' · мана <b>'+u.mana+'</b> · откат '+Math.round(u.cd*(1-g.S.ultcd)/(1+g.E.cdr*0.5))+' с · ['+keyName(SAVE.keys.ult)+']</div><div class="td">'+u.d+'</div>'+(mods.length?'<div class="tu">Усилена симбиозами: '+mods.map(p=>ULTMOD[p]+' ('+ULTMODD[p]+')').join('; ')+'</div>':'<div class="tu">Симбиозы с вашей стихией добавляют ульте новые эффекты.</div>');
+    return '<div class="tn">'+u.n+'</div><div class="tm">Ульта ур. '+g.ult.lv+' · мана <b>'+u.mana+'</b> · откат '+Math.round(u.cd*(1-g.S.ultcd)/(1+g.E.cdr*0.5))+' с · ['+keyName(SAVE.keys.ult)+']</div><div class="td">'+u.d+'</div>'+(mods.length?'<div class="tu">Усилена симбиозами: '+mods.map(p=>ULTMOD[p]+' ('+ULTMODD[p]+')').join('; ')+'</div>':(isAva(g)?'<div class="tu">Печати стихий в древе добавляют ульте эффекты.</div>':'<div class="tu">'+((MSEAL[g.start]||[]).filter(x=>g.ult.ms&&g.ult.ms[x.k]).map(x=>x.n).join(', ')||'Печати мастерства в древе (T) добавляют ульте эффекты')+'</div>'));
   }
   const x=g.bag[i];
   if(!x)return '<div class="tn">Пустой слот ['+keyName(SAVE.keys['i'+(i+1)])+']</div><div class="td">Рюкзак на 6 предметов. Покупайте у торговцев в паузе между волнами.</div>';

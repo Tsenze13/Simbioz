@@ -7,7 +7,7 @@ function rockPos(g){
   return out;
 }
 function weapons(dt){
-  const g=G,p=g.p,e=g.el,ar=1+g.S.area,cdm=1+g.E.cdr;
+  const g=G,p=g.p,e=g.el,ar=1+g.S.area;if(g.odT>0)g.odT-=dt;const cdm=(1+g.E.cdr)*(g.odT>0&&e.metal>0?2:1);
   const cd=k=>{g.cdw[k]=(g.cdw[k]||0)-dt*cdm;return g.cdw[k]<=0};
   if(e.fire>0&&cd('fire')){
     const l=e.fire,t=nearest(p.x,p.y,480);

@@ -76,7 +76,46 @@ const FORMS={
     mods:[{k:'more',n:'Ливень камней',d:'7 камней вместо 4.'},{k:'big',n:'Тяжёлый град',d:'Камни крупнее и сильнее.'}],
     fire(f,l,t,m){const g=G,p=g.p,near=nearList(p.x,p.y,480),n=m==='more'?7:4,big=m==='big';
       for(let i=0;i<n;i++){const e=near.length?pickOf(near):null;const x=e?e.x:p.x+rnd(-200,200),y=e?e.y:p.y+rnd(-200,200);
-        CAST.blast({r:42*(big?1.4:1),dmg:(14+6*l)*(big?1.3:1),dt:'phys',delay:0.55+i*0.08,range:2000,vis:'shell',col:'#c9974f',knock:120},{px:p.x,py:p.y,x:x,y:y,ang:0,col:'#c9974f'})}}}
+        CAST.blast({r:42*(big?1.4:1),dmg:(14+6*l)*(big?1.3:1),dt:'phys',delay:0.55+i*0.08,range:2000,vis:'shell',col:'#c9974f',knock:120},{px:p.x,py:p.y,x:x,y:y,ang:0,col:'#c9974f'})}}},
+  /* ---------- ВОЗДУХ: Ветра ---------- */
+  aboomer:{el:'air',n:'Вихрь-бумеранг',d:'Вихрь летит к врагу и возвращается, режа всех на пути.',cd:2,rng:420,
+    mods:[{k:'twin',n:'Два вихря',d:'Летят два вихря веером.'},{k:'pull',n:'Затягивающий вихрь',d:'Вихрь тянет врагов за собой и замедляет.'}],
+    fire(f,l,t,m){CAST.boomer({n:m==='twin'?2:1,spread:0.6,spd:420,r:13,dmg:10+5*l,dt:'phys',life:1.1,col:'#8febd0',vis:'boomer',knock:m==='pull'?-140:0,st:m==='pull'?{slow:[0.5,1]}:null},fctx(t,'#8febd0'))}},
+  agust:{el:'air',n:'Порыв',d:'Конус ветра отшвыривает врагов.',cd:2.2,rng:190,
+    mods:[{k:'strong',n:'Штормовой порыв',d:'Отбрасывает в полтора раза дальше.'},{k:'cut',n:'Режущий порыв',d:'Урон ×2,2, отброс слабее.'}],
+    fire(f,l,t,m){CAST.cone({range:190,arc:1.2,dmg:(8+4*l)*(m==='cut'?2.2:1),dt:'phys',knock:m==='strong'?520:(m==='cut'?200:340),col:'#e6fff7',vis:'arc'},fctx(t,'#e6fff7'))}},
+  aball:{el:'air',n:'Шаровая молния',d:'Молния прыгает по цепочке врагов.',cd:1.9,rng:400,
+    mods:[{k:'jumps',n:'Длинная цепь',d:'+3 прыжка.'},{k:'stun',n:'Оглушающий разряд',d:'Каждый удар оглушает на 0,4 с.'}],
+    fire(f,l,t,m){const p=G.p;chainBolt(p.x,p.y,t,m==='jumps'?6:3,12+6*l,170,{dt:'magic',shock:true,col:'#f4f08a',st:m==='stun'?{stun:0.4}:null,src:'proj'})}},
+  ascythe:{el:'air',n:'Серп',d:'Широкий разрез вокруг цели.',cd:1.8,rng:170,
+    mods:[{k:'wide',n:'Полумесяц',d:'Разрез шире и длиннее.'},{k:'bleed',n:'Кровотечение',d:'Раны кровоточат несколько секунд.'}],
+    fire(f,l,t,m){CAST.cone({range:m==='wide'?200:150,arc:m==='wide'?3.4:2.4,dmg:14+7*l,dt:'phys',knock:90,st:m==='bleed'?{poison:[3+1.5*l,3]}:null,col:'#bff8e8',vis:'arc'},fctx(t,'#bff8e8'))}},
+  afeather:{el:'air',n:'Перья-дротики',d:'Очередь острых перьев.',cd:1.4,rng:460,
+    mods:[{k:'pierce',n:'Стальные перья',d:'Перья пробивают 3 врагов.'},{k:'homing',n:'Ловчие перья',d:'Перья сами находят цель.'}],
+    fire(f,l,t,m){const g=G;for(let i=0;i<3;i++)g.later.push({t:i*0.08,fn:()=>{const p=g.p,e=nearest(p.x,p.y,500)||t;if(!e)return;const a=Math.atan2(e.y-p.y,e.x-p.x)+rnd(-0.06,0.06);
+      shoot({vis:'blade',x:p.x,y:p.y,vx:Math.cos(a)*760,vy:Math.sin(a)*760,r:4,dmg:5+2.5*l,dt:'phys',life:0.7,pierce:m==='pierce'?3:0,homing:m==='homing',col:'#e6fff7',src:'proj',sk:'form:afeather'})}})}},
+  /* ---------- ДЕРЕВО: Поросль ---------- */
+  wvine:{el:'wood',n:'Колючая лоза',d:'Длинный хлыст лозы травит врагов.',cd:1.7,rng:240,
+    mods:[{k:'long',n:'Длинная лоза',d:'Дальность +35%.'},{k:'snare',n:'Опутывающая лоза',d:'Лоза обездвиживает на 1 с.'}],
+    fire(f,l,t,m){CAST.cone({range:m==='long'?300:220,arc:0.55,dmg:12+6*l,dt:'magic',st:Object.assign({poison:[3+1.5*l,3]},m==='snare'?{root:1}:{}),knock:60,col:'#7fd15a',vis:'arc'},fctx(t,'#7fd15a'))}},
+  wspore:{el:'wood',n:'Споровое облако',d:'Ядовитое облако у врагов.',cd:4.5,rng:420,
+    mods:[{k:'wide',n:'Большое облако',d:'Облако шире.'},{k:'follow',n:'Споровый шлейф',d:'Облако ходит за вами.'}],
+    fire(f,l,t,m){const z={r:m==='wide'?130:90,life:4,dps:4+2*l,dt:'magic',col:'#a6e07a',st:{poison:[3+l,2]},vis:'spore'};
+      if(m==='follow')addZone(G.p.x,G.p.y,z,true);else{const c=fctx(t);addZone(c.x,c.y,z,false)}}},
+  wbush:{el:'wood',n:'Шипастый куст',d:'Сажает куст-турель, который стреляет шипами.',cd:0,rng:0,aura:true,
+    mods:[{k:'twin',n:'Два куста',d:'Растут сразу два куста.'},{k:'toxic',n:'Ядовитые шипы',d:'Шипы куста отравляют.'}],
+    fire(f,l,t,m){const g=G,p=g.p,n=m==='twin'?2:1;f.b=(f.b||[]).filter(b=>b.u>g.t);
+      while(f.b.length<n){const a=rnd(0,TAU);f.b.push({x:p.x+Math.cos(a)*70,y:p.y+Math.sin(a)*70,u:g.t+9,s:0});ring(p.x+Math.cos(a)*70,p.y+Math.sin(a)*70,30,'#7fd15a',0.4)}
+      for(const b of f.b){if(g.t<b.s)continue;const e=nearest(b.x,b.y,360);if(!e)continue;b.s=g.t+0.7;const a=Math.atan2(e.y-b.y,e.x-b.x);
+        shoot({vis:'seed',x:b.x,y:b.y,vx:Math.cos(a)*480,vy:Math.sin(a)*480,r:5,dmg:7+3.5*l,dt:'phys',life:0.8,st:m==='toxic'?{poison:[3+l,3]}:null,col:'#9ad16a',src:'proj',sk:'form:wbush'})}}},
+  wbees:{el:'wood',n:'Пчелиный рой',d:'Пчёлы сами находят врагов.',cd:2.4,rng:460,
+    mods:[{k:'more',n:'Большой рой',d:'5 пчёл вместо 3.'},{k:'sting',n:'Ядовитое жало',d:'Укусы отравляют.'}],
+    fire(f,l,t,m){const p=G.p,n=m==='more'?5:3;for(let i=0;i<n;i++){const a=rnd(0,TAU);
+      shoot({vis:'wasp',homing:true,x:p.x,y:p.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,r:5,dmg:6+3*l,dt:'phys',life:3,st:m==='sting'?{poison:[3+l,3]}:null,col:'#ffd36b',src:'proj'})}}},
+  wroots:{el:'wood',n:'Корни',d:'Корни хватают группу врагов.',cd:3.6,rng:420,
+    mods:[{k:'long',n:'Цепкие корни',d:'Держат вдвое дольше.'},{k:'hurt',n:'Колючие корни',d:'Корни ранят и травят.'}],
+    fire(f,l,t,m){const g=G,c=fctx(t),R=90*(1+g.S.area*0.5);ring(c.x,c.y,R,'#62c15a',0.5);puff(c.x,c.y,'#7fd15a',14,160,0.5,3);
+      for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-c.x)**2+(e.y-c.y)**2<(R+e.r)**2){hitEnemy(e,(6+3*l)*(m==='hurt'?2.5:1),{dt:'magic',src:'proj',st:Object.assign({root:m==='long'?2.2:1.1},m==='hurt'?{poison:[3+1.5*l,3]}:{})})}}}}
 };
 const FORM_IDS=Object.keys(FORMS);
 
@@ -108,6 +147,11 @@ function drawForms(g){
       ctx.setLineDash(fire?[10,6]:[4,10]);ctx.lineDashOffset=-anim*(fire?40:20);ctx.beginPath();ctx.arc(p.x,p.y,R,0,TAU);ctx.stroke();ctx.setLineDash([]);
       if(Math.random()<0.5&&g.pt.length<450){const a=rnd(0,TAU);g.pt.push({x:p.x+Math.cos(a)*R,y:p.y+Math.sin(a)*R,vx:rnd(-20,20),vy:fire?rnd(-60,-20):rnd(-20,20),life:0.5,max:0.5,col:fire?'#ff9a3c':'#a4825a',size:fire?2.4:3})}
       ctx.restore();
+    }else if(f.t==='wbush'&&f.b){
+      for(const b of f.b){ctx.save();ctx.translate(b.x,b.y);ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(2,8,14,6,0,0,TAU);ctx.fill();
+        for(let i=0;i<7;i++){const a=i*TAU/7+Math.sin(anim*2+i)*0.1;ctx.fillStyle=i%2?'#3f7a2e':'#5aa340';ctx.beginPath();ctx.ellipse(Math.cos(a)*7,Math.sin(a)*5,8,6,a,0,TAU);ctx.fill()}
+        ctx.fillStyle='#e8f0c0';for(let i=0;i<6;i++){const a=i*TAU/6+0.3;ctx.beginPath();ctx.moveTo(Math.cos(a)*9,Math.sin(a)*7);ctx.lineTo(Math.cos(a)*14,Math.sin(a)*11);ctx.lineTo(Math.cos(a+0.2)*9,Math.sin(a+0.2)*7);ctx.fill()}
+        ctx.restore()}
     }else if(f.t==='eshield'){
       for(const s of F.pos(g,f)){ctx.save();ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(s.x+2,s.y+8,10,5,0,0,TAU);ctx.fill();
         ctx.fillStyle='#8a7a62';ctx.strokeStyle='#3a2e22';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<7;i++){const a=i*TAU/7+anim,r=11+(i%2)*2;i?ctx.lineTo(s.x+Math.cos(a)*r,s.y+Math.sin(a)*r):ctx.moveTo(s.x+Math.cos(a)*r,s.y+Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();

@@ -38,7 +38,7 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/combat/damage.js | `OUT_MODS` (множители урона), `bossDefense`, учёт урона `dmgBy`/`tagNew`, `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
 | js/combat/cast.js | `CAST.*` — типы способностей |
 | js/combat/trees.js | древа мутаций `TREE`, хуки `HK`, `castSlot`, `useItem` |
-| js/combat/ults.js | `ULTFN` |
+| js/combat/ults.js | `ULTFN`, печати мастерства `MSEAL` (у мастеров, хранятся в `g.ult.ms`), печати Аватара — `g.ult.seals` |
 | js/combat/weapons.js | автоатаки стихий, стволы металла, гранаты |
 | js/combat/forms.js | формы мастеров `FORMS` (линии Очаги/Течения/Глыбы/…): `fire(f,l,t,m)`, `formsTick`, `drawForms`; карточки form/formmod |
 | js/combat/player_side.js | снаряды, зоны, столкновения |
