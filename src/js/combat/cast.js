@@ -40,6 +40,12 @@ CAST.zones=(pr,c)=>{
     addZone(t.x+Math.cos(a)*d,t.y+Math.sin(a)*d,pr,false);
   }
 };
+/* одна «порция» удерживаемой струи (вызывается каждые pr.tick секунд, пока держат кнопку) */
+CAST.channel=(pr,c)=>{
+  const k=Math.max(2,Math.round(pr.n/4));
+  for(let i=0;i<k;i++){const a=c.ang+(Math.random()-0.5)*pr.spread,sp=pr.spd*rnd(0.85,1.1);
+    shoot({vis:pr.vis,x:c.px+Math.cos(c.ang)*10,y:c.py+Math.sin(c.ang)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:pr.r,dmg:pr.dmg*0.18,dt:pr.dt,life:pr.life*rnd(1.1,1.45),pierce:pr.pierce,col:pr.col||c.col,st:pr.st,src:'proj'})}
+};
 CAST.proj=(pr,c)=>{
   const n=pr.n;
   for(let i=0;i<n;i++){

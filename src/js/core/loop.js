@@ -50,7 +50,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    GMOD,heroMech,interact,FORMS,FORM_IDS,MSEAL,castUlt,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
+    GMOD,heroMech,interact,FORMS,FORM_IDS,MSEAL,castUlt,toggleAuto,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

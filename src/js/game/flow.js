@@ -73,7 +73,7 @@ function movePlayer(dt){
     const pl=g.pools.length?poolAt(g,p.x,p.y):null;
     const mud=(pl&&!imm(pl.kind))?(pl.kind==='bramble'?0.6:(pl.kind==='quicksand'?0.5:1)):1;
     const fro=g.frz>0,slowF=((g.bliz&&!imm('blizzard'))?0.8:1)*(g.rootT>0?0.2:1)*(g.pslow>0?0.6:1);
-    const sp=150*(g.E.spd+0.03*g.el.air)*mud*slowF,k=Math.min(1,(fro?12:((M.ice&&!imm('slip'))?3.2:15))*dt);
+    const sp=150*(g.E.spd+0.03*g.el.air)*mud*slowF*(g.chan?0.7:1),k=Math.min(1,(fro?12:((M.ice&&!imm('slip'))?3.2:15))*dt);
     const ix=fro?0:inp.x,iy=fro?0:inp.y;
     p.vx+=(ix*sp-p.vx)*k;p.vy+=(iy*sp-p.vy)*k;
     trailFx(dt,moving||Math.hypot(p.vx,p.vy)>60,false);
@@ -151,6 +151,7 @@ function update(dt){
   movePlayer(dt);
   heroMech(dt);
   hintTick(dt);if(SAVE.hints)hintTriggers();
+  chanTick(dt);autoTick();
   itemFx(dt);
   poolsTick(dt);
   envTick(dt);

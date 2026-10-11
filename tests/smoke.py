@@ -98,6 +98,19 @@ with sync_playwright() as p:
         const dup=cv.filter(c=>c.dataset.et.indexOf('boss_')===0).length;S.setTab('play');res({n:cv.length,px,bossCards:dup})},400)})""")
     check('бестиарий: живые спрайты врагов, боссы без дублей', r['n'] > 30 and r['px'] > 200 and r['bossCards'] == 6, r)
 
+    print('Огнемёт и автоприменение')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);g.spawnT=1e9;g.en.length=0;S.learnSkill('flamejet');
+        const e=S.spawnEnemy('brute');e.hp=e.max=1e6;e.sp=0;S.setMouse(683+90,384);g.p.mana=g.S.maxMana;const m0=g.p.mana;
+        S.key('Digit1',true);S.castSlot(0);let held=0;for(let i=0;i<90;i++){e.x=g.p.x+90;e.y=g.p.y;g.p.inv=1;S.update(1/60);if(g.chan)held++}
+        const dmgHeld=Math.round(1e6-e.hp),manaUsed=Math.round(m0-g.p.mana);S.key('Digit1',false);S.update(1/60);
+        return {held,dmgHeld,manaUsed,chanAfter:!!g.chan,cd:g.slots[0].cd>0}}""")
+    check('огнемёт: струя, пока держишь кнопку', r['held'] >= 85 and r['dmgHeld'] > 0 and r['manaUsed'] > 15 and not r['chanAfter'] and r['cd'], r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);g.spawnT=1e9;g.en.length=0;S.learnSkill('fireball');S.learnSkill('flamejet');
+        const e=S.spawnEnemy('brute');e.hp=e.max=1e6;e.sp=0;S.toggleAuto(0);S.toggleAuto(1);let casts=0,ch=0;const c0=g.castN;
+        for(let i=0;i<300;i++){e.x=g.p.x+120;e.y=g.p.y;g.p.inv=1;g.p.mana=g.S.maxMana;S.update(1/60);if(g.chan)ch++}
+        S.hud();return {casts:g.castN-c0,ch,badge:document.querySelectorAll('.slot.sk.auto').length,dmg:Math.round(1e6-e.hp)}}""")
+    check('автоприменение навыков (Alt+клавиша)', r['casts'] >= 2 and r['ch'] > 30 and r['badge'] == 2 and r['dmg'] > 0, r)
+
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
         S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};

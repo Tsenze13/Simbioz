@@ -246,6 +246,7 @@ function addZone(x,y,z,self){
 function s2w(sx,sy){const z=ZM*(1+(G?G.zk:0));return {x:cam.x+VW/2+(sx-W/2)/z,y:cam.y+VH/2+(sy-H/2)/z}}
 function aimPoint(){
   const g=G,p=g.p;
+  if(g.autoAim){const t=nearest(p.x,p.y,600);if(t)return {x:t.x,y:t.y}}
   if(mouse.on&&!uiTouch)return s2w(mouse.x,mouse.y);
   const t=nearest(p.x,p.y,520);
   if(t)return {x:t.x,y:t.y};

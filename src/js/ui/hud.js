@@ -47,7 +47,7 @@ function buildTopHud(){
 }
 function renderDock(){
   const g=G;
-  const sig=g.pl+':'+(pasCan()?1:0)+'|'+g.slots.map(s=>s?s.id+s.lv:'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+(g.ult.kind||'')+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
+  const sig=g.pl+':'+(pasCan()?1:0)+'|'+g.slots.map(s=>s?s.id+s.lv+(s.auto?'A':''):'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+(g.ult.kind||'')+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
   if(g.dockSig===sig)return;
   g.dockSig=sig;
   {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+hEl(g.start).c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
@@ -56,7 +56,7 @@ function renderDock(){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
     if(s){
       const a=AB[s.id];
-      h+='<button class="slot sk" type="button" tabindex="-1" data-k="s" data-i="'+i+'" style="--c1:'+a.c1+';--c2:'+a.c2+'"><span class="ic">'+icon(a.gl)+'</span><span class="key">'+key+'</span><span class="cost">'+a.mana+'</span><span class="lv">'+pips(s.lv)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
+      h+='<button class="slot sk'+(s.auto?' auto':'')+'" type="button" tabindex="-1" data-k="s" data-i="'+i+'" style="--c1:'+a.c1+';--c2:'+a.c2+'"><span class="ic">'+icon(a.gl)+'</span><span class="key">'+key+'</span>'+(s.auto?'<span class="autob">A</span>':'')+'<span class="cost">'+a.mana+'</span><span class="lv">'+pips(s.lv)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
     }else h+='<button class="slot empty" type="button" tabindex="-1" data-k="s" data-i="'+i+'"><span class="key">'+key+'</span></button>';
   }
   const u=ultInfo(),E=hEl(g.start);
@@ -151,7 +151,7 @@ function tipFor(k,i){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
     if(!s)return '<div class="tn">Пустой слот ['+key+']</div><div class="td">Навыки даются на повышении уровня или покупаются свитками у Чародея.</div>';
     const a=AB[s.id];
-    return '<div class="tn">'+a.n+'</div><div class="tm">Ур. '+s.lv+' · мана <b>'+a.mana+'</b> · откат '+(a.cd/(1+g.E.cdr)).toFixed(1)+' с · ['+key+']</div><div class="td">'+a.d+'</div>'+(s.lv<5?'<div class="tu">Следующий уровень: '+a.up[s.lv-1]+'</div>':'');
+    return '<div class="tn">'+a.n+'</div><div class="tm">Ур. '+s.lv+' · мана <b>'+a.mana+'</b> · откат '+(a.cd/(1+g.E.cdr)).toFixed(1)+' с · ['+key+']</div><div class="td">'+a.d+'</div>'+'<div class="tu">Alt+'+key+' или правый клик — автоприменение'+(s.auto?' (включено)':'')+'</div>'+(s.lv<5?'<div class="tu">Следующий уровень: '+a.up[s.lv-1]+'</div>':'');
   }
   if(k==='u'){
     const u=ultInfo(),mods=ultMods();
@@ -171,9 +171,11 @@ function tipFor(k,i){
     e.preventDefault();
     const k=b.dataset.k,i=parseInt(b.dataset.i,10);
     if(e.pointerType!=='mouse')uiTouch=true;
-    if(k==='s')castSlot(i);else if(k==='u')castUlt();else if(k==='i')useItem(i);
+    if(k==='s'){if(e.button===2||e.altKey){toggleAuto(i);return}const s=G.slots[i];if(s&&AB[s.id].kind==='channel')G.chanPtr=i;castSlot(i)}else if(k==='u')castUlt();else if(k==='i')useItem(i);
     else if(k==='p'){if(!pasUp()){trSel='__pas';openTree()}else{tip.innerHTML=pasTip()}}
   });
+  dock.addEventListener('contextmenu',e=>{if(e.target.closest('.slot'))e.preventDefault()});
+  addEventListener('pointerup',()=>{if(G)G.chanPtr=-1});addEventListener('pointercancel',()=>{if(G)G.chanPtr=-1});
   dock.addEventListener('mouseover',e=>{
     const b=e.target.closest('.slot');
     if(!b||!G||uiTouch){tip.hidden=true;return}

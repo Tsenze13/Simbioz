@@ -27,10 +27,10 @@ addEventListener('keydown',e=>{
   else if(act==='tree')openTree();
   else if(act==='use')interact();
   else if(act==='skip')skipWave();
-  else if(act&&act.length===2&&act[0]==='s')castSlot(parseInt(act[1],10)-1);
+  else if(act&&act.length===2&&act[0]==='s'){if(e.altKey){e.preventDefault();toggleAuto(parseInt(act[1],10)-1)}else castSlot(parseInt(act[1],10)-1)}
   else if(act&&act.length===2&&act[0]==='i')useItem(parseInt(act[1],10)-1);
 });
-addEventListener('keyup',e=>{codes[e.code]=false});
+addEventListener('keyup',e=>{codes[e.code]=false;if(e.key==='Alt')e.preventDefault()});
 addEventListener('blur',()=>{for(const k in codes)codes[k]=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen)togglePause()});
 const cv=$('c'),ctx=cv.getContext('2d');

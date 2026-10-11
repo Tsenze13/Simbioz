@@ -337,6 +337,57 @@ function runHooks(pr,c,a){
   const X={pr:pr,c:c,tp:tp,tp2:tp,a:a};
   for(const h of pr.hk){const f=HK[h.t];if(f)f(X,h)}
 }
+/* ---------- удерживаемые навыки (огнемёт) ---------- */
+function chanCost(a,pr){const g=G;let m=a.mana*pr.manam*((g.cls&&g.cls.manax)||1);if(g.start==='water'&&g.tide!=='ebb')m*=0.7;return m}
+function chanStart(i){
+  const g=G,s=g.slots[i],a=AB[s.id];
+  if(g.chan)return;
+  const pr=skillPr(s);
+  if(g.p.mana<chanCost(a,pr)*0.25){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
+  g.chan={i:i,tt:0,zt:0.5,t:0};g.castN++;
+  if(g.start==='fire'){g.heatIdle=0;g.heat=Math.min(100,(g.heat||0)+25)}
+  const c=castCtx(a.c1,a.c2),L0=lens();g.curSk=a.id;runHooks(pr,c,a);tagNew(L0,a.id);g.curSk=null;
+  sfx(180,0.25,'sawtooth',0.04,120);
+}
+function chanHeld(i){const g=G,s=g.slots[i];if(!s)return false;if(codes[SAVE.keys['s'+(i+1)]]||g.chanPtr===i)return true;
+  if(s.auto){const a=AB[s.id],t=nearest(g.p.x,g.p.y,260);return !!t&&g.p.mana>g.S.maxMana*0.12}return false}
+function chanTick(dt){
+  const g=G,ch=g.chan;if(!ch)return;
+  const s=g.slots[ch.i];
+  const a=s&&AB[s.id];
+  if(!s||a.kind!=='channel'||!chanHeld(ch.i)||g.p.mana<=0||g.dashT>0){chanEnd();return}
+  const pr=skillPr(s);
+  g.p.mana=Math.max(0,g.p.mana-chanCost(a,pr)*dt);ch.t+=dt;g.heatIdle=0;
+  ch.tt-=dt;
+  if(ch.tt<=0){ch.tt=0.09;
+    if(s.auto&&!codes[SAVE.keys['s'+(ch.i+1)]]&&g.chanPtr!==ch.i)g.autoAim=true;
+    const c=castCtx(a.c1,a.c2);g.autoAim=false;
+    const L0=lens();g.curSk=a.id;CAST.channel(pr,c);
+    ch.zt-=0.09;if(ch.zt<=0){ch.zt=0.5;const zh=pr.hk.filter(h=>h.t==='zone');if(zh.length)runHooks(Object.assign({},pr,{hk:zh}),c,a)}
+    tagNew(L0,a.id);g.curSk=null;heroAtk(c.ang);
+    if(Math.random()<0.3)sfx(120+Math.random()*60,0.08,'sawtooth',0.012,-30);
+  }
+}
+function chanEnd(){
+  const g=G,ch=g.chan;if(!ch)return;g.chan=null;
+  const s=g.slots[ch.i];if(!s)return;const a=AB[s.id],pr=skillPr(s);
+  s.cdMax=a.cd*pr.cdm/(1+g.E.cdr);s.cd=s.cdMax;
+}
+/* ---------- автоприменение (Alt + клавиша навыка / правый клик по слоту) ---------- */
+function toggleAuto(i){
+  const g=G,s=g.slots[i];if(!s)return;
+  s.auto=!s.auto;g.dockSig='';
+  toast(AB[s.id].n,s.auto?'Автоприменение включено':'Автоприменение выключено');sfx(s.auto?660:330,0.1,'triangle',0.04,s.auto?200:-100);
+}
+function autoTick(){
+  const g=G;if(g.phase!=='fight')return;
+  for(let i=0;i<g.slots.length;i++){
+    const s=g.slots[i];if(!s||!s.auto||s.cd>0)continue;
+    const a=AB[s.id];if(a.kind==='channel'&&g.chan)continue;const t=nearest(g.p.x,g.p.y,a.kind==='channel'?240:480);if(!t)continue;
+    const pr=skillPr(s);if(g.p.mana<chanCost(a,pr)*(a.kind==='channel'?0.4:1))continue;
+    g.autoAim=true;castSlot(i);g.autoAim=false;
+  }
+}
 function castSlot(i){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
@@ -344,6 +395,7 @@ function castSlot(i){
   if(!s)return;
   const a=AB[s.id];
   if(s.cd>0)return;
+  if(a.kind==='channel'){chanStart(i);return}
   const pr=skillPr(s);let mana=Math.round(a.mana*pr.manam*((g.cls&&g.cls.manax)||1));
   if(g.start==='water'&&g.tide!=='ebb')mana=Math.round(mana*0.7);
   const free=g.start==='water'&&g.pl>=3&&(g.castN+1)%10===0;if(free)mana=0;
