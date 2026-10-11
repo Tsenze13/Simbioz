@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Симбиоз — лаборатория спрайтов</title>
+<style>
+:root{--bg:#0b0e16;--panel:#141a26;--line:#263044;--text:#e8eef8;--dim:#8d99b8;--gold:#ffd36b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:22px 16px 6px;max-width:1340px;margin:0 auto}
+h1{margin:0 0 4px;font-size:26px}header p{margin:0;color:var(--dim)}
+section{max-width:1340px;margin:0 auto;padding:10px 16px 6px}
+h2{font-size:18px;margin:18px 0 4px}h2 small{color:var(--dim);font-weight:400;font-size:14px}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:12px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card canvas{display:block;width:100%;aspect-ratio:420/260;background:#10131c}
+.card .cap{padding:9px 12px}.card .cap b{color:var(--gold);margin-right:6px}.card .cap span{color:var(--dim);font-size:13.5px}
+.old{border-color:#4a3030}.old .cap b{color:#ff8a7a}
+</style></head><body>
+<header><h1>Лаборатория спрайтов</h1><p>Варианты новых эффектов для навыков. Напиши, какой вариант берём для каждого навыка (например: «огнемёт — Б, стена — А»). Можно смешать: «А, но с искрами из Б».</p></header>
+<main id="main"></main>
+<script>
+const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const n1=x=>Math.sin(x*1.7)+Math.sin(x*3.1+1.3)*.5+Math.sin(x*7.3+.7)*.25;
+function rg(c,x,y,r,s){const g=c.createRadialGradient(x,y,0,x,y,Math.max(.1,r));s.forEach(q=>g.addColorStop(q[0],q[1]));return g}
+function lg(c,x0,y0,x1,y1,s){const g=c.createLinearGradient(x0,y0,x1,y1);s.forEach(q=>g.addColorStop(q[0],q[1]));return g}
+function glow(c,x,y,r,col,a){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=a;c.fillStyle=rg(c,x,y,r,[[0,col],[1,'rgba(0,0,0,0)']]);c.fillRect(x-r,y-r,2*r,2*r);c.restore()}
+/* кэш мягких «пятен» для частиц */
+const SPR={};function blob(col){if(SPR[col])return SPR[col];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d');c.fillStyle=rg(c,32,32,32,[[0,col],[.35,col.replace(/[\d.]+\)$/,'0.55)')],[1,'rgba(0,0,0,0)']]);c.fillRect(0,0,64,64);return SPR[col]=cv}
+function dot(c,x,y,r,col,a){c.globalAlpha=a;c.drawImage(blob(col),x-r,y-r,2*r,2*r);c.globalAlpha=1}
+const FCOL=a=>a<.12?'rgba(255,255,235,1)':a<.3?'rgba(255,224,120,1)':a<.55?'rgba(255,150,50,1)':'rgba(220,70,25,1)';
+
+/* ---------- сцена: фон, герой, враги ---------- */
+function ground(c,W,H,seed){c.fillStyle=rg(c,W*.45,H*.5,W*.75,[[0,'#232637'],[1,'#10131c']]);c.fillRect(0,0,W,H);
+  for(let i=0;i<70;i++){const x=(Math.sin(i*91.7+seed)*.5+.5)*W,y=(Math.sin(i*37.3+seed*2)*.5+.5)*H;c.fillStyle='rgba(255,255,255,'+(.03+.03*(i%3))+')';c.beginPath();c.arc(x,y,1+(i%3),0,TAU);c.fill()}}
+function hero(c,x,y,col,t){c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(x+2,y+11,13,6,0,0,TAU);c.fill();glow(c,x,y,40,col,.25);
+  c.fillStyle='#2a1f2a';c.beginPath();c.arc(x,y,12,0,TAU);c.fill();c.strokeStyle=col;c.lineWidth=3;c.beginPath();c.arc(x,y,12,0,TAU);c.stroke();
+  c.fillStyle=col;c.beginPath();c.arc(x+5,y,4,0,TAU);c.fill()}
+function foes(c,list,t){for(const e of list){const hit=e.h>0;e.h=Math.max(0,e.h-.03);const bob=Math.sin(t*3+e.x)*1.5;
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(e.x+2,e.y+10,11,5,0,0,TAU);c.fill();
+  c.fillStyle=hit?'#fff2d0':'#8a6ad8';c.beginPath();c.arc(e.x,e.y+bob,10,0,TAU);c.fill();c.strokeStyle='#2a1a4a';c.lineWidth=2;c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.arc(e.x-3,e.y-2+bob,2.4,0,TAU);c.arc(e.x+3,e.y-2+bob,2.4,0,TAU);c.fill();
+  if(e.burn>0){e.burn-=.016;for(let k=0;k<2;k++){c.save();c.globalCompositeOperation='lighter';dot(c,e.x+rnd(-6,6),e.y-6-rnd(0,10)+bob,rnd(4,7),'rgba(255,140,40,1)',.6);c.restore()}}}}
+function mkFoes(xs){return xs.map(p=>({x:p[0],y:p[1],h:0,burn:0}))}
+
+/* =====================================================================
+   ВАРИАНТЫ
+   ===================================================================== */
+const V=[];
+/* ---------- ОГНЕМЁТ ---------- */
+V.push({g:'Огнемёт',k:'Сейчас',old:true,d:'Отдельные огненные шары — выглядит как спам атак.',
+ init(s){s.f=mkFoes([[240,110],[275,140],[300,100],[330,150]]);s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,1);const hx=60,hy=125;
+  if(Math.random()<.9)for(let i=0;i<2;i++){const a=rnd(-.4,.4);s.p.push({x:hx+12,y:hy,vx:Math.cos(a)*380,vy:Math.sin(a)*380,l:.5})}
+  foes(c,s.f,t);c.save();c.globalCompositeOperation='lighter';
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;dot(c,p.x,p.y,14,'rgba(255,170,60,1)',.85);dot(c,p.x,p.y,6,'rgba(255,255,220,1)',.9)}
+  s.p=s.p.filter(p=>p.l>0);c.restore();hero(c,hx,hy,'#ff6a2b',t)}});
+V.push({g:'Огнемёт',k:'А · Струя',d:'Сплошной конус пламени с рваными краями: белое ядро, оранжевое тело, красная кромка, искры и дым на конце.',
+ init(s){s.f=mkFoes([[240,110],[275,140],[300,100],[330,150]]);s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,1);const hx=60,hy=125,ox=hx+14,L=250;foes(c,s.f,t);
+  for(const e of s.f){const dx=e.x-ox,dy=Math.abs(e.y-hy);if(dx>0&&dx<L&&dy<10+dx*.3){e.h=.4;e.burn=1}}
+  c.save();c.translate(ox,hy);c.globalCompositeOperation='lighter';
+  const layer=(sc,len,cols,ph,a)=>{c.beginPath();c.moveTo(0,-3*sc);for(let s=0;s<=1.0001;s+=.04){const x=s*L*len,w=(4+s*L*.3)*sc*(1+.22*n1(t*10+s*13+ph));c.lineTo(x,-w)}
+    for(let s=1;s>=0;s-=.04){const x=s*L*len,w=(4+s*L*.3)*sc*(1+.22*n1(t*11+s*11+ph+5));c.lineTo(x,w)}c.closePath();c.globalAlpha=a;c.fillStyle=lg(c,0,0,L*len,0,cols);c.fill()};
+  layer(1,1,[[0,'rgba(255,120,30,.9)'],[.6,'rgba(230,60,20,.55)'],[1,'rgba(150,20,10,0)']],0,.85);
+  layer(.62,.86,[[0,'rgba(255,220,110,1)'],[.7,'rgba(255,140,40,.6)'],[1,'rgba(255,100,30,0)']],2,.9);
+  layer(.26,.55,[[0,'rgba(255,255,240,1)'],[1,'rgba(255,230,150,0)']],4,1);
+  c.restore();
+  if(Math.random()<.8)s.p.push({x:ox+rnd(30,L),y:hy+rnd(-30,30),vx:rnd(60,160),vy:rnd(-60,-10),l:rnd(.3,.7),k:Math.random()<.35?1:0});
+  c.save();for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;if(p.k){c.globalCompositeOperation='source-over';dot(c,p.x,p.y,10+(1-p.l)*14,'rgba(60,50,50,1)',p.l*.5)}else{c.globalCompositeOperation='lighter';dot(c,p.x,p.y,3,'rgba(255,220,120,1)',p.l*1.4)}}c.restore();
+  s.p=s.p.filter(p=>p.l>0);glow(c,ox,hy,40,'#ffb347',.6);hero(c,hx,hy,'#ff6a2b',t)}});
+V.push({g:'Огнемёт',k:'Б · Пламя из частиц',d:'Плотный поток растущих огненных частиц: белые у рук, жёлтые, оранжевые, красные и переходят в дым.',
+ init(s){s.f=mkFoes([[240,110],[275,140],[300,100],[330,150]]);s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,1);const hx=60,hy=125,ox=hx+14;foes(c,s.f,t);
+  for(let i=0;i<9;i++){const a=rnd(-.3,.3),sp=rnd(300,390);s.p.push({x:ox,y:hy+rnd(-3,3),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,a:0,L:rnd(.5,.7)})}
+  c.save();
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;p.vy=p.vy*.985-30*dt;p.a+=dt;const k=p.a/p.L;
+    for(const e of s.f)if(Math.hypot(e.x-p.x,e.y-p.y)<16){e.h=.4;e.burn=1}
+    if(k>.8){c.globalCompositeOperation='source-over';dot(c,p.x,p.y,8+k*26,'rgba(50,42,42,1)',(1-k)*1.4)}
+    else{c.globalCompositeOperation='lighter';dot(c,p.x,p.y,3+k*24,FCOL(k),.55*(1-k*.6))}}
+  c.restore();s.p=s.p.filter(p=>p.a<p.L);glow(c,ox,hy,36,'#ffd36b',.7);hero(c,hx,hy,'#ff6a2b',t)}});
+V.push({g:'Огнемёт',k:'В · Огненные ленты',d:'Три закрученные огненные ленты, сплетающиеся в струю, с ярким ядром и угольками.',
+ init(s){s.f=mkFoes([[240,110],[275,140],[300,100],[330,150]]);s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,1);const hx=60,hy=125,ox=hx+14,L=250;foes(c,s.f,t);
+  for(const e of s.f){const dx=e.x-ox,dy=Math.abs(e.y-hy);if(dx>0&&dx<L&&dy<12+dx*.25){e.h=.4;e.burn=1}}
+  c.save();c.translate(ox,hy);c.globalCompositeOperation='lighter';c.lineCap='round';
+  for(let i=0;i<3;i++){for(const [lw,col,a] of [[14,'rgba(230,70,20,',.35],[7,'rgba(255,160,50,',.6],[2.5,'rgba(255,245,200,',.9]]){
+    c.beginPath();for(let x=0;x<=L;x+=6){const y=Math.sin(x*.045-t*16+i*2.1)*(3+x*.17)+n1(t*4+x*.02+i)*x*.03;x?c.lineTo(x,y):c.moveTo(x,y)}
+    c.strokeStyle=lg(c,0,0,L,0,[[0,col+a+')'],[.75,col+(a*.6)+')'],[1,col+'0)']]);c.lineWidth=lw;c.stroke()}}
+  c.fillStyle=lg(c,0,0,L*.5,0,[[0,'rgba(255,255,230,.9)'],[1,'rgba(255,200,100,0)']]);c.beginPath();c.ellipse(L*.22,0,L*.24,9,0,0,TAU);c.fill();c.restore();
+  if(Math.random()<.9)s.p.push({x:ox+rnd(20,L),y:hy+rnd(-35,35),vx:rnd(40,120),vy:rnd(-80,-20),l:rnd(.3,.6)});
+  c.save();c.globalCompositeOperation='lighter';for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;dot(c,p.x,p.y,2.5,'rgba(255,210,110,1)',p.l*1.6)}c.restore();s.p=s.p.filter(p=>p.l>0);
+  hero(c,hx,hy,'#ff6a2b',t)}});
+
+/* ---------- СТЕНА ОГНЯ ---------- */
+const WALL={x:250,y0:40,y1:220};
+V.push({g:'Стена огня',k:'Сейчас',old:true,d:'Столбик одинаковых маленьких огоньков.',
+ init(s){s.f=mkFoes([[300,90],[320,170]])},
+ draw(c,W,H,t,dt,s){ground(c,W,H,2);foes(c,s.f,t);for(let y=WALL.y0;y<=WALL.y1;y+=22){c.save();c.globalCompositeOperation='lighter';dot(c,WALL.x,y,14,'rgba(255,140,40,1)',.8);dot(c,WALL.x,y-4,6,'rgba(255,240,180,1)',.9);c.restore()}hero(c,60,130,'#ff6a2b',t)}});
+V.push({g:'Стена огня',k:'А · Языки пламени',d:'Светящаяся полоса на земле и ряд живых языков пламени разной высоты, угольки летят вверх.',
+ init(s){s.f=mkFoes([[300,90],[320,170]]);s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,2);foes(c,s.f,t);const{x,y0,y1}=WALL;
+  c.save();c.globalCompositeOperation='source-over';c.fillStyle='rgba(20,8,4,.55)';c.beginPath();c.ellipse(x,(y0+y1)/2,16,(y1-y0)/2+12,0,0,TAU);c.fill();
+  c.globalCompositeOperation='lighter';c.fillStyle=rg(c,x,(y0+y1)/2,(y1-y0)/2+20,[[0,'rgba(255,120,30,.55)'],[1,'rgba(255,60,10,0)']]);c.beginPath();c.ellipse(x,(y0+y1)/2,26,(y1-y0)/2+16,0,0,TAU);c.fill();
+  const N=22;for(let i=0;i<N;i++){const y=y0+(y1-y0)*i/(N-1)+Math.sin(i*7.1)*3,xo=Math.sin(i*5.3)*9,h=22+16*(.5+.5*n1(t*2.6+i*1.9)),sw=Math.sin(t*5+i)*4,w=11+4*Math.sin(i*3.3);
+    for(const [sc,cs] of [[1,[[0,'rgba(255,170,50,.95)'],[.55,'rgba(240,80,25,.6)'],[1,'rgba(160,30,10,0)']]],[.55,[[0,'rgba(255,255,220,1)'],[.6,'rgba(255,210,100,.7)'],[1,'rgba(255,160,50,0)']]]]){
+      const X=x+xo;c.beginPath();c.moveTo(X-w*sc,y);c.bezierCurveTo(X-w*sc,y-h*sc*.45,X+sw-w*sc*.3,y-h*sc*.75,X+sw*1.4,y-h*sc);c.bezierCurveTo(X+sw+w*sc*.3,y-h*sc*.7,X+w*sc,y-h*sc*.45,X+w*sc,y);c.closePath();
+      c.fillStyle=lg(c,0,y,0,y-h*sc,cs);c.fill()}}
+  if(Math.random()<.9)s.p.push({x:x+rnd(-8,8),y:rnd(y0,y1),vx:rnd(-15,15),vy:rnd(-90,-50),l:rnd(.5,1)});
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;dot(c,p.x,p.y,2.5,'rgba(255,200,100,1)',p.l)}s.p=s.p.filter(p=>p.l>0);c.restore();hero(c,60,130,'#ff6a2b',t)}});
+V.push({g:'Стена огня',k:'Б · Огненная завеса',d:'Высокая полупрозрачная пелена огня: колышущиеся столбы жара над раскалённой линией.',
+ init(s){s.f=mkFoes([[300,90],[320,170]])},
+ draw(c,W,H,t,dt,s){ground(c,W,H,2);foes(c,s.f,t);const{x,y0,y1}=WALL;c.save();c.globalCompositeOperation='lighter';
+  for(let y=y0;y<=y1;y+=5){const h=50+26*n1(t*1.8+y*.05),a=.12+.08*Math.sin(t*6+y*.3);c.fillStyle=lg(c,0,y,0,y-h,[[0,'rgba(255,200,80,'+(a*2.2)+')'],[.4,'rgba(255,110,30,'+a+')'],[1,'rgba(200,40,10,0)']]);
+    const sw=Math.sin(t*3+y*.08)*6;c.beginPath();c.moveTo(x-13,y);c.quadraticCurveTo(x+sw,y-h*.5,x+sw*1.5,y-h);c.quadraticCurveTo(x+sw+6,y-h*.5,x+13,y);c.fill()}
+  c.strokeStyle='rgba(255,240,180,.95)';c.lineWidth=3;c.beginPath();c.moveTo(x,y0);c.lineTo(x,y1);c.stroke();c.strokeStyle='rgba(255,120,30,.6)';c.lineWidth=10;c.stroke();
+  c.restore();hero(c,60,130,'#ff6a2b',t)}});
+V.push({g:'Стена огня',k:'В · Лавовая трещина',d:'Земля трескается раскалённой линией, из трещины вырываются огненные выбросы.',
+ init(s){s.f=mkFoes([[300,90],[320,170]]);s.p=[];s.pts=[];for(let y=WALL.y0;y<=WALL.y1;y+=12)s.pts.push([WALL.x+rnd(-7,7),y])},
+ draw(c,W,H,t,dt,s){ground(c,W,H,2);foes(c,s.f,t);c.save();
+  c.globalCompositeOperation='source-over';c.strokeStyle='#1a0a06';c.lineWidth=12;c.lineJoin='round';c.beginPath();s.pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.stroke();
+  c.globalCompositeOperation='lighter';for(const [lw,col] of [[10,'rgba(255,80,20,.55)'],[5,'rgba(255,170,50,.9)'],[2,'rgba(255,250,210,1)']]){c.strokeStyle=col;c.lineWidth=lw*(1+.15*Math.sin(t*8));c.stroke()}
+  if(Math.random()<.5){const p=s.pts[Math.floor(Math.random()*s.pts.length)];for(let k=0;k<8;k++)s.p.push({x:p[0],y:p[1],vx:rnd(-30,30),vy:rnd(-160,-80),l:rnd(.3,.6),L:.6})}
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;p.l-=dt;dot(c,p.x,p.y,4+(1-p.l/p.L)*10,FCOL(1-p.l/p.L),.6)}s.p=s.p.filter(p=>p.l>0);
+  c.restore();hero(c,60,130,'#ff6a2b',t)}});
+
+/* ---------- СМЕРЧ ---------- */
+function debris(c,s,cx,cy,t,col){for(const d of s.d){d.a+=d.w*.016;const k=d.h,r=14+k*70,x=cx+Math.cos(d.a)*r,y=cy-k*175+Math.sin(d.a)*r*.3;c.fillStyle=col;c.save();c.translate(x,y);c.rotate(d.a*3);c.fillRect(-d.s,-d.s*.6,d.s*2,d.s*1.2);c.restore()}}
+V.push({g:'Смерч (Ураган, Водоворот, Песчаная буря…)',k:'Сейчас',old:true,d:'Стопка полосатых эллипсов.',
+ init(s){},draw(c,W,H,t,dt,s){ground(c,W,H,3);const cx=260,cy=235;c.save();for(let i=0;i<22;i++){const k=i/22;c.strokeStyle='rgba(143,235,208,'+(.5-k*.3)+')';c.lineWidth=2;c.beginPath();c.ellipse(cx+Math.sin(t*4+k*5)*6,cy-k*190,14+k*70,4+k*14,0,0,TAU);c.stroke()}c.restore();hero(c,60,130,'#8febd0',t)}});
+V.push({g:'Смерч (Ураган, Водоворот, Песчаная буря…)',k:'А · Пряди ветра',d:'Воронка из десятков закрученных прядей, передние ярче задних; вокруг летает мусор, у земли кольцо пыли.',
+ init(s){s.d=[];for(let i=0;i<14;i++)s.d.push({a:rnd(0,TAU),w:rnd(4,7),h:rnd(.05,.9),s:rnd(1.5,3.5)})},
+ draw(c,W,H,t,dt,s){ground(c,W,H,3);const cx=260,cy=238;c.save();
+  c.fillStyle=rg(c,cx,cy,90,[[0,'rgba(143,235,208,.25)'],[1,'rgba(143,235,208,0)']]);c.beginPath();c.ellipse(cx,cy,90,26,0,0,TAU);c.fill();
+  const lean=k=>Math.sin(t*1.3+k*2)*14*k;
+  for(let pass=0;pass<2;pass++)for(let j=0;j<26;j++){const ph=j*TAU/26;c.beginPath();let front=0;
+    for(let k=0;k<=1.001;k+=.04){const r=10+k*72,a=t*5.5+ph+k*3.2,x=cx+Math.cos(a)*r+lean(k),y=cy-k*190+Math.sin(a)*r*.28;front+=Math.sin(a);k?c.lineTo(x,y):c.moveTo(x,y)}
+    const isF=front>0;if((pass===0)===isF)continue;
+    c.strokeStyle=isF?'rgba(230,255,248,.55)':'rgba(120,200,180,.18)';c.lineWidth=isF?1.8:1.2;c.stroke()}
+  c.globalCompositeOperation='lighter';glow(c,cx,cy-90,90,'#8febd0',.18);c.globalCompositeOperation='source-over';
+  debris(c,s,cx,cy,t,'#7a6a52');c.restore();hero(c,60,130,'#8febd0',t)}});
+V.push({g:'Смерч (Ураган, Водоворот, Песчаная буря…)',k:'Б · Плотная воронка',d:'Сплошная воронка с бегущими по ней полосами вращения, пылевое облако у основания.',
+ init(s){s.d=[];for(let i=0;i<10;i++)s.d.push({a:rnd(0,TAU),w:rnd(4,7),h:rnd(.05,.9),s:rnd(1.5,3)});s.p=[]},
+ draw(c,W,H,t,dt,s){ground(c,W,H,3);const cx=260,cy=238;c.save();
+  const L=[],R=[];for(let k=0;k<=1.001;k+=.05){const r=10+k*70,y=cy-k*190,off=Math.sin(t*1.3+k*2)*14*k+n1(t*3+k*4)*3;L.push([cx-r+off,y]);R.push([cx+r+off,y])}
+  c.beginPath();L.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));for(let i=R.length-1;i>=0;i--)c.lineTo(R[i][0],R[i][1]);c.closePath();
+  c.fillStyle=lg(c,cx-80,0,cx+80,0,[[0,'rgba(90,150,140,.25)'],[.5,'rgba(200,255,240,.45)'],[1,'rgba(90,150,140,.25)']]);c.fill();
+  c.save();c.clip();c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=3;for(let i=0;i<14;i++){const y=cy-((i*14+t*120)%190);c.beginPath();c.moveTo(cx-90,y+18);c.quadraticCurveTo(cx,y-8,cx+90,y-22);c.stroke()}c.restore();
+  if(Math.random()<.8)s.p.push({x:cx+rnd(-60,60),y:cy+rnd(-6,10),vx:rnd(-40,40),vy:rnd(-20,0),l:rnd(.6,1.2)});
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;dot(c,p.x,p.y,10+(1.2-p.l)*12,'rgba(170,200,190,1)',p.l*.35)}s.p=s.p.filter(p=>p.l>0);
+  debris(c,s,cx,cy,t,'#6a5a46');c.restore();hero(c,60,130,'#8febd0',t)}});
+
+/* ---------- ДОЖДЬ / ГРАД ---------- */
+function rainInit(s){s.d=[];s.f=mkFoes([[250,100],[300,150],[340,110]]);s.fx=[]}
+function rainSpawn(s){if(s.d.length<7&&Math.random()<.08)s.d.push({x:rnd(200,380),y:rnd(70,200),t:0,T:rnd(.7,1)})}
+V.push({g:'Дождь и град (Ливень, Осколочный град, Артобстрел)',k:'Сейчас',old:true,d:'Белые палки и пустые серые круги.',
+ init:rainInit,draw(c,W,H,t,dt,s){ground(c,W,H,4);foes(c,s.f,t);rainSpawn(s);for(const d of s.d){d.t+=dt;const k=d.t/d.T;c.strokeStyle='rgba(200,210,230,.6)';c.lineWidth=2;c.beginPath();c.arc(d.x,d.y,28,0,TAU);c.stroke();
+  const my=d.y-(1-k)*260;c.strokeStyle='rgba(230,240,255,.85)';c.lineWidth=3;c.beginPath();c.moveTo(d.x,my);c.lineTo(d.x+8,my-60);c.stroke()}s.d=s.d.filter(d=>d.t<d.T);hero(c,60,130,'#3aa7ff',t)}});
+V.push({g:'Дождь и град (Ливень, Осколочный град, Артобстрел)',k:'А · Мягкие метки',d:'На земле светящееся пятно, кольцо сжимается к центру к моменту удара; капля-снаряд с хвостом; при ударе брызги и волна.',
+ init:rainInit,draw(c,W,H,t,dt,s){ground(c,W,H,4);foes(c,s.f,t);rainSpawn(s);c.save();
+  for(const d of s.d){d.t+=dt;const k=clamp(d.t/d.T,0,1),R=30;c.globalCompositeOperation='lighter';c.fillStyle=rg(c,d.x,d.y,R,[[0,'rgba(90,170,255,'+(.12+.25*k)+')'],[1,'rgba(90,170,255,0)']]);c.beginPath();c.ellipse(d.x,d.y,R,R*.55,0,0,TAU);c.fill();
+    c.strokeStyle='rgba(160,215,255,'+(.4+.5*k)+')';c.lineWidth=2;c.beginPath();c.ellipse(d.x,d.y,R*(1-k*.75)+3,(R*(1-k*.75)+3)*.55,0,0,TAU);c.stroke();
+    const my=d.y-(1-k)*240,mx=d.x+(1-k)*40;c.strokeStyle=lg(c,mx,my,mx+14,my-60,[[0,'rgba(220,240,255,.95)'],[1,'rgba(120,190,255,0)']]);c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(mx,my);c.lineTo(mx+14,my-60);c.stroke();dot(c,mx,my,6,'rgba(230,245,255,1)',.9);
+    if(d.t>=d.T){s.fx.push({x:d.x,y:d.y,t:0});for(const e of s.f)if(Math.hypot(e.x-d.x,e.y-d.y)<36)e.h=.5}}
+  for(const f of s.fx){f.t+=dt;const k=f.t/.45;c.strokeStyle='rgba(180,225,255,'+(1-k)+')';c.lineWidth=2.5;c.beginPath();c.ellipse(f.x,f.y,10+k*36,(10+k*36)*.55,0,0,TAU);c.stroke();
+    for(let i=0;i<8;i++){const a=i*TAU/8,r=k*30;dot(c,f.x+Math.cos(a)*r,f.y+Math.sin(a)*r*.55-Math.sin(k*Math.PI)*14,3,'rgba(200,235,255,1)',1-k)}}
+  s.fx=s.fx.filter(f=>f.t<.45);s.d=s.d.filter(d=>d.t<d.T);c.restore();hero(c,60,130,'#3aa7ff',t)}});
+V.push({g:'Дождь и град (Ливень, Осколочный град, Артобстрел)',k:'Б · Прицельные кольца',d:'Кольцо с четырьмя засечками вращается и заполняется; снаряд — светящийся шар со следом; вспышка при ударе.',
+ init:rainInit,draw(c,W,H,t,dt,s){ground(c,W,H,4);foes(c,s.f,t);rainSpawn(s);c.save();
+  for(const d of s.d){d.t+=dt;const k=clamp(d.t/d.T,0,1),R=30;c.strokeStyle='rgba(255,220,140,.75)';c.lineWidth=2;c.beginPath();c.ellipse(d.x,d.y,R,R*.55,0,0,TAU);c.stroke();
+    c.fillStyle='rgba(255,200,100,'+(.08+.22*k)+')';c.beginPath();c.ellipse(d.x,d.y,R*k,R*k*.55,0,0,TAU);c.fill();
+    for(let i=0;i<4;i++){const a=t*2+i*TAU/4;c.beginPath();c.moveTo(d.x+Math.cos(a)*(R+2),d.y+Math.sin(a)*(R+2)*.55);c.lineTo(d.x+Math.cos(a)*(R+9),d.y+Math.sin(a)*(R+9)*.55);c.stroke()}
+    const my=d.y-(1-k)*240,mx=d.x+(1-k)*60;c.globalCompositeOperation='lighter';for(let j=1;j<6;j++){dot(c,mx+j*5,my-j*18,7-j,'rgba(255,200,120,1)',.5-j*.08)}dot(c,mx,my,9,'rgba(255,240,200,1)',1);c.globalCompositeOperation='source-over';
+    if(d.t>=d.T){s.fx.push({x:d.x,y:d.y,t:0});for(const e of s.f)if(Math.hypot(e.x-d.x,e.y-d.y)<36)e.h=.5}}
+  c.globalCompositeOperation='lighter';for(const f of s.fx){f.t+=dt;const k=f.t/.35;dot(c,f.x,f.y,20+k*30,'rgba(255,220,150,1)',(1-k)*.9)}
+  s.fx=s.fx.filter(f=>f.t<.35);s.d=s.d.filter(d=>d.t<d.T);c.restore();hero(c,60,130,'#ffd36b',t)}});
+
+/* ---------- ОГНЕННЫЙ СМЕРЧ (спираль) ---------- */
+V.push({g:'Огненный смерч (спираль)',k:'Сейчас',old:true,d:'Спираль из одинаковых точек.',
+ init(s){},draw(c,W,H,t,dt,s){ground(c,W,H,5);const cx=230,cy=130;c.save();c.globalCompositeOperation='lighter';for(let arm=0;arm<3;arm++)for(let i=0;i<14;i++){const r=i*8,a=t*2.2+arm*TAU/3+i*.32;dot(c,cx+Math.cos(a)*r,cy+Math.sin(a)*r,6,'rgba(255,170,60,1)',.85)}c.restore();hero(c,60,130,'#ff6a2b',t)}});
+V.push({g:'Огненный смерч (спираль)',k:'А · Огненные кометы',d:'По спиральным рукавам летят огненные кометы с хвостами, в центре — горячее ядро.',
+ init(s){},draw(c,W,H,t,dt,s){ground(c,W,H,5);const cx=230,cy=130;c.save();c.globalCompositeOperation='lighter';glow(c,cx,cy,60,'#ff8a3a',.5);
+  for(let arm=0;arm<3;arm++)for(let j=0;j<3;j++){const ph=((t*.7+j/3)%1),r=10+ph*110,a=t*2.2+arm*TAU/3+ph*3.2;
+    for(let q=0;q<10;q++){const pr=Math.max(0,ph-q*.012),rr=10+pr*110,aa=t*2.2+arm*TAU/3+pr*3.2-q*.05;dot(c,cx+Math.cos(aa)*rr,cy+Math.sin(aa)*rr,(9-q*.7)*(1-ph*.4),q<2?'rgba(255,250,210,1)':'rgba(255,140,40,1)',(1-q/10)*(1-ph*.5))}}
+  c.restore();hero(c,60,130,'#ff6a2b',t)}});
+V.push({g:'Огненный смерч (спираль)',k:'Б · Рукава пламени',d:'Сплошные закрученные рукава огня, вращаются и мерцают, по краям угольки.',
+ init(s){s.p=[]},draw(c,W,H,t,dt,s){ground(c,W,H,5);const cx=230,cy=130;c.save();c.globalCompositeOperation='lighter';c.lineCap='round';
+  for(let arm=0;arm<3;arm++)for(const [lw,col] of [[16,'rgba(220,60,20,.35)'],[8,'rgba(255,150,40,.6)'],[3,'rgba(255,240,190,.9)']]){c.beginPath();
+    for(let i=0;i<=40;i++){const k=i/40,r=6+k*115,a=t*2.4+arm*TAU/3+k*3.4+n1(t*3+k*5)*.08;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?c.lineTo(x,y):c.moveTo(x,y)}
+    c.strokeStyle=col;c.lineWidth=lw;c.stroke()}
+  glow(c,cx,cy,50,'#ffd36b',.6);
+  if(Math.random()<.8){const a=rnd(0,TAU),r=rnd(40,120);s.p.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,vx:-Math.sin(a)*90,vy:Math.cos(a)*90-30,l:rnd(.3,.6)})}
+  for(const p of s.p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;dot(c,p.x,p.y,2.5,'rgba(255,210,110,1)',p.l*1.6)}s.p=s.p.filter(p=>p.l>0);c.restore();hero(c,60,130,'#ff6a2b',t)}});
+
+/* =====================================================================
+   РАЗМЕТКА И ЦИКЛ
+   ===================================================================== */
+const main=document.getElementById('main'),cards=[];let grp=null,row=null;
+for(const v of V){
+  if(v.g!==grp){grp=v.g;const sec=document.createElement('section');sec.innerHTML='<h2>'+v.g+'</h2>';row=document.createElement('div');row.className='row';sec.appendChild(row);main.appendChild(sec)}
+  const card=document.createElement('div');card.className='card'+(v.old?' old':'');card.innerHTML='<canvas width="840" height="520"></canvas><div class="cap"><b>'+v.k+'</b><span>'+v.d+'</span></div>';row.appendChild(card);
+  const cv=card.querySelector('canvas'),c=cv.getContext('2d'),s={};v.init&&v.init(s);cards.push({v,cv,c,s,vis:true});
+}
+const io=new IntersectionObserver(es=>{for(const e of es){const k=cards.find(q=>q.cv===e.target);if(k)k.vis=e.isIntersecting}});cards.forEach(k=>io.observe(k.cv));
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const t=now/1000;
+  for(const k of cards){if(!k.vis)continue;const c=k.c;c.setTransform(2,0,0,2,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';try{k.v.draw(c,420,260,t,dt,k.s)}catch(e){console.error(e)}}
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script></body></html>
