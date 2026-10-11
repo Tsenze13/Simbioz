@@ -19,29 +19,9 @@ const GMOD={
 const GMODU={
   sil:{n:'Глушитель',d:'+12% шанса крита для всех стволов.'},
   scope:{n:'Лазерный прицел',d:'Стволы видят на 30% дальше, разброс меньше, пули летят на 20% быстрее и дальше.'},
-  mag:{n:'Расширенный магазин',d:'Солдат: магазины +50%. Другие герои: стволы стреляют на 12% чаще.'}
+  mag:{n:'Ускоренный затвор',d:'Все стволы стреляют на 12% чаще.'}
 };
-const MAG={pistol:[12,1.0],shotgun:[6,1.6],rifle:[30,1.6],smg:[24,1.4],launcher:[3,2.0],sniper:[5,2.2]};
-const RW=[.42,.62];
-function gunMag(gn){return Math.round(MAG[gn.t][0]*(G&&G.gmu&&G.gmu.mag?1.5:1))}
 function allGuns(g){const a=g.guns.slice();if(g.hand)a.unshift(g.hand);return a}
-function startReload(gn){gn.rlMax=MAG[gn.t][1];gn.rl=gn.rlMax;gn.boost=0;gn.qte=true;gn.bl=0;sfx(220,0.06,'square',0.02,-40)}
-function activeReload(){
-  const g=G;if(!g||mode!=='play'||uiOpen()||g.start!=='metal')return;
-  const L=allGuns(g);let ok=0,bad=0,man=0;
-  for(const gn of L){
-    if(gn.am===undefined)continue;
-    if(gn.rl>0){
-      if(!gn.qte)continue;
-      const k=1-gn.rl/gn.rlMax;
-      if(k>=RW[0]&&k<=RW[1]){gn.rl=0;gn.am=gunMag(gn);gn.boost=1;gn.qte=false;ok++}
-      else{gn.qte=false;gn.rl+=0.4;gn.rlMax+=0.4;bad++}
-    }else if(gn.am<gunMag(gn)){startReload(gn);man++}
-  }
-  const p=g.p;
-  if(ok){ring(p.x,p.y,46,'#ffd36b',0.35);sparks(p.x,p.y,'#ffd36b',8,240);sfx(880,0.08,'triangle',0.04,300);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-34,t:0.9,txt:'Идеальная перезарядка!',big:true,col:'#ffd36b'})}
-  else if(bad){sfx(120,0.12,'square',0.03,-30);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-34,t:0.8,txt:'Заминка',big:false,col:'#ff8a7a'})}
-}
 function gunHit(b,e,o){
   const g=G,t=b.gt,m=b.gmod;let d=b.dmg,km=1;b.nh=(b.nh||0)+1;
   if(g.gmu&&g.gmu.sil)o.cc=0.12;
@@ -64,7 +44,7 @@ function gunHit(b,e,o){
 }
 function gExplode(q){G.curSk='__gun';try{gExplode0(q)}finally{G.curSk=null}}
 function gExplode0(q){
-  const g=G,md=q.md||'',R=66+8*q.l,D=18+9*q.l,x=q.x1,y=q.y1;
+  const g=G,md=q.md||'',R=66+8*q.l,D=(18+9*q.l)*(q.dm||1),x=q.x1,y=q.y1;
   if(md==='cluster'){
     explodeAt(x,y,R*0.8,D*0.8,{dt:'phys',col:'#ffb347',knock:200,src:'auto',shake:4});
     for(let j=0;j<3;j++){const a=rnd(0,TAU),dd=rnd(45,85),cx=x+Math.cos(a)*dd,cy=y+Math.sin(a)*dd;
@@ -80,19 +60,6 @@ function gExplode0(q){
   explodeAt(x,y,R,D,o);
   if(md==='acid')addZone(x,y,{r:R*0.85,life:4,dps:5+2.5*q.l,dt:'magic',col:'#9be04a',st:{rust:1.5,slow:[0.82,0.5]}});
   if(md==='inc')addZone(x,y,{vis:'wildfire',r:R*0.8,life:4,dps:6+3*q.l,dt:'magic',col:'#ff7a3a',st:{burn:[3+q.l,2]}});
-}
-function drawAmmo(gn,x,y,w){
-  const mx=gunMag(gn);
-  ctx.save();ctx.fillStyle='rgba(6,8,14,.72)';ctx.fillRect(x-w/2-1,y-1,w+2,4.6);
-  if(gn.rl>0){
-    const k=clamp(1-gn.rl/gn.rlMax,0,1);
-    ctx.fillStyle='rgba(255,255,255,.14)';ctx.fillRect(x-w/2,y,w,2.6);
-    if(gn.qte){ctx.fillStyle='rgba(110,255,140,.6)';ctx.fillRect(x-w/2+w*RW[0],y,w*(RW[1]-RW[0]),2.6)}
-    ctx.fillStyle='#ffffff';ctx.fillRect(x-w/2+w*k-0.8,y-1.2,1.6,5);
-  }else{
-    ctx.fillStyle=gn.boost?'#ffd36b':'#e8eef8';ctx.fillRect(x-w/2,y,w*clamp(gn.am/mx,0,1),2.6);
-  }
-  ctx.restore();
 }
 function gunPos(g,i){
   const n=g.guns.length,a=g.t*0.9+i*TAU/Math.max(1,n);
@@ -118,7 +85,6 @@ function drawGuns(g){
     ctx.translate(-(gn.rec||0),0);ctx.scale(G0.sc,G0.sc);
     SP[gn.t](ctx,gn.fl||0);
     ctx.restore();
-    if(g.start==='metal'&&gn.am!==undefined)drawAmmo(gn,ps.x,ps.y-18,20);
     if(gn.t==='rifle'&&(gn.heat>0.05||gn.oh>0)){ctx.save();ctx.fillStyle='rgba(6,8,14,.6)';ctx.fillRect(ps.x-10,ps.y-13,20,2.4);ctx.fillStyle=gn.oh>0?'#ff6b5a':'#ffb347';ctx.fillRect(ps.x-10,ps.y-13,20*(gn.oh>0?gn.oh/1.3:gn.heat),2.4);ctx.restore()}
   }
 }

@@ -56,7 +56,7 @@ function applyChoice(c){
   if(c.kind==='gun'){g.guns.push({t:c.key,cd:0,aim:0,fl:0,rec:0});toast('Оружие: '+GUNS[c.key].n,'Теперь вокруг вас парят '+g.guns.length+' ствола')}
   else if(c.kind==='relic'){g.relics.push(c.key);recalc();toast('Реликвия: '+c.title,c.desc);ring(p.x,p.y,150,'#ffd36b',0.8);puff(p.x,p.y,'#ffd36b',30,260,0.8,3.5)}
   else if(c.kind==='gunmod'){(g.gmods||(g.gmods={}))[c.key]=c.mk;toast(GUNS[c.key].n+': '+c.title,c.desc);sfx(640,0.15,'triangle',0.05,200)}
-  else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;if(c.key==='mag')for(const gn of allGuns(g))if(gn.am!==undefined&&!(gn.rl>0))gn.am=gunMag(gn);toast('Модуль: '+c.title,c.desc)}
+  else if(c.kind==='gmodule'){(g.gmu||(g.gmu={}))[c.key]=1;toast('Модуль: '+c.title,c.desc)}
   else if(c.kind==='el'){
     g.el[c.key]++;
     if(g.el[c.key]===1)toast(EL[c.key].n,'Открыт навык «'+AB[ELSK[c.key]].n+'»');

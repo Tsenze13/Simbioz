@@ -48,7 +48,7 @@ const ACTIONS=[
   ['up','Вверх'],['down','Вниз'],['left','Влево'],['right','Вправо'],['dash','Рывок'],
   ['s1','Навык 1'],['s2','Навык 2'],['s3','Навык 3'],['s4','Навык 4'],['s5','Навык 5'],['ult','Ульта'],
   ['i1','Предмет 1'],['i2','Предмет 2'],['i3','Предмет 3'],['i4','Предмет 4'],['i5','Предмет 5'],['i6','Предмет 6'],
-  ['tree','Древо навыков'],['use','Торговец'],['skip','Начать волну'],['reload','Перезарядка (Солдат)'],['pause','Пауза'],['mute','Звук']
+  ['tree','Древо навыков'],['use','Торговец'],['skip','Начать волну'],['pause','Пауза'],['mute','Звук']
 ];
-const DEFKEYS={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',dash:'Space',s1:'Digit1',s2:'Digit2',s3:'Digit3',s4:'Digit4',s5:'Digit5',ult:'KeyR',i1:'KeyZ',i2:'KeyX',i3:'KeyC',i4:'KeyV',i5:'KeyB',i6:'KeyN',tree:'KeyT',use:'KeyE',skip:'Enter',pause:'KeyP',mute:'KeyM',reload:'KeyF'};
+const DEFKEYS={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',dash:'Space',s1:'Digit1',s2:'Digit2',s3:'Digit3',s4:'Digit4',s5:'Digit5',ult:'KeyR',i1:'KeyZ',i2:'KeyX',i3:'KeyC',i4:'KeyV',i5:'KeyB',i6:'KeyN',tree:'KeyT',use:'KeyE',skip:'Enter',pause:'KeyP',mute:'KeyM'};
 

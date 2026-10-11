@@ -72,8 +72,8 @@ with sync_playwright() as p:
         if(e.hp>=1e6)bad.push(hero+':'+t+':'+m)}return bad}""")
     check('все стволы и моды наносят урон', not r, r)
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('metal');const g=S.G;S.startWave(1);const e=S.spawnEnemy('wisp');e.hp=e.max=1e6;
-        let n=0;while(!(g.hand.rl>0)&&n<3000){e.x=g.p.x+100;e.y=g.p.y;g.p.inv=1;S.update(1/60);n++}while(1-g.hand.rl/g.hand.rlMax<0.5)S.update(1/60);S.activeReload();return g.hand.boost}""")
-    check('активная перезарядка', r == 1, r)
+        for(let i=0;i<600;i++){e.x=g.p.x+100;e.y=g.p.y;g.p.inv=1;S.update(1/60)}return {dmg:Math.round(1e6-e.hp),noAmmo:g.hand.am===undefined}}""")
+    check('Солдат стреляет без перезарядки', r['dmg'] > 0 and r['noAmmo'], r)
 
     print('Механики героев')
     r = J("""()=>{const S=window.__sb,o={};let g;

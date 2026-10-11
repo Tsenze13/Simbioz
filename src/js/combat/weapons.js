@@ -43,11 +43,10 @@ function weapons(dt){
     }else g.cdw.air=0.1;
   }
   if(e.metal>0){
-    const l=e.metal,sol=!!g.hand,GM=g.gmods||(g.gmods={}),MU=g.gmu||(g.gmu={}),magOn=g.start==='metal',scope=!!MU.scope;
+    const l=e.metal,sol=!!g.hand,GM=g.gmods||(g.gmods={}),MU=g.gmu||(g.gmu={}),scope=!!MU.scope,ars=g.start==='metal'?1+0.06*allGuns(g).length:1;
     if(!sol&&!g.guns.length)g.guns.push({t:'pistol',cd:0,aim:0,fl:0,rec:0});
-    const useAmmo=gn=>{if(!magOn)return;gn.am--;if(gn.am<=0){gn.am=0;startReload(gn)}};
     const fireOne=(gn,ps,G0)=>{
-      g.shotN++;const pw=g.start==='metal'&&g.pl>=3&&g.shotN%8===0,gm=(g.start==='metal'&&g.pl>=2?1.1:1)*(pw?2.5:1)*(gn.boost?1.3:1);
+      g.shotN++;const pw=g.start==='metal'&&g.pl>=3&&g.shotN%8===0,gm=(g.start==='metal'&&g.pl>=2?1.1:1)*(pw?2.5:1)*ars;
       if(pw){sparks(ps.x,ps.y,'#ffd36b',8,260);ring(ps.x,ps.y,26,'#ffd36b',0.25)}
       const md=GM[gn.t]||'',base=gn.aim,mo=gn.hand?12:G0.mz*G0.sc*1.6,mx=ps.x+Math.cos(base)*mo,my=ps.y+Math.sin(base)*mo;
       let pel=G0.pel,sp=G0.sp*(scope?0.45:1),dm=G0.dm,knock=G0.knock,big=G0.big,spd=G0.spd*(scope?1.2:1),life=G0.life*(scope?1.3:1),pellet=!!G0.pellet,xp=0;
@@ -59,7 +58,7 @@ function weapons(dt){
         else if(pellet)a=base+(Math.random()-0.5)*sp;
         else a=base+(pel>1?(k/(pel-1)-0.5)*sp:rnd(-sp,sp)*0.5);
         const sv=spd*(pellet?rnd(0.82,1.1):1),lf=life*(pellet?rnd(0.85,1.1):1);
-        let st=null,shock=false,col=pw?'#ffd36b':(gn.boost?'#fff0b0':'#e8eef8');
+        let st=null,shock=false,col=pw?'#ffd36b':'#e8eef8';
         if(gn.t==='smg'&&md==='shock'){g.smgN=(g.smgN||0)+1;if(g.smgN%6===0){st={stun:0.45};shock=true;col='#f4f08a'}}
         if(gn.t==='rifle'&&md==='tracer'){g.rflN=(g.rflN||0)+1;if(g.rflN%4===0){st={burn:[4+1.5*l,3]};col='#ff9a3c'}}
         shoot({vis:pellet?'pellet':'bullet',gun:true,gt:gn.t,gmod:md,x:mx+ox,y:my+oy,vx:Math.cos(a)*sv,vy:Math.sin(a)*sv,r:(big?6:(pellet?3:4.5))*(pw?1.6:1),dmg:(7+3.5*l)*dm*gm,dt:'phys',life:lf,l0:life,pierce:G0.pierce+xp+(l>=4&&!G0.pierce?1:0)+(g.start==='metal'?1:0)+(pw?2:0),knock:knock,col:col,st:st,shock:shock,src:'auto'});
@@ -68,12 +67,11 @@ function weapons(dt){
       puff(mx,my,'#fff2b0',2,70,0.14,2);
       if(G0.pellet){g.shake=Math.max(g.shake,md==='slug'?3:2)}
       if(gn.t==='rifle'){gn.heat=(gn.heat||0)+(md==='cool'?0.021:0.035);if(gn.heat>=1){gn.oh=1.3;gn.heat=0;gn.spin=0;puff(ps.x,ps.y,'#d6dde8',8,90,0.7,3);sfx(300,0.2,'sawtooth',0.03,-200);if(g.tx.length<50)g.tx.push({x:ps.x,y:ps.y-20,t:0.8,txt:'Перегрев',big:false,col:'#ffb0a0'})}}
-      useAmmo(gn);
+      
     };
     const tick=(gn,ps)=>{
       const G0=GUNS[gn.t],md=GM[gn.t]||'';
       gn.cd-=dt*cdm;gn.fl=Math.max(0,(gn.fl||0)-dt*9);gn.rec=gn.fl*5;
-      if(magOn){if(gn.am===undefined)gn.am=gunMag(gn);if(gn.rl>0){gn.rl-=dt*cdm;if(gn.rl<=0){gn.rl=0;gn.am=gunMag(gn);gn.boost=0;gn.qte=false;sfx(520,0.05,'square',0.02,100)}}}
       const t=nearest(ps.x,ps.y,G0.rng*(scope?1.3:1));
       gn.hasT=!!t;
       if(t)gn.aim=Math.atan2(t.y-ps.y,t.x-ps.x);
@@ -83,16 +81,16 @@ function weapons(dt){
         gn.tg=t;gn.heat=Math.max(0,(gn.heat||0)-dt*(md==='cool'?0.7:0.35));
         if(gn.oh>0){gn.oh-=dt;if(Math.random()<0.35)puff(ps.x,ps.y-8,'#d6dde8',1,30,0.6,2.6)}
       }
-      const ready=(!magOn||(!(gn.rl>0)&&gn.am>0))&&!(gn.oh>0);
+      const ready=!(gn.oh>0);
       if(gn.bl>0){if(!ready)gn.bl=0;else{gn.bt-=dt;if(gn.bt<=0){fireOne(gn,ps,G0);gn.bl--;gn.bt=G0.bi}}}
       if(t&&gn.cd<=0&&!(gn.bl>0)&&ready){
         if(G0.burst){gn.bl=G0.burst;gn.bt=0}
         else if(G0.gren){
           const d=Math.hypot(t.x-ps.x,t.y-ps.y),fl=Math.max(.45,d/520),mo=G0.mz*G0.sc*1.6;
-          g.gren.push({x0:ps.x+Math.cos(gn.aim)*mo,y0:ps.y+Math.sin(gn.aim)*mo,x1:t.x,y1:t.y,t:0,life:fl,l:l*(gn.boost?1.3:1),md:md});
-          gn.fl=1;g.shake=Math.max(g.shake,2);sfx(150,0.12,'square',0.04,60);useAmmo(gn);
+          g.gren.push({x0:ps.x+Math.cos(gn.aim)*mo,y0:ps.y+Math.sin(gn.aim)*mo,x1:t.x,y1:t.y,t:0,life:fl,l:l,dm:ars,md:md});
+          gn.fl=1;g.shake=Math.max(g.shake,2);sfx(150,0.12,'square',0.04,60);
         }else fireOne(gn,ps,G0);
-        let c0=G0.cd*(1-.04*(l-1))*(MU.mag&&!magOn?0.88:1);
+        let c0=G0.cd*(1-.04*(l-1))*(MU.mag?0.88:1);
         if(gn.t==='rifle')c0/=1+1.6*(gn.spin||0);
         gn.cd=c0;
       }

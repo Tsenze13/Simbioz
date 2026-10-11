@@ -55,12 +55,7 @@ function drawPlayer(g){
 function drawHeroRes(g){
   const p=g.p,k=g.start;if(!g.cls)return;
   const w=46,x0=p.x-w/2,y0=p.y+38;let f=0,col='#fff',lab='',pulse=false;
-  if(k==='metal'){
-    if(!g.hand||g.hand.am===undefined)return;
-    drawAmmo(g.hand,p.x,y0,w);
-    if(g.hand.rl>0&&g.hand.qte){ctx.save();ctx.font='700 8px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(180,255,190,.95)';ctx.fillText((SAVE.keys.reload||'KeyF').replace('Key','')+' — перезарядка',p.x,y0+13);ctx.restore()}
-    return;
-  }
+  if(k==='metal')return; /* у Солдата механика пассивная — без полоски */
   ctx.save();
   ctx.fillStyle='rgba(6,8,14,.72)';ctx.fillRect(x0-1,y0-1,w+2,5);
   if(k==='earth'){

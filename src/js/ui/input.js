@@ -27,7 +27,6 @@ addEventListener('keydown',e=>{
   else if(act==='tree')openTree();
   else if(act==='use')interact();
   else if(act==='skip')skipWave();
-  else if(act==='reload')activeReload();
   else if(act&&act.length===2&&act[0]==='s')castSlot(parseInt(act[1],10)-1);
   else if(act&&act.length===2&&act[0]==='i')useItem(parseInt(act[1],10)-1);
 });
