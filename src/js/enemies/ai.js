@@ -5,9 +5,9 @@ for(const k in BOSS){
   const B=BOSS[k];
   ET['boss_'+k]={n:B.n,r:B.r,hp:B.hp,sp:B.sp,dmg:B.dmg,gold:0,xp:'xl',col:B.col,shape:B.shape,ai:'boss',armor:B.armor,mres:B.mres,from:99,wt:0,d:B.d,dt:'mixed'};
 }
-const hpMul=w=>1+0.2*(w-1)+0.012*(w-1)*(w-1)+(w>10?0.035*(w-10)*(w-10):0);
-const dmgMul=w=>1+0.1*(w-1)+0.002*(w-1)*(w-1)+(w>10?0.012*(w-10)*(w-10):0);
-const lvAdj=()=>{const g=G;return g&&g.p?1+0.025*Math.max(0,g.p.lv-(3+1.6*g.wave)):1};
+const hpMul=w=>{const B=BAL.enemy;return 1+B.hpLin*(w-1)+B.hpQuad*(w-1)*(w-1)+(w>B.lateFrom?B.hpLate*(w-B.lateFrom)**2:0)};
+const dmgMul=w=>{const B=BAL.enemy;return 1+B.dmgLin*(w-1)+B.dmgQuad*(w-1)*(w-1)+(w>B.lateFrom?B.dmgLate*(w-B.lateFrom)**2:0)};
+const lvAdj=()=>{const g=G,B=BAL.enemy;return g&&g.p?1+B.lvAdjK*Math.max(0,g.p.lv-(B.lvExpBase+B.lvExpPerWave*g.wave)):1};
 const BOSS_ORDER=['guard','ent','queen','golem','sandlord','devourer'];
 function bossKeyFor(w){
   if(w<4||w%4)return null;
@@ -237,7 +237,7 @@ function bossAI(e,dt,p,d,spMul){
   const g=G;
   const ph=e.hp/e.max<0.34?3:(e.hp/e.max<0.67?2:1);
   if(ph!==e.phase){
-    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*0.12;e.barMax=e.bar;
+    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier;e.barMax=e.bar;
     if(ph===3){e.sp*=1.25;if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-30,t:1.4,txt:'ЯРОСТЬ',big:true,col:'#ff4d5e'})}
     g.shake=Math.max(g.shake,12);ring(e.x,e.y,e.r+120,e.col,0.6);puff(e.x,e.y,e.col,30,260,0.6,4);
     toast(e.name,'Фаза '+ph);sfx(80,0.5,'sawtooth',0.07,-20);
@@ -265,7 +265,7 @@ function bossAI(e,dt,p,d,spMul){
   e.bt-=dt*(ph>=2?1.25:1)*(ph>=3?1.15:1);
   e.pg=(e.pg||0)-dt;
   if(e.bt<=0&&e.pg<=0){
-    e.pg=1.1;
+    e.pg=BAL.boss.gapMin;
     const list=ph>=2?BOSS[e.bkey].pats.concat(BOSS[e.bkey].p2):BOSS[e.bkey].pats;
     bossPattern(e,list[e.pi%list.length]);e.pi++;
     e.bt=(e.st==='wind'?0.4:2.0-0.25*ph)+rnd(0,0.5);

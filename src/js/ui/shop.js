@@ -98,7 +98,7 @@ function renderShop(){
       const pr=awkPrice(),can=g.p.gold>=pr;
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';
     }
-    const sp=260+60*(g.spb||0),cs=g.p.gold>=sp;
+    const sp=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0),cs=g.p.gold>=sp;
     st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко мутации</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
     st+='<h2 class="sec" style="grid-column:1/-1">Редкие предметы: нигде больше не продаются</h2>';
   }
@@ -134,7 +134,7 @@ $('shop').addEventListener('click',e=>{
   if(iv||aw){
     let msg='';
     if(iv&&iv.dataset.inv==='__sp'){
-      const pr=260+60*(g.spb||0);
+      const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
       if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко мутации получено';sfx(700,0.12,'triangle',0.05,300)}
     }else if(iv){
       const s=INVEST.find(x=>x.k===iv.dataset.inv),n=g.inv[s.k]||0,pr=invPrice(s);

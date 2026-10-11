@@ -110,6 +110,6 @@ const INVEST=[
   {k:'crit',n:'Верный глаз',d:'+3% шанса критического удара',st:{crit:0.03},p:200},
   {k:'mreg',n:'Поток маны',d:'+0,8 маны в секунду',st:{mreg:0.8},p:170}
 ];
-const INV_MAX=5;
+const INV_MAX=BAL.shop.invMax;
 const MKEYS=Object.keys(MERCH);
 

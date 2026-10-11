@@ -1018,6 +1018,36 @@ const pickOf=a=>a[Math.floor(Math.random()*a.length)];
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const WAVES_TOTAL=24;
 
+
+/* =====================================================================
+   БАЛАНС — все главные числа игры в одном месте.
+   Меняешь здесь → python3 build.py → игра пересобрана.
+   ===================================================================== */
+const BAL={
+  /* опыт: нужно на уровень l = (base + lin·l + quad·l²) · (1 + lateK·max(0, l − lateFrom)) */
+  xp:{base:6,lin:3.4,quad:0.38,lateFrom:10,lateK:0.2},
+  /* враги: множители здоровья и урона по номеру волны w */
+  enemy:{
+    hpLin:0.2,hpQuad:0.012,dmgLin:0.1,dmgQuad:0.002,
+    lateFrom:10,hpLate:0.035,dmgLate:0.012,   /* добавка после 10-й волны: ·(w−10)² */
+    lvAdjK:0.025,lvExpBase:3,lvExpPerWave:1.6 /* враги крепчают, если герой обгоняет ожидаемый уровень 3+1.6·w */
+  },
+  /* боссы */
+  boss:{
+    hpBase:1.6,hpPerWave:0.06,hpFromWave:8,endlessK:0.12, /* множитель здоровья; после 24-й волны ещё +12% за волну */
+    hitCap:0.05,     /* один удар снимает не больше 5% здоровья */
+    burstLim:0.09,   /* порог «плотного урона» (доля здоровья за ~2 с) */
+    burstFloor:0.2,  /* минимум урона при троттлинге */
+    barrier:0.12,    /* барьер на каждой новой фазе, доля здоровья */
+    gapMin:1.1       /* минимальная пауза между приёмами, с */
+  },
+  /* волны */
+  wave:{durBase:56,durMax:75,interTime:60,interHeal:0.35},
+  /* герой */
+  hero:{ultLv:12,dashCd:2.2,pasLv:[3,8,13]},
+  /* лавка */
+  shop:{spBase:260,spStep:60,invMax:5,awkBase:380,awkStep:130}
+};
 /* =====================================================================
    ДАННЫЕ
    ===================================================================== */
@@ -1094,7 +1124,7 @@ const CLS={
 
 
 /* ---------- пассивки героев: 3 уровня, качаются очками навыков ---------- */
-const PASR=[3,8,13];
+const PASR=BAL.hero.pasLv;
 const HMECH={
   fire:{n:'Перегрев',d:'Каждый навык нагревает на 25. При 100 следующий навык бьёт ×1.5 и взрывом поджигает всё вокруг, но вы горите 3 с. Без кастов жар спадает'},
   water:{n:'Приливы и отливы',d:'Фаза меняется каждые 10 с. Прилив: навыки на 30% дешевле. Отлив: +3 здоровья в секунду. Мокрый враг, добитый током, даёт 5 маны'},
@@ -1731,7 +1761,7 @@ const INVEST=[
   {k:'crit',n:'Верный глаз',d:'+3% шанса критического удара',st:{crit:0.03},p:200},
   {k:'mreg',n:'Поток маны',d:'+0,8 маны в секунду',st:{mreg:0.8},p:170}
 ];
-const INV_MAX=5;
+const INV_MAX=BAL.shop.invMax;
 const MKEYS=Object.keys(MERCH);
 
 /* ---------- мета-прокачка (в меню) ---------- */
@@ -1851,7 +1881,7 @@ let uiTouch=false;
 
 const fmt=t=>{t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 const armorRed=a=>clamp(a/(25+Math.abs(a)),-0.5,0.9);
-const needFor=l=>Math.floor((6+l*3.4+l*l*0.38)*(1+Math.max(0,l-10)*0.2));
+const needFor=l=>{const X=BAL.xp;return Math.floor((X.base+l*X.lin+l*l*X.quad)*(1+Math.max(0,l-X.lateFrom)*X.lateK))};
 const vis=(x,y,m)=>x>VX-m&&x<VX+VW+m&&y>VY-m&&y<VY+VH+m;
 const dist2=(a,b)=>{const dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy};
 function distSeg(px,py,x1,y1,x2,y2){
@@ -2446,6 +2476,25 @@ function applySt(e,st,dm){
   if(st.wet)e.wet=Math.max(e.wet,st.wet);
   if(st.rust)e.rust=Math.max(e.rust,st.rust);
 }
+/* Множители исходящего урона героя. Новая механика усиления урона = новая строка тут. */
+const OUT_MODS=[
+  (e,o,g,dot)=>e.burn>0&&g.start==='fire'&&g.pl?1+PV('fire',[0,.08,.15,.25]):1, /* пассивка Пироманта по горящим */
+  (e,o,g,dot)=>g.ovhT>0&&!dot?1.5:1,  /* Перегрев Пироманта */
+  (e,o,g,dot)=>g.shdT>0&&!dot?1.5:1   /* Плащ тени после рывка */
+];
+function outMods(e,o,g,dot){let m=1;for(const f of OUT_MODS)m*=f(e,o,g,dot);return m}
+/* Защита босса: барьер фазы, лимит урона за удар, троттлинг плотного урона (числа в BAL.boss).
+   Возвращает урон после защиты; 0 — удар целиком ушёл в барьер. */
+function bossDefense(e,eff,o,dot){
+  const g=G;
+  if(e.bar>0){const a=Math.min(e.bar,eff);e.bar-=a;eff-=a;
+    if(e.bar<=0){e.bar=0;ring(e.x,e.y,e.r+50,'#7fe6ff',0.5);puff(e.x,e.y,'#bff4ff',24,260,0.5,3);if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-26,t:1,txt:'Барьер сломан',big:true,col:'#7fe6ff'})}
+    if(eff<=0){e.flash=0.05;if(!o.quiet&&!dot&&Math.random()<0.25&&g.tx.length<40)g.tx.push({x:e.x+rnd(-14,14),y:e.y-e.r,t:0.5,txt:'барьер',big:false,col:'#7fe6ff'});return 0}}
+  const now=g.t;e.rd=(e.rd||0)*Math.exp(-Math.max(0,now-(e.rdt||now))/2);e.rdt=now;
+  const lim=e.max*BAL.boss.burstLim;if(e.rd>lim)eff*=Math.max(BAL.boss.burstFloor,1-(e.rd-lim)/lim);
+  eff=Math.min(eff,e.max*BAL.boss.hitCap);e.rd+=eff;
+  return eff;
+}
 /* o: {dt,src:'skill'|'proj'|'auto'|'zone'|'dot'|'item', st, col, quiet, aoe, shock, icy, proj} */
 function hitEnemy(e,dmg,o){
   if(e.dead||e.sub)return 0;
@@ -2454,9 +2503,7 @@ function hitEnemy(e,dmg,o){
   const src=o.src||'skill',dot=src==='dot',zone=src==='zone',dt=o.dt||'phys';
   let crit=false,react=null,overload=false;
   if(!dot)dmg*=E.dm;
-  if(e.burn>0&&g.start==='fire'&&g.pl)dmg*=1+PV('fire',[0,.08,.15,.25]);
-  if(g.ovhT>0&&!dot)dmg*=1.5;
-  if(g.shdT>0&&!dot)dmg*=1.5;
+  dmg*=outMods(e,o,g,dot);
   {const cc=E.crit+(o.cc||0);if(!dot&&!zone&&cc>0&&Math.random()<cc){dmg*=2;crit=true}}
   if(o.fcrit)crit=true;
   if(o.shock&&!dot){
@@ -2470,14 +2517,7 @@ function hitEnemy(e,dmg,o){
     if(e.frz>0&&!dot&&!zone){eff*=1.5;e.frz=0;react='Раскол'}
   }else if(dt==='magic')eff*=1-e.mres;
   if(eff<0.2)eff=0.2;
-  if(e.boss){
-    if(e.bar>0){const a=Math.min(e.bar,eff);e.bar-=a;eff-=a;
-      if(e.bar<=0){e.bar=0;ring(e.x,e.y,e.r+50,'#7fe6ff',0.5);puff(e.x,e.y,'#bff4ff',24,260,0.5,3);if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-26,t:1,txt:'Барьер сломан',big:true,col:'#7fe6ff'})}
-      if(eff<=0){e.flash=0.05;if(!o.quiet&&!dot&&Math.random()<0.25&&g.tx.length<40)g.tx.push({x:e.x+rnd(-14,14),y:e.y-e.r,t:0.5,txt:'барьер',big:false,col:'#7fe6ff'});return 0}}
-    const now=g.t;e.rd=(e.rd||0)*Math.exp(-Math.max(0,now-(e.rdt||now))/2);e.rdt=now;
-    const lim=e.max*0.09;if(e.rd>lim)eff*=Math.max(0.2,1-(e.rd-lim)/lim);
-    eff=Math.min(eff,e.max*0.05);e.rd+=eff;
-  }
+  if(e.boss){eff=bossDefense(e,eff,o,dot);if(eff<=0)return 0}
   const before=e.hp;
   e.hp-=eff;e.flash=0.09;
   if(E.ls>0)heal(Math.min(eff,Math.max(0,before))*E.ls*((dot||zone||o.aoe)?0.4:1));
@@ -3292,7 +3332,7 @@ function ultMod(p,x,y,lv){
   }
   else if(p==='wood'){addZone(x,y,{r:200,life:4,dps:0,heal:18,dt:'magic',vis:'vines',col:'#62c15a',st:{root:1}})}
 }
-const ULT_LV=12;
+const ULT_LV=BAL.hero.ultLv;
 function ultMods(){const g=G;return EK.filter(p=>p!==g.start&&g.ult.seals&&g.ult.seals[p])}
 function symUltName(id){return 'Великий симбиоз: '+AB[id].n}
 function ultInfo(){
@@ -3658,9 +3698,9 @@ for(const k in BOSS){
   const B=BOSS[k];
   ET['boss_'+k]={n:B.n,r:B.r,hp:B.hp,sp:B.sp,dmg:B.dmg,gold:0,xp:'xl',col:B.col,shape:B.shape,ai:'boss',armor:B.armor,mres:B.mres,from:99,wt:0,d:B.d,dt:'mixed'};
 }
-const hpMul=w=>1+0.2*(w-1)+0.012*(w-1)*(w-1)+(w>10?0.035*(w-10)*(w-10):0);
-const dmgMul=w=>1+0.1*(w-1)+0.002*(w-1)*(w-1)+(w>10?0.012*(w-10)*(w-10):0);
-const lvAdj=()=>{const g=G;return g&&g.p?1+0.025*Math.max(0,g.p.lv-(3+1.6*g.wave)):1};
+const hpMul=w=>{const B=BAL.enemy;return 1+B.hpLin*(w-1)+B.hpQuad*(w-1)*(w-1)+(w>B.lateFrom?B.hpLate*(w-B.lateFrom)**2:0)};
+const dmgMul=w=>{const B=BAL.enemy;return 1+B.dmgLin*(w-1)+B.dmgQuad*(w-1)*(w-1)+(w>B.lateFrom?B.dmgLate*(w-B.lateFrom)**2:0)};
+const lvAdj=()=>{const g=G,B=BAL.enemy;return g&&g.p?1+B.lvAdjK*Math.max(0,g.p.lv-(B.lvExpBase+B.lvExpPerWave*g.wave)):1};
 const BOSS_ORDER=['guard','ent','queen','golem','sandlord','devourer'];
 function bossKeyFor(w){
   if(w<4||w%4)return null;
@@ -3890,7 +3930,7 @@ function bossAI(e,dt,p,d,spMul){
   const g=G;
   const ph=e.hp/e.max<0.34?3:(e.hp/e.max<0.67?2:1);
   if(ph!==e.phase){
-    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*0.12;e.barMax=e.bar;
+    e.phase=ph;e.bt=1.2;e.st='move';e.bar=e.max*BAL.boss.barrier;e.barMax=e.bar;
     if(ph===3){e.sp*=1.25;if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-30,t:1.4,txt:'ЯРОСТЬ',big:true,col:'#ff4d5e'})}
     g.shake=Math.max(g.shake,12);ring(e.x,e.y,e.r+120,e.col,0.6);puff(e.x,e.y,e.col,30,260,0.6,4);
     toast(e.name,'Фаза '+ph);sfx(80,0.5,'sawtooth',0.07,-20);
@@ -3918,7 +3958,7 @@ function bossAI(e,dt,p,d,spMul){
   e.bt-=dt*(ph>=2?1.25:1)*(ph>=3?1.15:1);
   e.pg=(e.pg||0)-dt;
   if(e.bt<=0&&e.pg<=0){
-    e.pg=1.1;
+    e.pg=BAL.boss.gapMin;
     const list=ph>=2?BOSS[e.bkey].pats.concat(BOSS[e.bkey].p2):BOSS[e.bkey].pats;
     bossPattern(e,list[e.pi%list.length]);e.pi++;
     e.bt=(e.st==='wind'?0.4:2.0-0.25*ph)+rnd(0,0.5);
@@ -4186,12 +4226,12 @@ function startWave(w){
   g.wave=w;g.phase='fight';g.wt=0;
   if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
   g.bossRef=null;g.bossDead=false;
-  g.waveDur=Math.min(75,56+w);
+  g.waveDur=Math.min(BAL.wave.durMax,BAL.wave.durBase+w);
   g.merch=[];
   if(g.shopOpen)closeShop();
   const bk=bossKeyFor(w);
   if(bk){
-    const bs=(1.6+0.06*Math.max(0,w-8))*(1+(w>24?0.12*(w-24):0)),pos=spawnPos();
+    const BB=BAL.boss,bs=(BB.hpBase+BB.hpPerWave*Math.max(0,w-BB.hpFromWave))*(1+(w>24?BB.endlessK*(w-24):0)),pos=spawnPos();
     g.bossRef=spawnAt('boss_'+bk,pos.x,pos.y,bs,dmgMul(w),{boss:bk});
     toast('Волна '+w+' из '+(g.endless?'∞':WAVES_TOTAL),'Босс: '+BOSS[bk].n);
     sfx(70,0.7,'sawtooth',0.07,-20);
@@ -4203,12 +4243,12 @@ function startWave(w){
 }
 function endWave(){
   const g=G,p=g.p;
-  g.phase='inter';g.inter=60;
+  g.phase='inter';g.inter=BAL.wave.interTime;
   for(const e of g.en){if(!e.dead){e.dead=true;if(g.pt.length<320)puff(e.x,e.y,e.col,3,80,0.4,2)}}
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*0.35);p.mana=g.S.maxMana;
+  heal(g.S.maxHp*BAL.wave.interHeal);p.mana=g.S.maxMana;
   {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
   stockMerchants();
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
@@ -4240,7 +4280,7 @@ function genStock(mid){
 function tycoonNeed2(w){return 200+25*w}
 function tycoonNeed(){return 200+25*G.wave}
 function invPrice(s){return Math.round(s.p*(1+0.55*((G.inv||{})[s.k]||0))/5)*5}
-function awkPrice(){return 380+130*(G.awk||0)}
+function awkPrice(){return BAL.shop.awkBase+BAL.shop.awkStep*(G.awk||0)}
 function stockMerchants(){
   const g=G;
   const ids=['smith','alch','mage'];
@@ -4420,7 +4460,7 @@ function applyChoice(c){
 /* =====================================================================
    ХОД ИГРЫ
    ===================================================================== */
-const DASH_CD=2.2;
+const DASH_CD=BAL.hero.dashCd;
 function getInput(){
   const k=SAVE.keys;
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
@@ -5210,7 +5250,7 @@ function renderShop(){
       const pr=awkPrice(),can=g.p.gold>=pr;
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';
     }
-    const sp=260+60*(g.spb||0),cs=g.p.gold>=sp;
+    const sp=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0),cs=g.p.gold>=sp;
     st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко мутации</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
     st+='<h2 class="sec" style="grid-column:1/-1">Редкие предметы: нигде больше не продаются</h2>';
   }
@@ -5246,7 +5286,7 @@ $('shop').addEventListener('click',e=>{
   if(iv||aw){
     let msg='';
     if(iv&&iv.dataset.inv==='__sp'){
-      const pr=260+60*(g.spb||0);
+      const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
       if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко мутации получено';sfx(700,0.12,'triangle',0.05,300)}
     }else if(iv){
       const s=INVEST.find(x=>x.k===iv.dataset.inv),n=g.inv[s.k]||0,pr=invPrice(s);

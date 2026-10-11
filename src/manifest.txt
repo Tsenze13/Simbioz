@@ -4,6 +4,7 @@ shell/body.html
 portraits/portraits.js
 shell/between.html
 js/core/prelude.js
+js/data/balance.js
 js/data/heroes.js
 js/data/skills.js
 js/data/enemies.js

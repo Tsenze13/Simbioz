@@ -1,7 +1,7 @@
 /* =====================================================================
    ХОД ИГРЫ
    ===================================================================== */
-const DASH_CD=2.2;
+const DASH_CD=BAL.hero.dashCd;
 function getInput(){
   const k=SAVE.keys;
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);

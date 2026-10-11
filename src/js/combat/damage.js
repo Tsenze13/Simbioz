@@ -38,6 +38,25 @@ function applySt(e,st,dm){
   if(st.wet)e.wet=Math.max(e.wet,st.wet);
   if(st.rust)e.rust=Math.max(e.rust,st.rust);
 }
+/* Множители исходящего урона героя. Новая механика усиления урона = новая строка тут. */
+const OUT_MODS=[
+  (e,o,g,dot)=>e.burn>0&&g.start==='fire'&&g.pl?1+PV('fire',[0,.08,.15,.25]):1, /* пассивка Пироманта по горящим */
+  (e,o,g,dot)=>g.ovhT>0&&!dot?1.5:1,  /* Перегрев Пироманта */
+  (e,o,g,dot)=>g.shdT>0&&!dot?1.5:1   /* Плащ тени после рывка */
+];
+function outMods(e,o,g,dot){let m=1;for(const f of OUT_MODS)m*=f(e,o,g,dot);return m}
+/* Защита босса: барьер фазы, лимит урона за удар, троттлинг плотного урона (числа в BAL.boss).
+   Возвращает урон после защиты; 0 — удар целиком ушёл в барьер. */
+function bossDefense(e,eff,o,dot){
+  const g=G;
+  if(e.bar>0){const a=Math.min(e.bar,eff);e.bar-=a;eff-=a;
+    if(e.bar<=0){e.bar=0;ring(e.x,e.y,e.r+50,'#7fe6ff',0.5);puff(e.x,e.y,'#bff4ff',24,260,0.5,3);if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-26,t:1,txt:'Барьер сломан',big:true,col:'#7fe6ff'})}
+    if(eff<=0){e.flash=0.05;if(!o.quiet&&!dot&&Math.random()<0.25&&g.tx.length<40)g.tx.push({x:e.x+rnd(-14,14),y:e.y-e.r,t:0.5,txt:'барьер',big:false,col:'#7fe6ff'});return 0}}
+  const now=g.t;e.rd=(e.rd||0)*Math.exp(-Math.max(0,now-(e.rdt||now))/2);e.rdt=now;
+  const lim=e.max*BAL.boss.burstLim;if(e.rd>lim)eff*=Math.max(BAL.boss.burstFloor,1-(e.rd-lim)/lim);
+  eff=Math.min(eff,e.max*BAL.boss.hitCap);e.rd+=eff;
+  return eff;
+}
 /* o: {dt,src:'skill'|'proj'|'auto'|'zone'|'dot'|'item', st, col, quiet, aoe, shock, icy, proj} */
 function hitEnemy(e,dmg,o){
   if(e.dead||e.sub)return 0;
@@ -46,9 +65,7 @@ function hitEnemy(e,dmg,o){
   const src=o.src||'skill',dot=src==='dot',zone=src==='zone',dt=o.dt||'phys';
   let crit=false,react=null,overload=false;
   if(!dot)dmg*=E.dm;
-  if(e.burn>0&&g.start==='fire'&&g.pl)dmg*=1+PV('fire',[0,.08,.15,.25]);
-  if(g.ovhT>0&&!dot)dmg*=1.5;
-  if(g.shdT>0&&!dot)dmg*=1.5;
+  dmg*=outMods(e,o,g,dot);
   {const cc=E.crit+(o.cc||0);if(!dot&&!zone&&cc>0&&Math.random()<cc){dmg*=2;crit=true}}
   if(o.fcrit)crit=true;
   if(o.shock&&!dot){
@@ -62,14 +79,7 @@ function hitEnemy(e,dmg,o){
     if(e.frz>0&&!dot&&!zone){eff*=1.5;e.frz=0;react='Раскол'}
   }else if(dt==='magic')eff*=1-e.mres;
   if(eff<0.2)eff=0.2;
-  if(e.boss){
-    if(e.bar>0){const a=Math.min(e.bar,eff);e.bar-=a;eff-=a;
-      if(e.bar<=0){e.bar=0;ring(e.x,e.y,e.r+50,'#7fe6ff',0.5);puff(e.x,e.y,'#bff4ff',24,260,0.5,3);if(g.tx.length<50)g.tx.push({x:e.x,y:e.y-e.r-26,t:1,txt:'Барьер сломан',big:true,col:'#7fe6ff'})}
-      if(eff<=0){e.flash=0.05;if(!o.quiet&&!dot&&Math.random()<0.25&&g.tx.length<40)g.tx.push({x:e.x+rnd(-14,14),y:e.y-e.r,t:0.5,txt:'барьер',big:false,col:'#7fe6ff'});return 0}}
-    const now=g.t;e.rd=(e.rd||0)*Math.exp(-Math.max(0,now-(e.rdt||now))/2);e.rdt=now;
-    const lim=e.max*0.09;if(e.rd>lim)eff*=Math.max(0.2,1-(e.rd-lim)/lim);
-    eff=Math.min(eff,e.max*0.05);e.rd+=eff;
-  }
+  if(e.boss){eff=bossDefense(e,eff,o,dot);if(eff<=0)return 0}
   const before=e.hp;
   e.hp-=eff;e.flash=0.09;
   if(E.ls>0)heal(Math.min(eff,Math.max(0,before))*E.ls*((dot||zone||o.aoe)?0.4:1));

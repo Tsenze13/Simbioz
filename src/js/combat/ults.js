@@ -55,7 +55,7 @@ function ultMod(p,x,y,lv){
   }
   else if(p==='wood'){addZone(x,y,{r:200,life:4,dps:0,heal:18,dt:'magic',vis:'vines',col:'#62c15a',st:{root:1}})}
 }
-const ULT_LV=12;
+const ULT_LV=BAL.hero.ultLv;
 function ultMods(){const g=G;return EK.filter(p=>p!==g.start&&g.ult.seals&&g.ult.seals[p])}
 function symUltName(id){return 'Великий симбиоз: '+AB[id].n}
 function ultInfo(){

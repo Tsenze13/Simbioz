@@ -4,12 +4,12 @@ function startWave(w){
   g.wave=w;g.phase='fight';g.wt=0;
   if(g.start==='wood'){g.season=(w-1)%4;const S0=SEAS[g.season];tickBuffs(0);ring(g.p.x,g.p.y,160,S0.c,0.8);puff(g.p.x,g.p.y,S0.c,24,220,0.8,3);g.tx.push({x:g.p.x,y:g.p.y-46,t:1.6,txt:'Сезон: '+S0.n+' ('+S0.d+')',big:true,col:S0.c})}g.spawnT=0.6;g.eliteT=rnd(12,18);g.evT=rnd(24,32);
   g.bossRef=null;g.bossDead=false;
-  g.waveDur=Math.min(75,56+w);
+  g.waveDur=Math.min(BAL.wave.durMax,BAL.wave.durBase+w);
   g.merch=[];
   if(g.shopOpen)closeShop();
   const bk=bossKeyFor(w);
   if(bk){
-    const bs=(1.6+0.06*Math.max(0,w-8))*(1+(w>24?0.12*(w-24):0)),pos=spawnPos();
+    const BB=BAL.boss,bs=(BB.hpBase+BB.hpPerWave*Math.max(0,w-BB.hpFromWave))*(1+(w>24?BB.endlessK*(w-24):0)),pos=spawnPos();
     g.bossRef=spawnAt('boss_'+bk,pos.x,pos.y,bs,dmgMul(w),{boss:bk});
     toast('Волна '+w+' из '+(g.endless?'∞':WAVES_TOTAL),'Босс: '+BOSS[bk].n);
     sfx(70,0.7,'sawtooth',0.07,-20);
@@ -21,12 +21,12 @@ function startWave(w){
 }
 function endWave(){
   const g=G,p=g.p;
-  g.phase='inter';g.inter=60;
+  g.phase='inter';g.inter=BAL.wave.interTime;
   for(const e of g.en){if(!e.dead){e.dead=true;if(g.pt.length<320)puff(e.x,e.y,e.col,3,80,0.4,2)}}
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*0.35);p.mana=g.S.maxMana;
+  heal(g.S.maxHp*BAL.wave.interHeal);p.mana=g.S.maxMana;
   {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
   stockMerchants();
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
@@ -58,7 +58,7 @@ function genStock(mid){
 function tycoonNeed2(w){return 200+25*w}
 function tycoonNeed(){return 200+25*G.wave}
 function invPrice(s){return Math.round(s.p*(1+0.55*((G.inv||{})[s.k]||0))/5)*5}
-function awkPrice(){return 380+130*(G.awk||0)}
+function awkPrice(){return BAL.shop.awkBase+BAL.shop.awkStep*(G.awk||0)}
 function stockMerchants(){
   const g=G;
   const ids=['smith','alch','mage'];
