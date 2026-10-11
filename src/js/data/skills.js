@@ -215,7 +215,7 @@ def('magma',{cat:'sym',pair:['fire','earth'],n:'Магма',kind:'rain',mana:48,
 def('firetwister',{cat:'sym',pair:['fire','air'],n:'Огненный смерч',kind:'spiral',mana:45,cd:13,
   d:'Вокруг вас раскручивается спираль огня на несколько секунд.',
   up:['+1 рукав','Быстрее и сильнее','+1 рукав','Сильнее'],
-  p:l=>({life:3.2,arms:2+Math.floor(l/2),rate:0.05,spd:300,r:6,dmg:12+5*l,dt:'magic',pierce:2,plife:1,vis:'flame',col:'#ff9a3c',st:{burn:[5,2]}})});
+  p:l=>({life:3.2,arms:2+Math.floor(l/2),rate:0.085,spd:300,r:6,dmg:(12+5*l)*1.7,dt:'magic',pierce:2,plife:1,vis:'comet',col:'#ff9a3c',st:{burn:[5,2]}})});
 def('molten',{cat:'sym',pair:['fire','metal'],n:'Расплав',kind:'proj',mana:46,cd:13,
   d:'Раскалённые болванки пробивают всех на пути и оставляют горящие лужи.',
   up:['+1 болванка','Лужи горячее','+1 болванка','Мощнее'],

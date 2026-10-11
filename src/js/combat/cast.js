@@ -116,7 +116,9 @@ CAST.leap=(pr,c)=>{
 };
 CAST.wall=(pr,c)=>{
   const g=G,t=clampRange(c,pr.range||300),px=-Math.sin(c.ang),py=Math.cos(c.ang),n=pr.n;
-  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st})}
+  const wid=(g.wid=(g.wid||0)+1);
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st});g.zn[g.zn.length-1].wid=wid}
+  const h=(n-1)/2*pr.gap+pr.r*0.6;(g.walls||(g.walls=[])).push({x0:t.x-px*h,y0:t.y-py*h,x1:t.x+px*h,y1:t.y+py*h,t0:g.t,dur:pr.life,col:pr.col});
 };
 CAST.strikes=(pr,c)=>{
   const g=G,t=clampRange(c,440);

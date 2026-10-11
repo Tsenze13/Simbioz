@@ -416,7 +416,7 @@ function render(){
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-(cx+VW/2),-(cy+VH/2));
   drawGround(g,MP,cx,cy);
   drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
-  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawJet(g);drawDebris(g);drawSmoke(g)}
+  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawWalls(g);drawSplashes(g);drawSpiralCore(g);drawJet(g);drawDebris(g);drawSmoke(g)}
   drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g)}
   if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
   else drawFx(g);

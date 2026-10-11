@@ -417,7 +417,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.33-бета · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.34-бета · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1531,7 +1531,7 @@ def('magma',{cat:'sym',pair:['fire','earth'],n:'Магма',kind:'rain',mana:48,
 def('firetwister',{cat:'sym',pair:['fire','air'],n:'Огненный смерч',kind:'spiral',mana:45,cd:13,
   d:'Вокруг вас раскручивается спираль огня на несколько секунд.',
   up:['+1 рукав','Быстрее и сильнее','+1 рукав','Сильнее'],
-  p:l=>({life:3.2,arms:2+Math.floor(l/2),rate:0.05,spd:300,r:6,dmg:12+5*l,dt:'magic',pierce:2,plife:1,vis:'flame',col:'#ff9a3c',st:{burn:[5,2]}})});
+  p:l=>({life:3.2,arms:2+Math.floor(l/2),rate:0.085,spd:300,r:6,dmg:(12+5*l)*1.7,dt:'magic',pierce:2,plife:1,vis:'comet',col:'#ff9a3c',st:{burn:[5,2]}})});
 def('molten',{cat:'sym',pair:['fire','metal'],n:'Расплав',kind:'proj',mana:46,cd:13,
   d:'Раскалённые болванки пробивают всех на пути и оставляют горящие лужи.',
   up:['+1 болванка','Лужи горячее','+1 болванка','Мощнее'],
@@ -1960,7 +1960,7 @@ const SYN=[
    СОХРАНЕНИЕ, ЗВУК, ВВОД
    ===================================================================== */
 const SAVE_KEY='simbioz-save-v2';
-function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0,mus:0.5,fps:false,jetStyle:'A'}}
+function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0,mus:0.5,fps:false}}
 let SAVE=freshSave();
 (function loadSave(){
   try{
@@ -3037,7 +3037,9 @@ CAST.leap=(pr,c)=>{
 };
 CAST.wall=(pr,c)=>{
   const g=G,t=clampRange(c,pr.range||300),px=-Math.sin(c.ang),py=Math.cos(c.ang),n=pr.n;
-  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st})}
+  const wid=(g.wid=(g.wid||0)+1);
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st});g.zn[g.zn.length-1].wid=wid}
+  const h=(n-1)/2*pr.gap+pr.r*0.6;(g.walls||(g.walls=[])).push({x0:t.x-px*h,y0:t.y-py*h,x1:t.x+px*h,y1:t.y+py*h,t0:g.t,dur:pr.life,col:pr.col});
 };
 CAST.strikes=(pr,c)=>{
   const g=G,t=clampRange(c,440);
@@ -4007,7 +4009,7 @@ function updPlayerSide0(dt){
         m.tm=m.rate;
         for(let k=0;k<m.arms;k++){
           const a=m.ang+k*TAU/m.arms;
-          shoot({vis:m.vis,x:p.x,y:p.y,vx:Math.cos(a)*m.spd,vy:Math.sin(a)*m.spd,r:m.r,dmg:m.dmg,dt:m.dt,life:m.plife,pierce:m.pierce,col:m.col,st:m.st,src:'proj'});
+          shoot({vis:m.vis,x:p.x,y:p.y,vx:Math.cos(a)*m.spd,vy:Math.sin(a)*m.spd,r:m.r,dmg:m.dmg,dt:m.dt,life:m.plife,pierce:m.pierce,col:m.col,st:m.st,src:'proj',curl:m.vis==='comet'?3.6:0});
         }
       }
     }else if(m.kind==='storm'){
@@ -4136,6 +4138,7 @@ function updPlayerSide0(dt){
       else{const k=Math.max(0.25,b.life/b.life0*2-1);const sp=Math.hypot(b.vx,b.vy)||1;b.vx*=1-(1-k)*dt*1.5;b.vy*=1-(1-k)*dt*1.5}
     }
     if(b.zap){b.zt=(b.zt||0)-dt;if(b.zt<=0){b.zt=b.zap.every;const near=nearList(b.x,b.y,b.zap.range);if(near.length)chainBolt(b.x,b.y,pickOf(near),b.zap.jumps,b.zap.dmg,150,{dt:'magic',col:'#f4f08a',shock:true})}}
+    if(b.curl){const ca=b.curl*dt,cs=Math.cos(ca),sn=Math.sin(ca),vx=b.vx;b.vx=vx*cs-b.vy*sn;b.vy=vx*sn+b.vy*cs}
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     if(b.hfxT>0)b.hfxT-=dt;
     if(b.vis==='fire'&&Math.random()<0.6)puff(b.x,b.y,'#ff9a3c',1,30,0.3,2.4);
@@ -6186,7 +6189,7 @@ function keysTab(){
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
   h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-jet="1">Огнемёт (бета): вид '+({A:'А · струя',B:'Б · частицы',C:'В · ленты'})[SAVE.jetStyle||'A']+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -6202,7 +6205,6 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
-  else if(t.dataset.jet){const o=['A','B','C'];SAVE.jetStyle=o[(o.indexOf(SAVE.jetStyle||'A')+1)%3];store();renderMenu()}
   else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
@@ -7233,6 +7235,7 @@ function blFx(b){
   const g=G;if(!g||g.hfx.length>34)return;
   if(b.vis==='spike')g.hfx.push({kk:'spike',x:b.x,y:b.y,a:0,k:Math.max(18,b.r),sc:1,t:0,life:.85,seed:Math.floor(Math.random()*90)});
   else if(b.vis==='meteor')hitFx('fire',b.x,b.y,0,Math.max(.5,b.r/60),.7);
+  else if(b.vis==='drop'||b.vis==='shell')rainSplash(b);
   else if(b.vis==='root')g.hfx.push({kk:'root',x:b.x,y:b.y,a:0,k:b.r/110,sc:1,t:0,life:1.1,seed:1});
 }
 const AFXM={nova:['Вспышка',118,0],frost:['Ледяной шквал',110,18],quake:['Землетрясение',100,0],blaze:['Боевой жар',100,0],stoneward:['Каменный покров',96,0],bladestorm:['Вихрь клинков',96,0],tailwind:['Попутный ветер',96,0],magnet:['Магнитный импульс',104,0],bastion:['Бастион',96,0]};
@@ -7388,6 +7391,7 @@ function drawMeteorSpr(b,pr){
 function drawZones(g){
   for(const z of g.zn){
     if(!vis(z.x,z.y,z.r+20))continue;
+    if(z.wid)continue;
     if(zoneSpr(z))continue;
     const fade=Math.min(1,z.life/0.5);
     const hot=z.kind==='lava'||z.kind==='wildfire';
@@ -7418,21 +7422,10 @@ function drawBlasts(g){
   for(const b of g.bl){
     if(!vis(b.x,b.y,b.r+100))continue;
     const pr=clamp(1-b.t/b.max,0,1);
-    ctx.strokeStyle=rgba(b.col,0.3+0.45*pr);ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.stroke();
-    ctx.fillStyle=rgba(b.col,0.16);ctx.beginPath();ctx.arc(b.x,b.y,b.r*pr,0,TAU);ctx.fill();
+    drawRainMark(b,pr);
     if(b.vis==='meteor')drawMeteorSpr(b,pr);
-    else if(b.vis==='drop'){
-      const k=1-pr,mx=b.x+k*30,my=b.y-k*300;
-      ctx.strokeStyle='rgba(160,220,255,.75)';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+8,my-60);ctx.stroke();ctx.lineCap='butt';
-      ctx.fillStyle='#d6f2ff';ctx.beginPath();ctx.arc(mx,my,4,0,TAU);ctx.fill();
-    }
-    else if(b.vis==='shell'){
-      const k=1-pr,mx=b.x+k*90,my=b.y-k*320;
-      ctx.strokeStyle=b.vis==='meteor'?'rgba(255,150,70,.8)':'rgba(220,235,255,.8)';ctx.lineWidth=4;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+30,my-100);ctx.stroke();ctx.lineCap='butt';
-      ctx.fillStyle=b.vis==='meteor'?'#ffb347':'#ffffff';ctx.beginPath();ctx.arc(mx,my,8,0,TAU);ctx.fill();
-    }
+    else if(b.vis==='drop')drawRainDrop(b,pr,'#e6f5ff');
+    else if(b.vis==='shell')drawRainDrop(b,pr,'#fff0d0');
   }
 }
 function drawTelegraphs(g){
@@ -8855,6 +8848,7 @@ function drawProj(g){
   for(const b of g.pr){
     if(!vis(b.x,b.y,180))continue;
     const a=Math.atan2(b.vy,b.vx),v=b.vis;
+    if(v==='comet'){drawComet(b,a);continue}
     if(NEWV[v]){drawNewProj(b,a,v);continue}
     if(SPV[v]){drawProjSpr(b,a,v);continue}
     if(v!=='tsunami'&&v!=='wave'){const gr=b.r*3.4+6;ctx.globalAlpha=0.5;ctx.drawImage(glowSpr(b.col),b.x-gr,b.y-gr,gr*2,gr*2);ctx.globalAlpha=1}
@@ -8905,18 +8899,6 @@ function drawEnemyProj(g){
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x,b.y,b.r*0.4,0,TAU);ctx.fill();
   }
   ctx.globalCompositeOperation='source-over';
-}
-function drawTornados(g){
-  for(const t of g.tor){
-    if(!vis(t.x,t.y,t.r+20))continue;
-    const tc=t.vis==='storm'?'244,230,130':(t.vis==='fire'?'255,140,60':'224,194,122');
-    const cc=t.vis==='storm'?['244,230,130','255,250,210']:(t.vis==='fire'?['255,120,30','255,230,150']:(t.vis==='water'?['80,160,255','200,235,255']:(t.vis==='air'?['150,235,215','235,255,250']:['220,185,120','255,235,190'])));
-    ctx.globalCompositeOperation='source-over';
-    SP.disc(ctx,t.x,t.y+6,t.r*1.1,t.r*.5,cc[0],.4);
-    SP.funnel(ctx,t.x,t.y+4,t.r*2.5,t.r*.95,anim,cc[0],cc[1]);
-    for(let i=0;i<14;i++){const q=(anim*.8+i*.173)%1,ang=anim*7+i*1.7,rr=t.r*(.2+.8*q);ctx.fillStyle='rgba('+cc[0]+','+(.8*(1-q*.5))+')';ctx.beginPath();ctx.arc(t.x+Math.cos(ang)*rr,t.y+4-q*t.r*2.4+Math.sin(ang)*rr*.2,1.8,0,TAU);ctx.fill()}
-    ctx.strokeStyle='rgba('+cc[0]+',.25)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,TAU);ctx.stroke();
-  }
 }
 function bzig(x1,y1,x2,y2,seed,depth,branch){
   const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
@@ -9463,7 +9445,7 @@ function render(){
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-(cx+VW/2),-(cy+VH/2));
   drawGround(g,MP,cx,cy);
   drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
-  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawJet(g);drawDebris(g);drawSmoke(g)}
+  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawWalls(g);drawSplashes(g);drawSpiralCore(g);drawJet(g);drawDebris(g);drawSmoke(g)}
   drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g)}
   if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
   else drawFx(g);
@@ -9518,7 +9500,7 @@ function jetCol(k){return k<.12?'#fffbe6':k<.3?'#ffe078':k<.55?'#ff9632':'#dc461
 function drawJet(g){
   const now=anim,dt=Math.min(0.05,Math.max(0,now-JET.last));JET.last=now;
   const J=g.jet,on=J&&J.t>0;if(J)J.t-=dt;
-  const st=SAVE.jetStyle||'A',p=g.p;
+  const st='A',p=g.p;
   if(on){J.x=p.x;J.y=p.y}
   /* частицы (вид Б) и угольки/дым (все виды) живут и после отпускания — дотухают */
   if(on&&st==='B')for(let i=0;i<7;i++){const a=J.ang+(Math.random()-0.5)*J.arc*0.8,sp=J.len*rnd(1.6,2.1);JET.p.push({x:J.x+Math.cos(J.ang)*12,y:J.y+Math.sin(J.ang)*12,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,a:0,L:rnd(0.42,0.55)})}
@@ -9558,6 +9540,87 @@ function drawJet(g){
   JET.e=JET.e.filter(q=>q.l>0);
   if(JET.p.length>400)JET.p.splice(0,JET.p.length-400);
   ctx.restore();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+
+/* =====================================================================
+   НОВЫЕ ЭФФЕКТЫ (одобрено в лаборатории спрайтов):
+   Стена огня — «Языки пламени», смерчи — «Плотная воронка», дожди/град — «Мягкие метки»,
+   Огненный смерч — «Огненные кометы».
+   ===================================================================== */
+/* ---------- Стена огня ---------- */
+function drawWalls(g){
+  if(!g.walls||!g.walls.length)return;
+  g.walls=g.walls.filter(w=>g.t<w.t0+w.dur);
+  ctx.save();
+  for(const w of g.walls){
+    const age=g.t-w.t0,fade=Math.min(1,age/0.25,(w.t0+w.dur-g.t)/0.5),t=anim,dx=w.x1-w.x0,dy=w.y1-w.y0,L=Math.hypot(dx,dy)||1,cx=(w.x0+w.x1)/2,cy=(w.y0+w.y1)/2,ang=Math.atan2(dy,dx);
+    if(!vis(cx,cy,L/2+60))continue;
+    ctx.globalAlpha=fade;ctx.globalCompositeOperation='source-over';
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(ang);ctx.fillStyle='rgba(20,8,4,.5)';ctx.beginPath();ctx.ellipse(0,0,L/2+14,15,0,0,TAU);ctx.fill();
+    ctx.globalCompositeOperation='lighter';const gr=ctx.createRadialGradient(0,0,0,0,0,L/2+22);gr.addColorStop(0,'rgba(255,120,30,.5)');gr.addColorStop(1,'rgba(255,60,10,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(0,0,L/2+22,24,0,0,TAU);ctx.fill();ctx.restore();
+    ctx.globalCompositeOperation='lighter';
+    const N=Math.max(6,Math.round(L/10));
+    for(let i=0;i<N;i++){
+      const k=i/(N-1),x=w.x0+dx*k-dy/L*Math.sin(i*5.3)*7,y=w.y0+dy*k+dx/L*Math.sin(i*5.3)*7;
+      const h=(22+16*(.5+.5*JETN(t*2.6+i*1.9)))*Math.min(1,age*4),sw=Math.sin(t*5+i)*4,wd=10+4*Math.sin(i*3.3);
+      for(const [sc,c0,c1,c2] of [[1,'rgba(255,170,50,.95)','rgba(240,80,25,.6)','rgba(160,30,10,0)'],[.55,'rgba(255,255,220,1)','rgba(255,210,100,.7)','rgba(255,160,50,0)']]){
+        ctx.beginPath();ctx.moveTo(x-wd*sc,y);ctx.bezierCurveTo(x-wd*sc,y-h*sc*.45,x+sw-wd*sc*.3,y-h*sc*.75,x+sw*1.4,y-h*sc);ctx.bezierCurveTo(x+sw+wd*sc*.3,y-h*sc*.7,x+wd*sc,y-h*sc*.45,x+wd*sc,y);ctx.closePath();
+        const lg=ctx.createLinearGradient(0,y,0,y-h*sc);lg.addColorStop(0,c0);lg.addColorStop(.55,c1);lg.addColorStop(1,c2);ctx.fillStyle=lg;ctx.fill()}
+    }
+    if(Math.random()<0.6&&g.pt.length<450){const k=Math.random();g.pt.push({x:w.x0+dx*k+rnd(-6,6),y:w.y0+dy*k,vx:rnd(-15,15),vy:rnd(-90,-50),life:rnd(.5,1),max:1,col:'#ffc864',size:2.2})}
+  }
+  ctx.restore();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+/* ---------- Смерч: плотная воронка ---------- */
+const TORC={storm:['rgba(200,190,110,','rgba(255,250,210,'],fire:['rgba(200,80,30,','rgba(255,220,150,'],water:['rgba(60,130,220,','rgba(200,235,255,'],air:['rgba(90,170,150,','rgba(225,255,245,']};
+function drawTornados(g){
+  for(const t of g.tor){
+    if(!vis(t.x,t.y,t.r*3))continue;
+    const C=TORC[t.vis]||['rgba(150,120,80,','rgba(255,235,190,'],H=t.r*2.1,R=t.r*0.9,cx=t.x,cy=t.y+6,tm=anim+(t.ang||0);
+    ctx.save();
+    ctx.fillStyle=C[0]+'.3)';ctx.beginPath();ctx.ellipse(cx,cy,R*1.25,R*.42,0,0,TAU);ctx.fill();
+    const Lp=[],Rp=[];for(let k=0;k<=1.001;k+=0.05){const r=R*(0.14+0.86*k),y=cy-k*H,off=Math.sin(tm*1.3+k*2)*R*0.2*k+JETN(tm*3+k*4)*R*0.04;Lp.push([cx-r+off,y]);Rp.push([cx+r+off,y])}
+    ctx.beginPath();Lp.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));for(let i=Rp.length-1;i>=0;i--)ctx.lineTo(Rp[i][0],Rp[i][1]);ctx.closePath();
+    const gr=ctx.createLinearGradient(cx-R,0,cx+R,0);gr.addColorStop(0,C[0]+'.28)');gr.addColorStop(.5,C[1]+'.5)');gr.addColorStop(1,C[0]+'.28)');ctx.fillStyle=gr;ctx.fill();
+    ctx.save();ctx.clip();ctx.strokeStyle='rgba(255,255,255,.32)';ctx.lineWidth=Math.max(2,R*0.05);
+    for(let i=0;i<14;i++){const y=cy-((i*H/12+tm*H*0.7)%(H*1.1));ctx.beginPath();ctx.moveTo(cx-R*1.3,y+R*.22);ctx.quadraticCurveTo(cx,y-R*.1,cx+R*1.3,y-R*.3);ctx.stroke()}ctx.restore();
+    if(t.vis==='fire'||t.vis==='storm'){ctx.globalCompositeOperation='lighter';ctx.fillStyle=C[1]+'.12)';ctx.beginPath();Lp.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));for(let i=Rp.length-1;i>=0;i--)ctx.lineTo(Rp[i][0],Rp[i][1]);ctx.fill();ctx.globalCompositeOperation='source-over'}
+    for(let i=0;i<10;i++){const q=(tm*.8+i*.173)%1,a=tm*6+i*1.7,rr=R*(.2+.9*q);ctx.fillStyle=C[0]+'.85)';ctx.save();ctx.translate(cx+Math.cos(a)*rr,cy-q*H*.9+Math.sin(a)*rr*.25);ctx.rotate(a*2);ctx.fillRect(-2,-1.4,4,2.8);ctx.restore()}
+    if(Math.random()<0.4&&g.pt.length<450)g.pt.push({x:cx+rnd(-R,R),y:cy+rnd(-4,6),vx:rnd(-40,40),vy:rnd(-20,0),life:1,max:1,col:C[1].replace('rgba(','rgb(').replace(/,$/,')'),size:4});
+    ctx.restore();
+  }
+}
+/* ---------- Дожди и град: мягкие метки, падающий снаряд со следом, брызги ---------- */
+function drawRainMark(b,pr){
+  const R=b.r;ctx.save();ctx.globalCompositeOperation='lighter';
+  const gr=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,R);gr.addColorStop(0,rgba(b.col,0.1+0.25*pr));gr.addColorStop(1,rgba(b.col,0));ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(b.x,b.y,R,R*.6,0,0,TAU);ctx.fill();
+  const rr=R*(1-pr*0.75)+3;ctx.strokeStyle=rgba(b.col,0.35+0.5*pr);ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(b.x,b.y,rr,rr*.6,0,0,TAU);ctx.stroke();
+  ctx.restore();
+}
+function drawRainDrop(b,pr,head){
+  const k=1-pr,mx=b.x+k*40,my=b.y-k*240;ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  const lg=ctx.createLinearGradient(mx,my,mx+14,my-60);lg.addColorStop(0,head);lg.addColorStop(1,rgba(b.col,0));ctx.strokeStyle=lg;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+14,my-60);ctx.stroke();
+  ctx.globalAlpha=0.95;ctx.drawImage(glowSpr(head),mx-7,my-7,14,14);ctx.restore();ctx.globalAlpha=1;
+}
+function rainSplash(b){const g=G;if(!g)return;(g.spl||(g.spl=[])).push({x:b.x,y:b.y,r:b.r,col:b.col,t:0});if(g.spl.length>30)g.spl.shift()}
+function drawSplashes(g){
+  if(!g.spl||!g.spl.length)return;ctx.save();ctx.globalCompositeOperation='lighter';
+  for(const s of g.spl){s.t+=1/60;const k=s.t/0.45;if(k>=1)continue;ctx.strokeStyle=rgba(s.col,1-k);ctx.lineWidth=2.5;const R=s.r*(0.35+k*0.9);ctx.beginPath();ctx.ellipse(s.x,s.y,R,R*.6,0,0,TAU);ctx.stroke();
+    for(let i=0;i<8;i++){const a=i*TAU/8,r=k*s.r*0.85;ctx.globalAlpha=1-k;ctx.drawImage(glowSpr(s.col),s.x+Math.cos(a)*r-3,s.y+Math.sin(a)*r*.6-Math.sin(k*Math.PI)*14-3,6,6)}ctx.globalAlpha=1}
+  g.spl=g.spl.filter(s=>s.t<0.45);ctx.restore();ctx.globalCompositeOperation='source-over';
+}
+/* ---------- Огненный смерч: кометы ---------- */
+function drawComet(b,a){
+  ctx.save();ctx.globalCompositeOperation='lighter';const L=46;
+  const lg=ctx.createLinearGradient(b.x,b.y,b.x-Math.cos(a)*L,b.y-Math.sin(a)*L);lg.addColorStop(0,'rgba(255,240,190,.95)');lg.addColorStop(.35,'rgba(255,150,50,.7)');lg.addColorStop(1,'rgba(220,60,20,0)');
+  ctx.strokeStyle=lg;ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=b.r*1.9;ctx.beginPath();ctx.moveTo(b.x,b.y);
+  if(b.curl){let x=b.x,y=b.y,vx=b.vx,vy=b.vy;const st=0.018,ca=-b.curl*st,cs=Math.cos(ca),sn=Math.sin(ca);for(let i=0;i<9;i++){x-=vx*st;y-=vy*st;const v=vx;vx=v*cs-vy*sn;vy=v*sn+vy*cs;ctx.lineTo(x,y)}}
+  else ctx.lineTo(b.x-Math.cos(a)*L,b.y-Math.sin(a)*L);ctx.stroke();
+  ctx.drawImage(glowSpr('#ffb347'),b.x-b.r*3,b.y-b.r*3,b.r*6,b.r*6);ctx.drawImage(glowSpr('#fff2c0'),b.x-b.r*1.4,b.y-b.r*1.4,b.r*2.8,b.r*2.8);
+  ctx.restore();
+}
+function drawSpiralCore(g){
+  for(const m of g.em){if(m.kind!=='spiral'||m.dead)continue;ctx.save();ctx.globalCompositeOperation='lighter';const r=46+6*Math.sin(anim*8);ctx.drawImage(glowSpr('#ff8a3a'),g.p.x-r,g.p.y-r,r*2,r*2);ctx.restore()}
 }
 /* =====================================================================
    ЦИКЛ
