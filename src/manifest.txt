@@ -38,6 +38,7 @@ js/ui/menu.js
 js/ui/input.js
 js/render/canvas.js
 js/render/sprites_skills.js
+js/render/guns_art.js
 js/render/projectiles.js
 js/render/guns_zones.js
 js/render/merchants.js

@@ -41,7 +41,7 @@ renderMenu();
 requestAnimationFrame(frame);
 
 if(DEBUG){
-  window.__x={SPAB:SP.AB,ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
+  window.__x={SPAB:SP.AB,SP,GUNART,ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
   window.__pasUp=pasUp;window.__trPas=()=>{trSel='__pas';openTree()};
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,

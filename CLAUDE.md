@@ -10,6 +10,9 @@
 - Версия игры: строка `Версия X.Y` в `src/shell/body.html`. Поднимать при каждой выдаче игроку.
 - Коммит = одна версия/одна логическая правка, сообщение на русском: `Симбиоз vX.Y: что изменилось`.
 - `index.html` в корне коммитится всегда собранным: его раздаёт GitHub Pages → https://tsenze13.github.io/Simbioz/
+- **Бета и лаборатория.** Крупные визуальные правки сначала идут в ветку `beta-sprites` (версия «X.Y-бета»).
+  Сборка беты копируется в `beta/index.html` на main → https://tsenze13.github.io/Simbioz/beta/ ,
+  варианты спрайтов на выбор — `lab/sprites.html` на main. После одобрения игроком бета сливается в main.
 - Старые версии — в истории git (коммиты «Симбиоз v0.15.1 … v0.22»), отдельными файлами их не хранить.
 
 ## Сборка
@@ -26,7 +29,7 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/core/prelude.js | хелперы `$`, `TAU`, `rnd`, `clamp`, `pickOf`, `WAVES_TOTAL` |
 | js/data/balance.js | **`BAL` — все числа баланса**: опыт, рост врагов, защита боссов, волны, лавка, уровни ульты |
 | js/data/heroes.js | стихии `EL`, классы `CLS`, рост `GROW`, `HST`, пассивки `HPAS`, `HMECH`, иконки `GL` |
-| js/data/skills.js | навыки `AB` через `def(...)`, ульты `ULT`, `ultRoom/ultOverflow` |
+| js/data/skills.js | навыки `AB` через `def(...)`, ульты `ULT` |
 | js/data/enemies.js | враги `ET`, боссы `BOSS` (pats/p2 — списки приёмов) |
 | js/data/items.js | предметы `ITEMS` через `it(...)`, торговцы `MERCH`, вложения `INVEST` |
 | js/data/meta.js | мета-прокачка `META`, статы карточек `STC`, клавиши `ACTIONS/DEFKEYS` |
@@ -49,6 +52,8 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/game/runextras.js | выбор реликвий, комбо (`synUpdate`, `synTip`), события между волнами (`spawnEvents`, `useEvent`, `drawEvents`) |
 | js/ui/*.js | HUD, подсказки новичку `tut()`, окно уровня, древо, лавка, пауза и итоги (`dmgRows`), меню (сложность `ascRow`), ввод |
 | js/render/*.js | спрайты навыков `SP`, снаряды, стволы (`GUNS`, `GMOD`), торговцы `MS`, враги `ENS`, герои `HTD`, карта, `render()` |
+| js/render/guns_art.js | `GUNART` — спрайты оружия Солдата (пистолет…снайперка, граната), подменяют `SP.pistol` и др. |
+| js/render/jet.js | струя огнемёта `drawJet`, стена огня `drawWalls`, смерчи, дожди/град, огненные кометы |
 | js/core/loop.js | игровой цикл, отладочные хуки `window.__sb`, `window.__x` |
 
 ## Отладка

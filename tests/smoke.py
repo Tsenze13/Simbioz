@@ -47,6 +47,9 @@ with sync_playwright() as p:
     r = J("""()=>{const S=window.__sb,g=S.G;const n=Object.keys(g.dmgBy||{}).length;S.endRun(false);
         return {src:n,rows:document.querySelectorAll('#goDmg .dr').length,over:!document.getElementById('over').hidden}}""")
     check('итоги забега: урон по источникам', r['src'] > 0 and r['rows'] > 0 and r['over'], r)
+    r = J("""()=>{const X=window.__x,c=document.createElement('canvas').getContext('2d');const out={};
+        for(const k of ['pistol','shotgun','rifle','smg','launcher','sniper','grenade']){X.SP[k](c,k==='grenade'?0:1);out[k]=X.SP[k]===X.GUNART[k]}return out}""")
+    check('новые спрайты оружия Солдата рисуются', all(r.values()), r)
     r = J("()=>{const S=window.__sb;S.SAVE.tut={};S.SAVE.hints=true;S.quitToMenu();S.startRun('fire');S.update(1/60);return document.getElementById('hint').innerText}")
     check('подсказка новичку', 'Управление' in r, r[:40])
 
