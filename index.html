@@ -64,6 +64,14 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .portrait b{position:absolute;right:-2px;bottom:-2px;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--panel2);border:1px solid var(--line2);display:grid;place-items:center;font:700 14px var(--f-display);font-variant-numeric:tabular-nums}
 .dmain{display:grid;gap:8px;min-width:0}
 .skills{display:flex;gap:6px;align-items:flex-end}
+.skrow{display:flex;gap:10px;align-items:flex-end}
+.slot.pas{--sz:52px;border-radius:50%;border:2px solid #000;box-shadow:0 0 0 2px var(--c1),0 0 12px -2px var(--c1);background:#0c1018;cursor:pointer;overflow:visible;margin-bottom:4px}
+.slot.pas canvas{width:100%;height:100%;border-radius:50%;display:block}
+.slot.pas .pp{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);display:flex;gap:2px}
+.slot.pas .pp b{width:9px;height:5px;border-radius:2px;background:#222a3a;border:1px solid #000}.slot.pas .pp b.on{background:var(--c1);box-shadow:0 0 5px var(--c1)}
+.slot.pas.can{animation:pasp 1s infinite alternate}@keyframes pasp{to{box-shadow:0 0 0 2px #ffd36a,0 0 16px #ffd36a}}
+.tip .pl{opacity:.45;margin-top:3px}.tip .pl.on{opacity:1}
+@media(max-width:700px){.slot.pas{--sz:40px}}
 .dbars{display:grid;gap:4px;min-width:0}
 .dbars .bar{height:20px}.dbars .bar.mp{height:15px}
 .slot{--c1:#4a5575;--c2:#8d99b8;position:relative;width:var(--sz);height:var(--sz);border-radius:9px;border:1px solid var(--line2);padding:0;overflow:hidden;color:#fff;background:radial-gradient(circle at 30% 22%,var(--c2) -20%,var(--c1) 62%,#0d1018 150%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),0 0 14px -6px var(--c1);flex:none}
@@ -319,7 +327,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
     <div id="dock">
       <div class="portrait" id="portrait"><div class="pin"><span class="orb" id="portOrb"></span><b id="portLv">1</b></div></div>
       <div class="dmain">
-        <div class="skills" id="skills"></div>
+        <div class="skrow"><div id="pasw"></div><div class="skills" id="skills"></div></div>
         <div class="dbars">
           <div class="bar hp"><i id="hpF"></i><span id="hpT"></span></div>
           <div class="bar mp"><i id="mpF"></i><span id="mpT"></span></div>
@@ -339,7 +347,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.15.1 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.16 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -454,6 +462,36 @@ const CLS={
     plus:'+0.9 регенерации, +4% вампиризма, яд и горение на 35% сильнее. Умирая отравленным, враг заражает соседей.',minus:'−5% скорости, −2 брони.'}
 };
 
+
+/* ---------- пассивки героев: 3 уровня, качаются очками навыков ---------- */
+const PASR=[3,8,13];
+const HPAS={
+  fire:{n:'Раскалённая кровь',ic:'🔥',pd:['+8% урона по горящим врагам','+15% урона по горящим, горение длится на 1 с дольше','+25% урона по горящим; взрывы горящих врагов при смерти вдвое сильнее и шире']},
+  water:{n:'Приливная сила',ic:'💧',pd:['Восстановление маны +10%','Восстановление маны +20%, мокрые враги на 15% медленнее','Восстановление маны +30%; каждый 10-й навык бесплатный']},
+  earth:{n:'Каменная кожа',ic:'⛰',pd:['−6% входящего урона','−10% входящего урона','−14% входящего урона; раз в 20 с каменный щит на 3 с']},
+  air:{n:'Попутный ветер',ic:'🌪',pd:['+6% скорости','+10% скорости, рывок перезаряжается на 15% быстрее','+14% скорости; после рывка +20% урона на 2 с']},
+  metal:{n:'Боевая выучка',ic:'⚙',pd:['+6% шанса крита','+10% шанса крита, +10% урона огнестрела','+14% шанса крита; каждый 8-й выстрел орудия усиленный (×2,5 урона, пробивает)']},
+  wood:{n:'Живой яд',ic:'🌿',pd:['+15% урона яда','+30% урона яда, яд накапливается до 3 стаков','+45% урона яда; смерть отравленного врага лечит вас на 1% здоровья']}
+};
+const PV=(k,arr)=>{const g=G;return(g&&g.start===k)?arr[g.pl||0]:0};
+function pasCan(){const g=G;if(!g)return false;const l=g.pl||0;return l<3&&g.sp>0&&g.p.lv>=PASR[l]}
+function pasUp(){const g=G;if(!pasCan())return false;g.pl=(g.pl||0)+1;g.sp--;g.dockSig='';recalc();sfx(860,0.16,'triangle',0.05,420);toast(HPAS[g.start].n+' · ур. '+g.pl,HPAS[g.start].pd[g.pl-1]);ring(g.p.x,g.p.y,90,EL[g.start].c,0.6);return true}
+function pShade(h,a){const n=parseInt(h.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(v+(a<0?v*a:(255-v)*a))));return'rgb('+f(r)+','+f(gg)+','+f(b)+')'}
+function pIcon(c,k,t,lv){
+ const W=c.canvas.width,col=EL[k].c;c.save();c.setTransform(1,0,0,1,0,0);c.scale(W/54,W/54);c.clearRect(0,0,54,54);
+ const gr=c.createRadialGradient(27,22,2,27,27,30);gr.addColorStop(0,pShade(col,-.3));gr.addColorStop(1,'#06080c');c.fillStyle=gr;c.beginPath();c.arc(27,27,27,0,TAU);c.fill();
+ c.translate(27,27);c.globalAlpha=lv?1:.4;const p=Math.sin(t*3)*.5+.5;c.lineJoin='round';
+ if(k==='fire'){c.fillStyle='#c0201a';c.beginPath();c.moveTo(0,-16);c.quadraticCurveTo(14,2,0,14);c.quadraticCurveTo(-14,2,0,-16);c.fill();c.fillStyle=col;c.beginPath();c.moveTo(0,-4);c.quadraticCurveTo(7+p*2,4,0,12);c.quadraticCurveTo(-7,4,0,-4);c.fill();c.fillStyle='#ffd27a';c.beginPath();c.moveTo(0,3);c.quadraticCurveTo(3,7,0,11);c.quadraticCurveTo(-3,7,0,3);c.fill()}
+ else if(k==='water'){c.strokeStyle='#cfefff';c.lineWidth=3;c.lineCap='round';for(let i=0;i<3;i++){c.beginPath();for(let x=-15;x<=15;x+=2){const y=-9+i*9+Math.sin(x*.28+t*3+i)*3;x===-15?c.moveTo(x,y):c.lineTo(x,y)}c.stroke()}}
+ else if(k==='earth'){c.fillStyle='#8a8070';c.beginPath();c.moveTo(-14,-6);c.lineTo(-4,-15);c.lineTo(10,-13);c.lineTo(16,0);c.lineTo(10,13);c.lineTo(-6,15);c.lineTo(-15,6);c.closePath();c.fill();c.strokeStyle='#1a1610';c.lineWidth=2;c.stroke();c.strokeStyle='rgba(255,200,90,'+(.6+.4*p)+')';c.beginPath();c.moveTo(-6,-8);c.lineTo(2,-2);c.lineTo(-2,6);c.stroke()}
+ else if(k==='air'){c.strokeStyle='#e6fff7';c.lineWidth=3;c.lineCap='round';const s=Math.sin(t*3)*2;c.beginPath();c.moveTo(-15,-6);c.lineTo(8+s,-6);c.arc(8+s,-10,4,Math.PI/2,-Math.PI*.9,true);c.stroke();c.beginPath();c.moveTo(-13,4);c.lineTo(11-s,4);c.arc(11-s,8,4,-Math.PI/2,Math.PI*.9);c.stroke()}
+ else if(k==='metal'){c.fillStyle='#b4c0d4';c.beginPath();c.moveTo(0,-16);c.lineTo(13,-11);c.lineTo(12,3);c.quadraticCurveTo(10,12,0,17);c.quadraticCurveTo(-10,12,-12,3);c.lineTo(-13,-11);c.closePath();c.fill();c.fillStyle='#d9c25a';c.beginPath();for(let i=0;i<10;i++){const r=i%2?3.5:8,a=-Math.PI/2+i*Math.PI/5;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r):c.moveTo(Math.cos(a)*r,Math.sin(a)*r)}c.closePath();c.fill()}
+ else{c.fillStyle='#62c15a';c.beginPath();c.moveTo(-12,12);c.quadraticCurveTo(-16,-12,10,-14);c.quadraticCurveTo(16,10,-12,12);c.fill();c.strokeStyle='#1d3a1a';c.lineWidth=1.8;c.beginPath();c.moveTo(-12,12);c.quadraticCurveTo(-2,0,8,-10);c.stroke()}
+ c.restore()}
+function pasTip(){
+  const g=G,H=HPAS[g.start],l=g.pl||0;
+  return '<div class="tn" style="color:'+EL[g.start].c+'">'+H.n+'</div><div class="tm">Пассивка героя · ур. '+l+'/3</div>'+H.pd.map((d,i)=>'<div class="pl'+(i<l?' on':'')+'">'+(i+1)+'. '+d+(i>=l?' <span style="color:var(--dim)">(ур. героя '+PASR[i]+')</span>':'')+'</div>').join('')+'<div class="tu">'+(l>=3?'Максимум.':(pasCan()?'Нажмите, чтобы прокачать за 1 очко.':'Качается очками навыков (T).'))+'</div>';
+}
 
 /* ---------- значки (svg, 24x24) ---------- */
 const GL={
@@ -1401,7 +1439,7 @@ function mapStats(g){
 }
 function mkState(start,map){
   return {
-    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,cls:CLS[start]||null,tideT:9,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
+    map:map||'ash',aff:null,inv:{},awk:0,pslow:0,dv:[],rt:[],bliz:null,frz:0,rootT:0,immT:0,binst:0,ox:0,oy:0,pch:[],sk:[],flashA:0,wind:{t:0,max:1,ang:0},hzT:5,start:start,pl:0,castN:0,shotN:0,pasT:20,cls:CLS[start]||null,tideT:9,hand:start==='metal'?{t:'pistol',cd:0,aim:0,fl:0,rec:0,hasT:false}:null,gren:[],hat:null,hlt:0,hla:0,sp:0,nodes:{},later:[],hfx:[],afx:[],guns:[],bought:{},lastHits:0,treeOpen:false,hinted:false,t:0,kills:0,over:false,paused:false,lvlOpen:false,shopOpen:false,
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
@@ -1433,6 +1471,7 @@ function recalc(){
   if(g.aff)for(const k in g.aff.st)it[k]=(it[k]||0)+g.aff.st[k];
   if(g.cls)for(const k in g.cls.st)it[k]=(it[k]||0)+g.cls.st[k];
   if(g.inv)for(const s of INVEST){const n=g.inv[s.k]||0;if(n)for(const q in s.st)it[q]=(it[q]||0)+s.st[q]*n}
+  {const a=PV('air',[0,.06,.1,.14]);if(a)it.spd=(it.spd||0)+a;const m=PV('metal',[0,.06,.1,.14]);if(m)it.crit=(it.crit||0)+m;if(g.start==='air'&&g.pl>=2)it.drc=(it.drc||0)+0.15}
   const x=k=>it[k]||0;
   S.maxHp=100+12*ml('hp')+25*cl('hp')+x('hp');
   S.regen=0.3+0.25*ml('reg')+0.8*cl('reg')+x('regen');
@@ -1452,6 +1491,7 @@ function recalc(){
   S.thorns=x('thorns');
   S.dch=cl('dch')+x('dch');S.drc=Math.min(0.6,0.03*ml('drc')+0.15*cl('drc')+x('drc'));
   S.ultcd=Math.min(0.5,0.05*ml('ultcd')+x('ultcd'));
+  S.mreg*=1+PV('water',[0,.1,.2,.3]);
   S.mreg=Math.max(0.4,S.mreg);S.regen=Math.max(0,S.regen);S.cdr=Math.max(-0.4,S.cdr);S.spd=Math.max(0.5,S.spd);S.crit=Math.min(0.95,S.crit);
   if(!g.lastMax){p.hp=S.maxHp;p.mana=S.maxMana}
   else{
@@ -1550,8 +1590,8 @@ function applySt(e,st,dm){
   if(!st)return;
   const c=e.boss?0.25:(e.elite?0.5:1);
   dm=(dm||1)*((G&&G.cls&&G.cls.dot)||1);
-  if(st.burn){e.burn=Math.max(e.burn,st.burn[1]);e.burnDps=Math.max(e.burnDps,st.burn[0]*dm)}
-  if(st.poison){e.poison=Math.max(e.poison,st.poison[1]);e.poisonDps=Math.max(e.poisonDps,st.poison[0]*dm)}
+  if(st.burn){e.burn=Math.max(e.burn,st.burn[1]+(G&&G.start==='fire'&&G.pl>=2?1:0));e.burnDps=Math.max(e.burnDps,st.burn[0]*dm)}
+  if(st.poison){const pm=1+PV('wood',[0,.15,.3,.45]);if(G&&G.start==='wood'&&G.pl>=2)e.pst=e.poison>0?Math.min(3,(e.pst||1)+1):1;e.poison=Math.max(e.poison,st.poison[1]);e.poisonDps=Math.max(e.poisonDps,st.poison[0]*dm*pm)}
   if(st.slow){
     const f=e.boss?1-(1-st.slow[0])*0.5:st.slow[0];
     e.slowF=e.slow>0?Math.min(e.slowF,f):f;e.slow=Math.max(e.slow,st.slow[1]);
@@ -1570,6 +1610,7 @@ function hitEnemy(e,dmg,o){
   const src=o.src||'skill',dot=src==='dot',zone=src==='zone',dt=o.dt||'phys';
   let crit=false,react=null,overload=false;
   if(!dot)dmg*=E.dm;
+  if(e.burn>0&&g.start==='fire'&&g.pl)dmg*=1+PV('fire',[0,.08,.15,.25]);
   if(!dot&&!zone&&E.crit>0&&Math.random()<E.crit){dmg*=2;crit=true}
   if(o.shock&&!dot){
     if(e.wet>0){dmg*=1.5;e.stun=Math.max(e.stun,e.boss?0.1:0.35);react='Электрошок'}
@@ -1665,7 +1706,8 @@ function killEnemy(e,o){
     for(let i=0;i<e.def.split;i++){const a=rnd(0,TAU);spawnAt('slimelet',e.x+Math.cos(a)*12,e.y+Math.sin(a)*12,e.hpMul,e.dmgMul)}
   }
   if(g.cls&&!g.inChain){
-    if(g.start==='fire'&&e.burn>0){g.inChain=true;explodeAt(e.x,e.y,58,12+6*g.el.fire,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true});g.inChain=false}
+    if(g.start==='fire'&&e.burn>0){g.inChain=true;const bx=g.pl>=3?2:1;explodeAt(e.x,e.y,58*(g.pl>=3?1.4:1),(12+6*g.el.fire)*bx,{dt:'magic',col:'#ff7a3a',st:{burn:[3,2]},src:'skill',quiet:true});g.inChain=false}
+    if(g.start==='wood'&&e.poison>0&&g.pl>=3)heal(g.S.maxHp*0.01);
     if(g.start==='wood'&&e.poison>0){for(const o of g.en){if(!o.dead&&o!==e&&(o.x-e.x)**2+(o.y-e.y)**2<85*85)applySt(o,{poison:[e.poisonDps*0.6,3]},1/(g.cls.dot||1))}ring(e.x,e.y,85,'#a6e07a',0.4)}
   }
   if(e.def.onDeath){const lv=e.def.onDeath==='lava';addPatch(e.x,e.y,lv?52:40,lv?4:3,e.dmg*(lv?1.1:0.9),lv?'lava':'fire')}
@@ -2097,12 +2139,14 @@ function castSlot(i){
   if(!s)return;
   const a=AB[s.id];
   if(s.cd>0)return;
-  const pr=skillPr(s),mana=Math.round(a.mana*pr.manam*((g.cls&&g.cls.manax)||1));
+  const pr=skillPr(s);let mana=Math.round(a.mana*pr.manam*((g.cls&&g.cls.manax)||1));
+  const free=g.start==='water'&&g.pl>=3&&(g.castN+1)%10===0;if(free)mana=0;
   if(g.p.mana<mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
   const c=castCtx(a.c1,a.c2);
   const r=CAST[a.kind](pr,c);
   if(r===false)return;
-  g.p.mana-=mana;
+  g.p.mana-=mana;g.castN++;
+  if(free&&g.tx.length<50)g.tx.push({x:g.p.x,y:g.p.y-30,t:0.9,txt:'Прилив: без маны',big:false,col:'#6fd0ff'});
   s.cdMax=a.cd*pr.cdm/(1+g.E.cdr);s.cd=s.cdMax;
   if(AFXM[a.id]){const m=AFXM[a.id],R0=(pr.r||100)*(1+g.S.area);g.afx.push({m:m,x:c.px,y:c.py,t:0,life:.9,k:R0/m[1]})}
   runHooks(pr,c,a);
@@ -2257,10 +2301,12 @@ function weapons(dt){
     const l=e.metal,sol=!!g.hand;
     if(!sol&&!g.guns.length)g.guns.push({t:'pistol',cd:0,aim:0,fl:0,rec:0});
     const fireOne=(gn,ps,G0)=>{
+      g.shotN++;const pw=g.start==='metal'&&g.pl>=3&&g.shotN%8===0,gm=(g.start==='metal'&&g.pl>=2?1.1:1)*(pw?2.5:1);
+      if(pw){sparks(ps.x,ps.y,'#ffd36b',8,260);ring(ps.x,ps.y,26,'#ffd36b',0.25)}
       const base=gn.aim,mo=gn.hand?12:G0.mz*G0.sc*1.6,mx=ps.x+Math.cos(base)*mo,my=ps.y+Math.sin(base)*mo;
       for(let k=0;k<G0.pel;k++){
         const a=base+(G0.pel>1?(k/(G0.pel-1)-.5)*G0.sp:rnd(-G0.sp,G0.sp)*.5);
-        shoot({vis:G0.pellet?'pellet':'bullet',gun:true,x:mx,y:my,vx:Math.cos(a)*G0.spd,vy:Math.sin(a)*G0.spd,r:G0.big?6:(G0.pellet?3:4.5),dmg:(7+3.5*l)*G0.dm,dt:'phys',life:G0.life,pierce:G0.pierce+(l>=4&&!G0.pierce?1:0)+(g.start==='metal'?1:0),knock:G0.knock,col:'#e8eef8',src:'auto'});
+        shoot({vis:G0.pellet?'pellet':'bullet',gun:true,x:mx,y:my,vx:Math.cos(a)*G0.spd,vy:Math.sin(a)*G0.spd,r:(G0.big?6:(G0.pellet?3:4.5))*(pw?1.6:1),dmg:(7+3.5*l)*G0.dm*gm,dt:'phys',life:G0.life,pierce:G0.pierce+(l>=4&&!G0.pierce?1:0)+(g.start==='metal'?1:0)+(pw?2:0),knock:G0.knock,col:pw?'#ffd36b':'#e8eef8',src:'auto'});
       }
       gn.fl=1;
       puff(mx,my,'#fff2b0',2,70,0.14,2);
@@ -2554,6 +2600,7 @@ function hurtPlayer(d,dt,att){
   if(g.block>0){g.block=0;ring(p.x,p.y,45,'#7fe6ff',0.4);p.inv=0.4;sfx(600,0.15,'triangle',0.05);return}
   if(dt==='phys')d*=1-armorRed(E.armor);
   else if(dt==='magic')d*=1-E.mres;
+  d*=1-PV('earth',[0,.06,.1,.14]);
   d=Math.max(1,d);
   p.hp-=d;p.inv=(att&&att.melee)?0.45:0.3;
   if(att&&att.e&&att.melee){const ka=Math.atan2(p.y-att.e.y,p.x-att.e.x),kf=att.boss?420:230;p.kx+=Math.cos(ka)*kf;p.ky+=Math.sin(ka)*kf}
@@ -2685,7 +2732,7 @@ function updEnemies(dt){
     if(e.wet>0)e.wet-=dt;
     if(e.rust>0)e.rust-=dt;
     if(e.burn>0){e.burn-=dt;e.bnt=(e.bnt||0)+dt;if(e.bnt>=0.5){e.bnt=0;hitEnemy(e,e.burnDps*0.5,{dt:'magic',src:'dot',quiet:true});if(e.dead)continue}}
-    if(e.poison>0){e.poison-=dt;e.pt+=dt;if(e.pt>=0.5){e.pt=0;hitEnemy(e,e.poisonDps*0.5,{dt:'magic',src:'dot',quiet:true});if(e.dead)continue}}
+    if(e.poison>0){e.poison-=dt;if(e.poison<=0)e.pst=0;e.pt+=dt;if(e.pt>=0.5){e.pt=0;hitEnemy(e,e.poisonDps*0.5*(e.pst||1),{dt:'magic',src:'dot',quiet:true});if(e.dead)continue}}
     if(e.affix==='regen'&&e.hp<e.max)e.hp=Math.min(e.max,e.hp+e.max*0.03*dt);
     if(e.slow>0){e.slow-=dt;if(e.slow<=0)e.slowF=1}
     if(e.frz>0)e.frz-=dt;
@@ -2697,6 +2744,7 @@ function updEnemies(dt){
     e.ang=Math.atan2(dy,dx);
     let spMul=1;
     if(e.slow>0)spMul*=e.slowF;
+    if(e.wet>0&&g.start==='water'&&g.pl>=2)spMul*=0.85;
     if(g.slowAll>0)spMul*=g.slowAllF;
     if(e.def.rage)spMul*=1+(1-e.hp/e.max)*0.9;
     if(e.buf>0){spMul*=1.3;e.buf-=dt}
@@ -3179,6 +3227,7 @@ function tryDash(){
   g.rootT=0;
   const i=getInput();
   g.dashAng=i.m>0.05?Math.atan2(i.y,i.x):p.face;
+  if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
   if(g.start==='earth'){explodeAt(p.x,p.y,78,22+7*g.el.earth,{dt:'phys',col:'#c9974f',knock:320,st:{stun:0.5},src:'skill',spike:true});g.shake=Math.max(g.shake,5)}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
@@ -3259,6 +3308,7 @@ function update(dt){
   movePlayer(dt);
   poolsTick(dt);
   envTick(dt);
+  if(g.start==='earth'&&g.pl>=3){g.pasT-=dt;if(g.pasT<=0){g.pasT=20;g.shield=Math.max(g.shield,3);ring(g.p.x,g.p.y,60,'#c9974f',0.6);toast('Каменная кожа','Щит на 3 секунды')}}
   if(g.phase==='fight')weapons(dt);
   updPlayerSide(dt);
   waveLogic(dt);
@@ -3430,9 +3480,10 @@ function buildTopHud(){
 }
 function renderDock(){
   const g=G;
-  const sig=g.slots.map(s=>s?s.id+s.lv:'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
+  const sig=g.pl+':'+(pasCan()?1:0)+'|'+g.slots.map(s=>s?s.id+s.lv:'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
   if(g.dockSig===sig)return;
   g.dockSig=sig;
+  {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+EL[g.start].c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
   let h='';
   for(let i=0;i<5;i++){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
@@ -3473,6 +3524,7 @@ function hud(){
   if(mode!=='play'||!G)return;
   const g=G,p=g.p,S=g.S;
   renderDock();
+  {const pc=$('pasCv');if(pc)pIcon(pc.getContext('2d'),g.start,anim,g.pl||0)}
   /* хотбар */
   for(let i=0;i<5;i++){
     const s=g.slots[i];
@@ -3525,6 +3577,7 @@ function hud(){
 }
 function tipFor(k,i){
   const g=G;
+  if(k==='p')return pasTip();
   if(k==='s'){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
     if(!s)return '<div class="tn">Пустой слот ['+key+']</div><div class="td">Навыки даются на повышении уровня или покупаются свитками у Чародея.</div>';
@@ -3549,6 +3602,7 @@ function tipFor(k,i){
     const k=b.dataset.k,i=parseInt(b.dataset.i,10);
     if(e.pointerType!=='mouse')uiTouch=true;
     if(k==='s')castSlot(i);else if(k==='u')castUlt();else if(k==='i')useItem(i);
+    else if(k==='p'){if(!pasUp()){trSel='__pas';openTree()}else{tip.innerHTML=pasTip()}}
   });
   dock.addEventListener('mouseover',e=>{
     const b=e.target.closest('.slot');
@@ -3667,7 +3721,7 @@ function openTree(){
   g.treeOpen=true;
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
-  if(!trSel||!AB[trSel]){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:ELSK[g.start]}
+  if(!trSel||(trSel!=='__pas'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:ELSK[g.start]}
   $('tree').hidden=false;renderTree();
 }
 function closeTree(){const g=G;if(!g)return;g.treeOpen=false;$('tree').hidden=true;$('tip').hidden=true;treeBadge()}
@@ -3675,7 +3729,7 @@ function slotOf(id){return G.slots.find(s=>s&&s.id===id)}
 function renderTree(){
   const g=G;
   $('trSp').textContent='Очков: '+g.sp+' · +1 очко за каждый уровень. Вложите в «Усиление» или откройте мутации, меняющие геймплей.';
-  let h='<h4>Навыки стихий</h4>';
+  let h='<h4>Герой</h4><button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+EL[g.start].c+'"><span>'+HPAS[g.start].n+'</span><small>ур.'+(g.pl||0)+'/3</small></button><h4>Навыки стихий</h4>';
   const row=id=>{
     const a=AB[id],s=slotOf(id),why=skillAvail(id);
     h+='<button type="button" data-sk="'+id+'" class="'+(trSel===id?'sel':'')+(why&&!s?' lock':'')+'" style="--c1:'+(a.c1||'#9cc4ff')+'"><span>'+a.n+'</span><small>'+(s?'ур.'+s.lv:(why?'🔒':'—'))+'</small></button>';
@@ -3683,6 +3737,13 @@ function renderTree(){
   SKILL_IDS.forEach(row);
   h+='<h4>Симбиозы</h4>';SYM_IDS.forEach(row);
   $('trList').innerHTML=h;
+  if(trSel==='__pas'){
+    const H=HPAS[g.start],l=g.pl||0,col=EL[g.start].c;
+    let d='<div class="th" style="--c1:'+col+'"><strong style="color:'+col+'">'+H.n+'</strong><span>Пассивка героя «'+CLS[g.start].n+'» · ур. '+l+'/3</span></div><p style="margin:0;color:#c5cbdd">Работает всегда. Каждый уровень стоит 1 очко и открывается на нужном уровне героя.</p>';
+    H.pd.forEach((t,i)=>{const done=i<l,next=i===l,ok=g.p.lv>=PASR[i];
+      d+='<div class="nd'+(done?' max':'')+'" style="--c1:'+col+'"><div><strong>Уровень '+(i+1)+'</strong><p>'+t+'</p></div>'+(!done&&!ok?'<span class="rq">Нужен уровень героя '+PASR[i]+'</span>':'')+'<button type="button" data-pas="1"'+(next&&pasCan()?'':' disabled')+'>'+(done?'Открыто':'+1 · 1 очко')+'</button></div>'});
+    $('trDet').innerHTML=d;return;
+  }
   const id=trSel,a=AB[id],s=slotOf(id),why=skillAvail(id);
   const col=a.c1||'#9cc4ff';
   let d='<div class="th" style="--c1:'+col+'"><strong style="color:'+col+'">'+a.n+'</strong><span>Мана '+a.mana+' · перезарядка '+a.cd+' с</span></div><p style="margin:0;color:#c5cbdd">'+a.d+'</p>';
@@ -3705,7 +3766,8 @@ $('trList').addEventListener('click',e=>{const b=e.target.closest('button[data-s
 $('trDet').addEventListener('click',e=>{
   const g=G,b=e.target.closest('button');
   if(!g||!b||b.disabled)return;
-  if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
+  if(b.hasAttribute('data-pas')){pasUp()}
+  else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-node')){
     const [id,i]=b.getAttribute('data-node').split(':'),ix=parseInt(i,10),s=slotOf(id);
@@ -3970,7 +4032,7 @@ function playTab(){
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><h3 style="color:'+E.c+'">'+E.n+'</h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта [R]</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd></dl>'
+    +'<div class="pdetail" style="--c1:'+E.c+'"><h3 style="color:'+E.c+'">'+E.n+'</h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта [R]</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd></dl>'
     +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
     +'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
@@ -6978,6 +7040,7 @@ renderMenu();
 requestAnimationFrame(frame);
 
 if(DEBUG){
+  window.__pasUp=pasUp;window.__trPas=()=>{trSel='__pas';openTree()};
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,
     CLS,genStock,TREE,openTree,openLevelUp,GUNS,closeTree,renderTree,skillPr,
