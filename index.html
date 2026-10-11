@@ -395,7 +395,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.22 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.23 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1044,7 +1044,7 @@ const BAL={
   /* волны */
   wave:{durBase:56,durMax:75,interTime:60,interHeal:0.35},
   /* герой */
-  hero:{ultLv:12,dashCd:2.2,pasLv:[3,8,13]},
+  hero:{ultLv:12,ultLvReq:[12,18,24],dashCd:2.2,pasLv:[3,8,13]}, /* ulta: открыть / ур.2 / ур.3 — с этих уровней героя */
   /* лавка */
   shop:{spBase:260,spStep:60,invMax:5,awkBase:380,awkStep:130}
 };
@@ -1557,16 +1557,9 @@ for(const k in AB){
   else if(a.cat==='sym'){a.c1=EL[a.pair[0]].c;a.c2=EL[a.pair[1]].c}
   else{a.c1=AB[a.a].c1;a.c2=AB[a.b].c1}
 }
-function ultRoom(){
-  const g=G;if(!g)return 0;let n=g.ult.kind?3-g.ult.lv:3;
-  for(const p of EK){if(p===g.start)continue;const sid=symFor(g.start,p);if(!sid||g.ult.seals[p])continue;
-    if(g.symKnown[sid]||(!symForbidden(sid)&&!(g.el[OPP[p]]>0)))n++}
-  return Math.max(0,n);
-}
-function ultOverflow(){
-  const g=G;if(!g)return;const r=ultRoom();
-  if(g.up>r){const x=g.up-r;g.up=r;g.sp+=x;g.dockSig='';toast('Лишние очки ульты','Ульту больше некуда качать: +'+x+' очк. навыков')}
-}
+/* Ульта качается обычными очками навыков; уровни ульты открываются с уровня героя (BAL.hero.ultLvReq). */
+function ultNeedLv(k){return BAL.hero.ultLvReq[Math.min(k,3)-1]}
+function ultCanUp(){const g=G;return !!g.ult.kind&&g.ult.lv<3&&g.p.lv>=ultNeedLv(g.ult.lv+1)}
 function symFor(x,y){for(const k of SYM_IDS){const p=AB[k].pair;if((p[0]===x&&p[1]===y)||(p[0]===y&&p[1]===x))return k}return null}
 
 /* ---------- ульты (R) ---------- */
@@ -1700,7 +1693,7 @@ it('cloak',{n:'Плащ мага',gl:'shield',price:160,st:{mres:0.35,hp:20},d:'
 it('ward',{n:'Сфера отражения',gl:'shield',price:280,cd:22,mana:30,cast:{kind:'block',dur:8},d:'Активная: поглощает следующий полученный удар в течение 8 секунд.',c:['#2c8a8a','#7fe6ff']});
 it('ultgem',{n:'Кристалл ульты',gl:'gem',price:260,st:{ultcd:0.22,mana:30},d:'Ульта заряжается заметно быстрее.',c:['#8a2a8a','#ff8aff']});
 it('ringmind',{n:'Кольцо ритма',gl:'ring',price:210,st:{cdr:0.14,mreg:1},d:'Способности и атаки быстрее.',c:['#2a7a8a','#8febd0']});
-it('ultscroll',{n:'Свиток силы',gl:'scroll',price:300,scroll:'ultup',d:'Даёт 1 очко ульты: открыть ульту раньше, поднять её уровень или открыть печать.',c:['#8a6a1a','#ffd36b']});
+it('spscroll',{n:'Свиток мудрости',gl:'scroll',price:300,scroll:'sp',d:'Даёт 1 очко навыков: на навыки, мутации, пассивку или ульту.',c:['#8a6a1a','#ffd36b']});
 it('archstaff',{n:'Посох архимага',gl:'staff',price:400,st:{dm:0.22,mana:100,cdr:0.1},d:'Власть над маной и силой заклинаний.',c:['#5a3a9a','#c9b3ff']});
 it('runering',{n:'Руническое кольцо',gl:'ring',price:330,st:{area:0.28,cdr:0.1},d:'Способности накрывают заметно больше.',c:['#2a7a8a','#8febd0']});
 it('arcanebook',{n:'Книга тайн',gl:'scroll',price:360,st:{xpm:0.22,mreg:3,mana:60},d:'Знания дают опыт и ману.',c:['#3a2a8a','#9a8aff']});
@@ -1748,7 +1741,7 @@ for(const k in ITEMS){
 const MERCH={
   smith:{n:'Кузнец Бронн',q:'Сталь не врёт. Бери, пока горячая.',col:'#ff8a5c',pool:['shield1','mail','blade','boots','heart','thorn','mace','gaunt','anvil','plate','greaves','reaper','vitality','spikedshield','warhammer','dragonscale','jetsole','springs','frostheart'],cnt:5},
   alch:{n:'Алхимик Мирра',q:'Всё свежее. Почти.',col:'#6fe3a0',pool:['salve','mpot','regenp','rage','stone','molotov','venom','haste','tonic','philos','bloodvial','hermes'],cnt:6},
-  mage:{n:'Чародей Эзра',q:'Мана течёт к тем, кто умеет слушать.',col:'#9a8aff',pool:['staffbolt','wandfrost','blinkd','orbmana','cloak','ward','ultgem','ringmind','ultscroll','archstaff','runering','arcanebook','prism','ultheart','flamering'],cnt:5,scrolls:2},
+  mage:{n:'Чародей Эзра',q:'Мана течёт к тем, кто умеет слушать.',col:'#9a8aff',pool:['staffbolt','wandfrost','blinkd','orbmana','cloak','ward','ultgem','ringmind','spscroll','archstaff','runering','arcanebook','prism','ultheart','flamering'],cnt:5,scrolls:2},
   sage:{n:'Мастер перемен Ксандр',q:'Забудь старое — освободи место новому.',col:'#6fd6d0',pool:[],cnt:0,special:'swap'},
   tycoon:{n:'Магнат Мидас',q:'Деньги любят тех, кто умеет их тратить.',col:'#f0a8ff',pool:['goldheart','midasring','chronolens','warlord','echoorb','phoenix'],cnt:3,special:'invest'},
   smug:{n:'Контрабандист Рогар',q:'Я вам этого не продавал.',col:'#ffd36b',pool:['aegis','fang','purse','compass','hourglass','voidb','crown','storm','bulwark','luckycoin','berserk','colossus','stormgem','thundercrown','shadowcloak','venomfang','bloodpact'],cnt:4,fscroll:1}
@@ -2312,7 +2305,7 @@ function mkState(start,map){
     wave:0,phase:'fight',wt:0,inter:0,waveDur:60,spawnT:1,evT:30,bossRef:null,bossDead:false,bossKills:0,endless:false,victory:false,
     p:{x:0,y:0,r:13,hp:100,mana:120,xp:0,lv:1,need:needFor(1),inv:0,dash:0,dch:1,dcr:0,face:0,gold:0,vx:0,vy:0,kx:0,ky:0},
     el:{fire:0,water:0,earth:0,air:0,metal:0,wood:0},pass:{},
-    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},up:0,symKnown:{},bag:[null,null,null,null,null,null],
+    slots:[null,null,null,null,null],ult:{lv:0,cd:0,cdMax:1,kind:null,seals:{}},symKnown:{},bag:[null,null,null,null,null,null],
     S:{},E:{},bf:{dm:{t:0,v:0},spd:{t:0,v:0},armor:{t:0,v:0},ls:{t:0,v:0},regen:{t:0,v:0}},
     en:[],pr:[],zn:[],gem:[],pt:[],tx:[],bl:[],tor:[],fx:[],pk:[],bolts:[],beams:[],em:[],stc:[],eps:[],tgs:[],gh:[],merch:[],solids:[],pools:[],decors:[],gk:'',deb:[],smk:[],spk:[],fl:[],sc:[],slowmo:0,zk:0,lavaT:0,
     cdw:{},choices:[],pending:0,shake:0,hitFlash:0,rockAng:0,dashT:0,dashAng:0,block:0,shield:0,vac:0,slowAll:0,slowAllF:1,
@@ -3354,7 +3347,7 @@ function symUlt(id,lv,c){
 function castUlt(){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
-  if(!g.ult.lv){if(!g.ult.warn||g.t-g.ult.warn>2){g.ult.warn=g.t;toast('Ульта ещё закрыта','На '+ULT_LV+' уровне героя придёт очко ульты: древо (T) → Ульта')}return}
+  if(!g.ult.lv){if(!g.ult.warn||g.t-g.ult.warn>2){g.ult.warn=g.t;toast('Ульта ещё закрыта','С '+ULT_LV+' уровня героя: древо (T) → Ульта, 1 очко навыков')}return}
   const u=ultInfo();
   if(g.ult.cd>0)return;
   if(g.p.mana<u.mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}
@@ -4264,7 +4257,7 @@ function priceOf(id,mid){
 function genStock(mid){
   const g=G,M=MERCH[mid];
   if(M.special==='swap')return [];
-  const have=id=>ITEMS[id].ch?false:(g.bought[id]||g.bag.some(b=>b&&b.id===id)||(id==='ultscroll'&&g.ult.lv>=3&&ultMods().length>=2));
+  const have=id=>ITEMS[id].ch?false:(g.bought[id]||g.bag.some(b=>b&&b.id===id));
   const list=shuffle(M.pool.filter(id=>!have(id))).slice(0,M.cnt);
   const owned=id=>g.slots.some(s=>s&&s.id===id);
   if(M.scrolls){
@@ -4354,8 +4347,8 @@ function buyItem(m,si){
   if(!s||s.sold)return 'Уже продано';
   const d=ITEMS[s.id],price=priceOf(s.id,m.id);
   if(g.p.gold<price)return 'Не хватает золота';
-  if(d.scroll==='ultup'){
-    g.up++;if(ultRoom()<g.up)ultOverflow();else toast('Очко ульты','Древо (T) → Ульта');
+  if(d.scroll==='sp'){
+    g.sp++;toast('Очко навыков','Древо (T)');
   }else if(d.scroll){
     const ex=g.slots.find(x=>x&&x.id===d.scroll);
     if(ex&&ex.lv>=5)return 'Способность на максимуме';
@@ -4384,7 +4377,7 @@ function sellItem(i){
 function gainXp(v){
   const g=G,p=g.p;
   p.xp+=v*(1+g.S.xpm);
-  while(p.xp>=p.need){p.xp-=p.need;p.lv++;p.need=needFor(p.lv);g.pending++;g.sp++;recalc();if(p.lv>=ULT_LV&&(p.lv-ULT_LV)%4===0){g.up++;if(ultRoom()<g.up){ultOverflow();continue}toast('Очко ульты',g.ult.kind?'Древо (T) → Ульта: уровень или печать':'Древо (T) → Ульта: выберите свою ульту')}}
+  while(p.xp>=p.need){p.xp-=p.need;p.lv++;p.need=needFor(p.lv);g.pending++;g.sp++;recalc();if(p.lv===ULT_LV)toast('Ульта доступна','Древо (T) → Ульта: выберите её за 1 очко навыков');else if(g.ult.kind&&BAL.hero.ultLvReq.indexOf(p.lv)>0&&g.ult.lv<3)toast('Ульту можно усилить','Древо (T) → Ульта')}
 }
 function buildChoices(){
   const g=G,pool=[];
@@ -4892,7 +4885,7 @@ function tipFor(k,i){
   }
   if(k==='u'){
     const u=ultInfo(),mods=ultMods();
-    if(!g.ult.lv)return '<div class="tn">Ульта закрыта</div><div class="td">На '+ULT_LV+' уровне героя придёт первое очко ульты. В древе (T) → «Ульта» выберите направление: ульта героя «'+ULT[g.start].n+'» или ульта одного из изученных симбиозов.</div><div class="tu">Дальше очко ульты каждые 4 уровня: уровень ульты и печати симбиозов.</div>';
+    if(!g.ult.lv)return '<div class="tn">Ульта закрыта</div><div class="td">С '+ULT_LV+' уровня героя её можно открыть за 1 очко навыков: древо (T) → «Ульта» выберите направление: ульта героя «'+ULT[g.start].n+'» или ульта одного из изученных симбиозов.</div><div class="tu">Уровни ульты открываются на '+ultNeedLv(2)+' и '+ultNeedLv(3)+' уровнях героя, печати — после изучения симбиозов.</div>';
     return '<div class="tn">'+u.n+'</div><div class="tm">Ульта ур. '+g.ult.lv+' · мана <b>'+u.mana+'</b> · откат '+Math.round(u.cd*(1-g.S.ultcd)/(1+g.E.cdr*0.5))+' с · ['+keyName(SAVE.keys.ult)+']</div><div class="td">'+u.d+'</div>'+(mods.length?'<div class="tu">Усилена симбиозами: '+mods.map(p=>ULTMOD[p]+' ('+ULTMODD[p]+')').join('; ')+'</div>':'<div class="tu">Симбиозы с вашей стихией добавляют ульте новые эффекты.</div>');
   }
   const x=g.bag[i];
@@ -5020,7 +5013,7 @@ function skillAvail(id){
 function treeBadge(){
   const g=G;if(!g)return;
   const b=$('treeBtn');if(!b)return;
-  const n=g.sp+(g.up||0),t=n>0?'Навыки · '+n+' (T)':'Навыки (T)';
+  const n=g.sp,t=n>0?'Навыки · '+n+' (T)':'Навыки (T)';
   if(b.textContent!==t){b.textContent=t;b.classList.toggle('has',n>0)}
 }
 function openTree(){
@@ -5054,12 +5047,11 @@ function trThumbs(){
 function roleTag(a){return a.role?'<span class="rtag" style="color:'+ROLEC[a.role]+'">'+a.role+'</span>':''}
 function renderTree(){
   const g=G;
-  ultOverflow();
-  $('trSp').textContent='Очков навыков: '+g.sp+' · очков ульты: '+g.up+'. Очко навыков за каждый уровень, очко ульты на '+ULT_LV+' уровне и дальше каждые 4.';
+  $('trSp').textContent='Очков навыков: '+g.sp+'. Очко за каждый уровень. Тратятся на навыки, мутации, пассивку героя и ульту (с '+ULT_LV+' уровня).';
   let h='<h4>Герой</h4>';
   h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+EL[g.start].c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+EL[g.start].c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
   const ui=ultInfo();
-  h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта'+(g.up?' · очков '+g.up:'')+'</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
+  h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
   const row=id=>{
     const a=AB[id],s=slotOf(id),why=skillAvail(id);
     h+='<button type="button" data-sk="'+id+'" class="'+(trSel===id?'sel':'')+(why&&!s?' lock':'')+'" style="--c1:'+(a.c1||'#9cc4ff')+'"><canvas class="tth" data-id="'+id+'" width="104" height="60"></canvas><span class="tl"><b>'+a.n+'</b>'+(a.cat==='sym'?'<span class="rtag" style="color:'+a.c2+'">'+EL[a.pair[0]].n+' + '+EL[a.pair[1]].n+'</span>':roleTag(a))+'</span><small>'+(s?'ур.'+s.lv:(why?'🔒':'—'))+'</small></button>';
@@ -5106,28 +5098,28 @@ function renderTree(){
 }
 function ultTreeHtml(){
   const g=G,ui=ultInfo();
-  let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков ульты: '+g.up+' · первое на '+ULT_LV+' ур. героя, дальше каждые 4 уровня</span></div>';
+  let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков навыков: '+g.sp+' · открыть с '+ULT_LV+' ур., уровни 2 и 3 — с '+ultNeedLv(2)+' и '+ultNeedLv(3)+' ур. героя</span></div>';
   if(!g.ult.kind){
+    const lvOk=g.p.lv>=ULT_LV;
     d+='<p style="margin:0;color:#c5cbdd">Выберите направление ульты. Выбор один на забег. Ульта симбиоза доступна, если этот симбиоз уже изучен.</p>';
-    const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&g.up>0?'':' disabled')+'>Выбрать · 1 очко ульты</button></div>';
-    const lvOk=g.p.lv>=ULT_LV||g.up>0;
+    const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&lvOk&&g.sp>0?'':' disabled')+'>Выбрать · 1 очко</button></div>';
     d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',EL[g.start].c);
     for(const id of SYM_IDS){
       if(!g.symKnown[id])continue;
       d+=opt('sym:'+id,symUltName(id),'«'+AB[id].n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',true,'',AB[id].c1);
     }
     if(!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
-    if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Очко ульты придёт на '+ULT_LV+' уровне героя (сейчас '+g.p.lv+').</p>';
+    if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Ульта открывается с '+ULT_LV+' уровня героя (сейчас '+g.p.lv+').</p>';
     return d;
   }
   d+='<p style="margin:0;color:#c5cbdd"><b style="color:'+ui.c1+'">'+ui.n+'.</b> '+ui.d+'</p>';
-  d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div><button type="button" data-ultlv="1"'+(g.ult.lv<3&&g.up>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко ульты')+'</button></div>';
+  d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div>'+(g.ult.lv<3&&!ultCanUp()?'<span class="rq">Нужен '+ultNeedLv(g.ult.lv+1)+' ур. героя</span>':'')+'<button type="button" data-ultlv="1"'+(ultCanUp()&&g.sp>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко')+'</button></div>';
   d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати симбиозов — добавляют ульте эффекты</h4>';
   for(const p of EK){
     if(p===g.start)continue;
     const sid=symFor(g.start,p);if(!sid)continue;
     const has=g.ult.seals[p],known=g.symKnown[sid];
-    d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.up>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко ульты')+'</button></div>';
+    d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.sp>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко')+'</button></div>';
   }
   return d;
 }
@@ -5136,9 +5128,9 @@ $('trDet').addEventListener('click',e=>{
   const g=G,b=e.target.closest('button');
   if(!g||!b||b.disabled)return;
   if(b.hasAttribute('data-pas')){pasUp()}
-  else if(b.hasAttribute('data-ult')){if(g.up>0&&!g.ult.kind){g.up--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
-  else if(b.hasAttribute('data-ultlv')){if(g.up>0&&g.ult.kind&&g.ult.lv<3){g.up--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
-  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.up>0&&g.ult.kind&&!g.ult.seals[p]){g.up--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
+  else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
+  else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
+  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&g.symKnown[symFor(g.start,p)]){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
   else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-node')){
@@ -5199,7 +5191,7 @@ function sageSwap(m,i,k){
   g.swaps=(g.swaps||0)+1;g.dockSig='';m.sel=-1;
   recalc();
   sfx(520,0.2,'triangle',0.05,300);
-  return '«'+old+'» забыт, «'+AB[k].n+'» начинает с 2 уровня'+(back?'. Очки мутаций вернулись: '+back:'');
+  return '«'+old+'» забыт, «'+AB[k].n+'» начинает с 2 уровня'+(back?'. Очки навыков вернулись: '+back:'');
 }
 function renderSage(m,M,tabs){
   const g=G;let body='';
@@ -5211,7 +5203,7 @@ function renderSage(m,M,tabs){
     g.slots.forEach((s,i)=>{
       if(!s)return;
       const a=AB[s.id],price=sagePrice(s),can=g.p.gold>=price,n=g.nodes[s.id],back=n?(n.a||0)+(n.b||0)+(n.c||0):0;
-      body+='<button class="btn alt sagecard" type="button" data-sage="old:'+i+'" style="--c1:'+a.c1+'"><span class="orb sm" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><span><b>'+a.n+'</b> · ур. '+s.lv+'<br><small>'+(back?'Вернёт очков мутаций: '+back+'. ':'')+'</small></span><span class="price'+(can?'':' no')+'">'+coin+price+'</span></button>';
+      body+='<button class="btn alt sagecard" type="button" data-sage="old:'+i+'" style="--c1:'+a.c1+'"><span class="orb sm" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><span><b>'+a.n+'</b> · ур. '+s.lv+'<br><small>'+(back?'Вернёт очков навыков: '+back+'. ':'')+'</small></span><span class="price'+(can?'':' no')+'">'+coin+price+'</span></button>';
     });
     if(!g.slots.some(s=>s))body+='<p>У вас нет навыков, которые можно забыть.</p>';
   }else{
@@ -5226,7 +5218,7 @@ function renderSage(m,M,tabs){
   }
   $('shop').innerHTML='<div class="shop"><div class="shop-head"><div><h3 style="color:'+M.col+'">'+M.n+'</h3><p>«'+M.q+'»</p></div><div class="mtabs">'+tabs+'</div><div class="gold" id="shopGold"><span class="coin"></span>'+Math.floor(g.p.gold)+'</div></div>'
     +'<div class="stock" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start">'+body+'</div>'
-    +'<div class="bagside"><h2 class="sec">Смена навыка</h2><div class="hint" id="shopMsg">'+(shopMsg||'Навык и его прокачка исчезают, потраченные очки мутаций возвращаются. Новый навык начнёт со 2 уровня.')+'</div><button class="btn" type="button" data-close="1">Закрыть ('+keyName(SAVE.keys.use)+')</button></div></div>';
+    +'<div class="bagside"><h2 class="sec">Смена навыка</h2><div class="hint" id="shopMsg">'+(shopMsg||'Навык и его прокачка исчезают, потраченные очки навыков возвращаются. Новый навык начнёт со 2 уровня.')+'</div><button class="btn" type="button" data-close="1">Закрыть ('+keyName(SAVE.keys.use)+')</button></div></div>';
 }
 function renderShop(){
   const g=G,m=shopM;
@@ -5251,7 +5243,7 @@ function renderShop(){
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';
     }
     const sp=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0),cs=g.p.gold>=sp;
-    st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко мутации</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
+    st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко навыков</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
     st+='<h2 class="sec" style="grid-column:1/-1">Редкие предметы: нигде больше не продаются</h2>';
   }
   m.stock.forEach((s,i)=>{
@@ -5287,7 +5279,7 @@ $('shop').addEventListener('click',e=>{
     let msg='';
     if(iv&&iv.dataset.inv==='__sp'){
       const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
-      if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко мутации получено';sfx(700,0.12,'triangle',0.05,300)}
+      if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко навыков получено';sfx(700,0.12,'triangle',0.05,300)}
     }else if(iv){
       const s=INVEST.find(x=>x.k===iv.dataset.inv),n=g.inv[s.k]||0,pr=invPrice(s);
       if(n>=INV_MAX)msg='Уже на максимуме';else if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.inv[s.k]=n+1;recalc();msg=s.n+': '+s.d;sfx(700,0.12,'triangle',0.05,300)}
@@ -5473,7 +5465,7 @@ function codexTab(){
     const M=MERCH[mk];
     let r='';
     for(const id of M.pool)r+=row(ITEMS[id].n,ITEMS[id].tag+'. '+ITEMS[id].d+(ITEMS[id].st?' ('+statLine(ITEMS[id].st)+')':'')+' Цена '+ITEMS[id].price+'.');
-    if(M.special==='invest')r+=row('Вложения и пробуждение','Приходит после 6-й, 12-й и 18-й волн, только если у вас много золота (200 + 25 за волну). Постоянные усиления, повышение уровня стихии, очко мутации и четыре предмета, которых нет у других торговцев.');
+    if(M.special==='invest')r+=row('Вложения и пробуждение','Приходит после 6-й, 12-й и 18-й волн, только если у вас много золота (200 + 25 за волну). Постоянные усиления, повышение уровня стихии, очко навыков и четыре предмета, которых нет у других торговцев.');
     if(M.special==='swap')r+=row('Смена навыка','Появляется на чётных волнах. Забываете навык, возвращаются очки мутаций, а новый навык стартует со 2 уровня. Цена растёт с каждой сменой.');
     if(M.scrolls)r+=row('Свитки способностей','Случайные навыки и симбиозы: изучаются сразу, без условий стихий.');
     if(M.fscroll)r+=row('Свиток слияния','Редкая находка: слияние без ингредиентов.');
@@ -8888,7 +8880,7 @@ if(DEBUG){
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
-    activeReload,GMOD,gunMag,heroMech,bossPattern,itemTip,ultRoom,BOSS,
+    activeReload,GMOD,gunMag,heroMech,bossPattern,itemTip,ultCanUp,BOSS,
     ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
   };
 }

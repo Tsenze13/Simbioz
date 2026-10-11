@@ -11,7 +11,7 @@ function skillAvail(id){
 function treeBadge(){
   const g=G;if(!g)return;
   const b=$('treeBtn');if(!b)return;
-  const n=g.sp+(g.up||0),t=n>0?'Навыки · '+n+' (T)':'Навыки (T)';
+  const n=g.sp,t=n>0?'Навыки · '+n+' (T)':'Навыки (T)';
   if(b.textContent!==t){b.textContent=t;b.classList.toggle('has',n>0)}
 }
 function openTree(){
@@ -45,12 +45,11 @@ function trThumbs(){
 function roleTag(a){return a.role?'<span class="rtag" style="color:'+ROLEC[a.role]+'">'+a.role+'</span>':''}
 function renderTree(){
   const g=G;
-  ultOverflow();
-  $('trSp').textContent='Очков навыков: '+g.sp+' · очков ульты: '+g.up+'. Очко навыков за каждый уровень, очко ульты на '+ULT_LV+' уровне и дальше каждые 4.';
+  $('trSp').textContent='Очков навыков: '+g.sp+'. Очко за каждый уровень. Тратятся на навыки, мутации, пассивку героя и ульту (с '+ULT_LV+' уровня).';
   let h='<h4>Герой</h4>';
   h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+EL[g.start].c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+EL[g.start].c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
   const ui=ultInfo();
-  h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта'+(g.up?' · очков '+g.up:'')+'</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
+  h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
   const row=id=>{
     const a=AB[id],s=slotOf(id),why=skillAvail(id);
     h+='<button type="button" data-sk="'+id+'" class="'+(trSel===id?'sel':'')+(why&&!s?' lock':'')+'" style="--c1:'+(a.c1||'#9cc4ff')+'"><canvas class="tth" data-id="'+id+'" width="104" height="60"></canvas><span class="tl"><b>'+a.n+'</b>'+(a.cat==='sym'?'<span class="rtag" style="color:'+a.c2+'">'+EL[a.pair[0]].n+' + '+EL[a.pair[1]].n+'</span>':roleTag(a))+'</span><small>'+(s?'ур.'+s.lv:(why?'🔒':'—'))+'</small></button>';
@@ -97,28 +96,28 @@ function renderTree(){
 }
 function ultTreeHtml(){
   const g=G,ui=ultInfo();
-  let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков ульты: '+g.up+' · первое на '+ULT_LV+' ур. героя, дальше каждые 4 уровня</span></div>';
+  let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков навыков: '+g.sp+' · открыть с '+ULT_LV+' ур., уровни 2 и 3 — с '+ultNeedLv(2)+' и '+ultNeedLv(3)+' ур. героя</span></div>';
   if(!g.ult.kind){
+    const lvOk=g.p.lv>=ULT_LV;
     d+='<p style="margin:0;color:#c5cbdd">Выберите направление ульты. Выбор один на забег. Ульта симбиоза доступна, если этот симбиоз уже изучен.</p>';
-    const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&g.up>0?'':' disabled')+'>Выбрать · 1 очко ульты</button></div>';
-    const lvOk=g.p.lv>=ULT_LV||g.up>0;
+    const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&lvOk&&g.sp>0?'':' disabled')+'>Выбрать · 1 очко</button></div>';
     d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',EL[g.start].c);
     for(const id of SYM_IDS){
       if(!g.symKnown[id])continue;
       d+=opt('sym:'+id,symUltName(id),'«'+AB[id].n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',true,'',AB[id].c1);
     }
     if(!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
-    if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Очко ульты придёт на '+ULT_LV+' уровне героя (сейчас '+g.p.lv+').</p>';
+    if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Ульта открывается с '+ULT_LV+' уровня героя (сейчас '+g.p.lv+').</p>';
     return d;
   }
   d+='<p style="margin:0;color:#c5cbdd"><b style="color:'+ui.c1+'">'+ui.n+'.</b> '+ui.d+'</p>';
-  d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div><button type="button" data-ultlv="1"'+(g.ult.lv<3&&g.up>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко ульты')+'</button></div>';
+  d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div>'+(g.ult.lv<3&&!ultCanUp()?'<span class="rq">Нужен '+ultNeedLv(g.ult.lv+1)+' ур. героя</span>':'')+'<button type="button" data-ultlv="1"'+(ultCanUp()&&g.sp>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко')+'</button></div>';
   d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати симбиозов — добавляют ульте эффекты</h4>';
   for(const p of EK){
     if(p===g.start)continue;
     const sid=symFor(g.start,p);if(!sid)continue;
     const has=g.ult.seals[p],known=g.symKnown[sid];
-    d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.up>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко ульты')+'</button></div>';
+    d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.sp>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко')+'</button></div>';
   }
   return d;
 }
@@ -127,9 +126,9 @@ $('trDet').addEventListener('click',e=>{
   const g=G,b=e.target.closest('button');
   if(!g||!b||b.disabled)return;
   if(b.hasAttribute('data-pas')){pasUp()}
-  else if(b.hasAttribute('data-ult')){if(g.up>0&&!g.ult.kind){g.up--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
-  else if(b.hasAttribute('data-ultlv')){if(g.up>0&&g.ult.kind&&g.ult.lv<3){g.up--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
-  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.up>0&&g.ult.kind&&!g.ult.seals[p]){g.up--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
+  else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
+  else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
+  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&g.symKnown[symFor(g.start,p)]){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
   else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-node')){

@@ -82,8 +82,11 @@ with sync_playwright() as p:
 
     print('Прокачка, древо, ульта')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air');const g=S.G;for(let i=0;i<61;i++){g.p.xp=g.p.need;S.gainXp(0)}g.pending=0;
-        S.openTree();S.closeTree();const c=S.buildChoices();return {lv:g.p.lv,up:g.up,room:S.ultRoom(),cards:c.length}}""")
-    check('очки ульты не копятся сверх возможного', r['up'] <= r['room'], r)
+        S.openTree();const sp0=g.sp;document.querySelector('#trList [data-sk="__ult"]').click();
+        const pick=document.querySelector('#trDet [data-ult="hero"]');pick.click();const lv1=g.ult.lv;
+        document.querySelector('#trDet [data-ultlv]').click();document.querySelector('#trDet [data-ultlv]').click();
+        S.closeTree();const c=S.buildChoices();return {lv:g.p.lv,sp0,sp:g.sp,ult:g.ult.lv,lv1,cards:c.length,up:g.up}}""")
+    check('ульта открывается и качается очками навыков', r['lv1'] == 1 and r['ult'] == 3 and r['sp'] == r['sp0'] - 3 and r.get('up') is None, r)
     check('карточки уровня', r['cards'] == 3, r['cards'])
 
     print('Лавка и предметы')

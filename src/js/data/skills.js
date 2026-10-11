@@ -318,16 +318,9 @@ for(const k in AB){
   else if(a.cat==='sym'){a.c1=EL[a.pair[0]].c;a.c2=EL[a.pair[1]].c}
   else{a.c1=AB[a.a].c1;a.c2=AB[a.b].c1}
 }
-function ultRoom(){
-  const g=G;if(!g)return 0;let n=g.ult.kind?3-g.ult.lv:3;
-  for(const p of EK){if(p===g.start)continue;const sid=symFor(g.start,p);if(!sid||g.ult.seals[p])continue;
-    if(g.symKnown[sid]||(!symForbidden(sid)&&!(g.el[OPP[p]]>0)))n++}
-  return Math.max(0,n);
-}
-function ultOverflow(){
-  const g=G;if(!g)return;const r=ultRoom();
-  if(g.up>r){const x=g.up-r;g.up=r;g.sp+=x;g.dockSig='';toast('Лишние очки ульты','Ульту больше некуда качать: +'+x+' очк. навыков')}
-}
+/* Ульта качается обычными очками навыков; уровни ульты открываются с уровня героя (BAL.hero.ultLvReq). */
+function ultNeedLv(k){return BAL.hero.ultLvReq[Math.min(k,3)-1]}
+function ultCanUp(){const g=G;return !!g.ult.kind&&g.ult.lv<3&&g.p.lv>=ultNeedLv(g.ult.lv+1)}
 function symFor(x,y){for(const k of SYM_IDS){const p=AB[k].pair;if((p[0]===x&&p[1]===y)||(p[0]===y&&p[1]===x))return k}return null}
 
 /* ---------- ульты (R) ---------- */

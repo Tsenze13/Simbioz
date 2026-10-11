@@ -47,7 +47,7 @@ function sageSwap(m,i,k){
   g.swaps=(g.swaps||0)+1;g.dockSig='';m.sel=-1;
   recalc();
   sfx(520,0.2,'triangle',0.05,300);
-  return '«'+old+'» забыт, «'+AB[k].n+'» начинает с 2 уровня'+(back?'. Очки мутаций вернулись: '+back:'');
+  return '«'+old+'» забыт, «'+AB[k].n+'» начинает с 2 уровня'+(back?'. Очки навыков вернулись: '+back:'');
 }
 function renderSage(m,M,tabs){
   const g=G;let body='';
@@ -59,7 +59,7 @@ function renderSage(m,M,tabs){
     g.slots.forEach((s,i)=>{
       if(!s)return;
       const a=AB[s.id],price=sagePrice(s),can=g.p.gold>=price,n=g.nodes[s.id],back=n?(n.a||0)+(n.b||0)+(n.c||0):0;
-      body+='<button class="btn alt sagecard" type="button" data-sage="old:'+i+'" style="--c1:'+a.c1+'"><span class="orb sm" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><span><b>'+a.n+'</b> · ур. '+s.lv+'<br><small>'+(back?'Вернёт очков мутаций: '+back+'. ':'')+'</small></span><span class="price'+(can?'':' no')+'">'+coin+price+'</span></button>';
+      body+='<button class="btn alt sagecard" type="button" data-sage="old:'+i+'" style="--c1:'+a.c1+'"><span class="orb sm" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><span><b>'+a.n+'</b> · ур. '+s.lv+'<br><small>'+(back?'Вернёт очков навыков: '+back+'. ':'')+'</small></span><span class="price'+(can?'':' no')+'">'+coin+price+'</span></button>';
     });
     if(!g.slots.some(s=>s))body+='<p>У вас нет навыков, которые можно забыть.</p>';
   }else{
@@ -74,7 +74,7 @@ function renderSage(m,M,tabs){
   }
   $('shop').innerHTML='<div class="shop"><div class="shop-head"><div><h3 style="color:'+M.col+'">'+M.n+'</h3><p>«'+M.q+'»</p></div><div class="mtabs">'+tabs+'</div><div class="gold" id="shopGold"><span class="coin"></span>'+Math.floor(g.p.gold)+'</div></div>'
     +'<div class="stock" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start">'+body+'</div>'
-    +'<div class="bagside"><h2 class="sec">Смена навыка</h2><div class="hint" id="shopMsg">'+(shopMsg||'Навык и его прокачка исчезают, потраченные очки мутаций возвращаются. Новый навык начнёт со 2 уровня.')+'</div><button class="btn" type="button" data-close="1">Закрыть ('+keyName(SAVE.keys.use)+')</button></div></div>';
+    +'<div class="bagside"><h2 class="sec">Смена навыка</h2><div class="hint" id="shopMsg">'+(shopMsg||'Навык и его прокачка исчезают, потраченные очки навыков возвращаются. Новый навык начнёт со 2 уровня.')+'</div><button class="btn" type="button" data-close="1">Закрыть ('+keyName(SAVE.keys.use)+')</button></div></div>';
 }
 function renderShop(){
   const g=G,m=shopM;
@@ -99,7 +99,7 @@ function renderShop(){
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';
     }
     const sp=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0),cs=g.p.gold>=sp;
-    st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко мутации</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
+    st+='<button class="btn alt sagecard" type="button" data-inv="__sp"><span><b>Озарение</b><br><small>+1 очко навыков</small></span><span class="price'+(cs?'':' no')+'">'+coin+sp+'</span></button>';
     st+='<h2 class="sec" style="grid-column:1/-1">Редкие предметы: нигде больше не продаются</h2>';
   }
   m.stock.forEach((s,i)=>{
@@ -135,7 +135,7 @@ $('shop').addEventListener('click',e=>{
     let msg='';
     if(iv&&iv.dataset.inv==='__sp'){
       const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
-      if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко мутации получено';sfx(700,0.12,'triangle',0.05,300)}
+      if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко навыков получено';sfx(700,0.12,'triangle',0.05,300)}
     }else if(iv){
       const s=INVEST.find(x=>x.k===iv.dataset.inv),n=g.inv[s.k]||0,pr=invPrice(s);
       if(n>=INV_MAX)msg='Уже на максимуме';else if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.inv[s.k]=n+1;recalc();msg=s.n+': '+s.d;sfx(700,0.12,'triangle',0.05,300)}

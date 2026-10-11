@@ -49,7 +49,7 @@ it('cloak',{n:'Плащ мага',gl:'shield',price:160,st:{mres:0.35,hp:20},d:'
 it('ward',{n:'Сфера отражения',gl:'shield',price:280,cd:22,mana:30,cast:{kind:'block',dur:8},d:'Активная: поглощает следующий полученный удар в течение 8 секунд.',c:['#2c8a8a','#7fe6ff']});
 it('ultgem',{n:'Кристалл ульты',gl:'gem',price:260,st:{ultcd:0.22,mana:30},d:'Ульта заряжается заметно быстрее.',c:['#8a2a8a','#ff8aff']});
 it('ringmind',{n:'Кольцо ритма',gl:'ring',price:210,st:{cdr:0.14,mreg:1},d:'Способности и атаки быстрее.',c:['#2a7a8a','#8febd0']});
-it('ultscroll',{n:'Свиток силы',gl:'scroll',price:300,scroll:'ultup',d:'Даёт 1 очко ульты: открыть ульту раньше, поднять её уровень или открыть печать.',c:['#8a6a1a','#ffd36b']});
+it('spscroll',{n:'Свиток мудрости',gl:'scroll',price:300,scroll:'sp',d:'Даёт 1 очко навыков: на навыки, мутации, пассивку или ульту.',c:['#8a6a1a','#ffd36b']});
 it('archstaff',{n:'Посох архимага',gl:'staff',price:400,st:{dm:0.22,mana:100,cdr:0.1},d:'Власть над маной и силой заклинаний.',c:['#5a3a9a','#c9b3ff']});
 it('runering',{n:'Руническое кольцо',gl:'ring',price:330,st:{area:0.28,cdr:0.1},d:'Способности накрывают заметно больше.',c:['#2a7a8a','#8febd0']});
 it('arcanebook',{n:'Книга тайн',gl:'scroll',price:360,st:{xpm:0.22,mreg:3,mana:60},d:'Знания дают опыт и ману.',c:['#3a2a8a','#9a8aff']});
@@ -97,7 +97,7 @@ for(const k in ITEMS){
 const MERCH={
   smith:{n:'Кузнец Бронн',q:'Сталь не врёт. Бери, пока горячая.',col:'#ff8a5c',pool:['shield1','mail','blade','boots','heart','thorn','mace','gaunt','anvil','plate','greaves','reaper','vitality','spikedshield','warhammer','dragonscale','jetsole','springs','frostheart'],cnt:5},
   alch:{n:'Алхимик Мирра',q:'Всё свежее. Почти.',col:'#6fe3a0',pool:['salve','mpot','regenp','rage','stone','molotov','venom','haste','tonic','philos','bloodvial','hermes'],cnt:6},
-  mage:{n:'Чародей Эзра',q:'Мана течёт к тем, кто умеет слушать.',col:'#9a8aff',pool:['staffbolt','wandfrost','blinkd','orbmana','cloak','ward','ultgem','ringmind','ultscroll','archstaff','runering','arcanebook','prism','ultheart','flamering'],cnt:5,scrolls:2},
+  mage:{n:'Чародей Эзра',q:'Мана течёт к тем, кто умеет слушать.',col:'#9a8aff',pool:['staffbolt','wandfrost','blinkd','orbmana','cloak','ward','ultgem','ringmind','spscroll','archstaff','runering','arcanebook','prism','ultheart','flamering'],cnt:5,scrolls:2},
   sage:{n:'Мастер перемен Ксандр',q:'Забудь старое — освободи место новому.',col:'#6fd6d0',pool:[],cnt:0,special:'swap'},
   tycoon:{n:'Магнат Мидас',q:'Деньги любят тех, кто умеет их тратить.',col:'#f0a8ff',pool:['goldheart','midasring','chronolens','warlord','echoorb','phoenix'],cnt:3,special:'invest'},
   smug:{n:'Контрабандист Рогар',q:'Я вам этого не продавал.',col:'#ffd36b',pool:['aegis','fang','purse','compass','hourglass','voidb','crown','storm','bulwark','luckycoin','berserk','colossus','stormgem','thundercrown','shadowcloak','venomfang','bloodpact'],cnt:4,fscroll:1}

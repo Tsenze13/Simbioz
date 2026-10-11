@@ -39,8 +39,8 @@ function buyItem(m,si){
   if(!s||s.sold)return 'Уже продано';
   const d=ITEMS[s.id],price=priceOf(s.id,m.id);
   if(g.p.gold<price)return 'Не хватает золота';
-  if(d.scroll==='ultup'){
-    g.up++;if(ultRoom()<g.up)ultOverflow();else toast('Очко ульты','Древо (T) → Ульта');
+  if(d.scroll==='sp'){
+    g.sp++;toast('Очко навыков','Древо (T)');
   }else if(d.scroll){
     const ex=g.slots.find(x=>x&&x.id===d.scroll);
     if(ex&&ex.lv>=5)return 'Способность на максимуме';

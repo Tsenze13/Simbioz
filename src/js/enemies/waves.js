@@ -42,7 +42,7 @@ function priceOf(id,mid){
 function genStock(mid){
   const g=G,M=MERCH[mid];
   if(M.special==='swap')return [];
-  const have=id=>ITEMS[id].ch?false:(g.bought[id]||g.bag.some(b=>b&&b.id===id)||(id==='ultscroll'&&g.ult.lv>=3&&ultMods().length>=2));
+  const have=id=>ITEMS[id].ch?false:(g.bought[id]||g.bag.some(b=>b&&b.id===id));
   const list=shuffle(M.pool.filter(id=>!have(id))).slice(0,M.cnt);
   const owned=id=>g.slots.some(s=>s&&s.id===id);
   if(M.scrolls){

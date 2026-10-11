@@ -77,7 +77,7 @@ function symUlt(id,lv,c){
 function castUlt(){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
-  if(!g.ult.lv){if(!g.ult.warn||g.t-g.ult.warn>2){g.ult.warn=g.t;toast('Ульта ещё закрыта','На '+ULT_LV+' уровне героя придёт очко ульты: древо (T) → Ульта')}return}
+  if(!g.ult.lv){if(!g.ult.warn||g.t-g.ult.warn>2){g.ult.warn=g.t;toast('Ульта ещё закрыта','С '+ULT_LV+' уровня героя: древо (T) → Ульта, 1 очко навыков')}return}
   const u=ultInfo();
   if(g.ult.cd>0)return;
   if(g.p.mana<u.mana){g.nomana=0.35;sfx(130,0.1,'square',0.03);return}

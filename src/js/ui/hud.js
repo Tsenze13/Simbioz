@@ -119,7 +119,7 @@ function tipFor(k,i){
   }
   if(k==='u'){
     const u=ultInfo(),mods=ultMods();
-    if(!g.ult.lv)return '<div class="tn">Ульта закрыта</div><div class="td">На '+ULT_LV+' уровне героя придёт первое очко ульты. В древе (T) → «Ульта» выберите направление: ульта героя «'+ULT[g.start].n+'» или ульта одного из изученных симбиозов.</div><div class="tu">Дальше очко ульты каждые 4 уровня: уровень ульты и печати симбиозов.</div>';
+    if(!g.ult.lv)return '<div class="tn">Ульта закрыта</div><div class="td">С '+ULT_LV+' уровня героя её можно открыть за 1 очко навыков: древо (T) → «Ульта» выберите направление: ульта героя «'+ULT[g.start].n+'» или ульта одного из изученных симбиозов.</div><div class="tu">Уровни ульты открываются на '+ultNeedLv(2)+' и '+ultNeedLv(3)+' уровнях героя, печати — после изучения симбиозов.</div>';
     return '<div class="tn">'+u.n+'</div><div class="tm">Ульта ур. '+g.ult.lv+' · мана <b>'+u.mana+'</b> · откат '+Math.round(u.cd*(1-g.S.ultcd)/(1+g.E.cdr*0.5))+' с · ['+keyName(SAVE.keys.ult)+']</div><div class="td">'+u.d+'</div>'+(mods.length?'<div class="tu">Усилена симбиозами: '+mods.map(p=>ULTMOD[p]+' ('+ULTMODD[p]+')').join('; ')+'</div>':'<div class="tu">Симбиозы с вашей стихией добавляют ульте новые эффекты.</div>');
   }
   const x=g.bag[i];
