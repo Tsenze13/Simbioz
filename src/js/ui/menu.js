@@ -11,7 +11,7 @@ function renderMenu(){
   if(menuTab==='play')P.innerHTML=playTab();
   else if(menuTab==='up')P.innerHTML=upTab();
   else if(menuTab==='codex')P.innerHTML=codexTab();
-  else if(menuTab==='bestiary')P.innerHTML=bestiaryTab();
+  else if(menuTab==='bestiary'){P.innerHTML=bestiaryTab();if(!bestRaf)bestRaf=requestAnimationFrame(bestLoop)}
   else P.innerHTML=keysTab();
 }
 function routeHtml(){
@@ -47,13 +47,31 @@ function upTab(){
   }
   return h+'</div></section>';
 }
+/* живые спрайты врагов в бестиарии — те же, что в игре (ENS.draw) */
+let bestRaf=0,bestLast=0;
+function bestLoop(t){
+  bestRaf=0;
+  if(mode!=='menu'||menuTab!=='bestiary')return;
+  bestRaf=requestAnimationFrame(bestLoop);
+  if(t-bestLast<33)return;bestLast=t;
+  const tt=t/1000,vh=innerHeight;
+  for(const cv of document.querySelectorAll('canvas[data-et]')){
+    const r=cv.getBoundingClientRect();if(r.bottom<0||r.top>vh||!r.width)continue;
+    const k=cv.dataset.et,d=ET[k];if(!d||typeof ENS==='undefined'||!ENS.has(k))continue;
+    const c=cv.getContext('2d'),W=cv.width;
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,W);
+    c.save();c.translate(W/2,W/2+2);c.rotate(-0.35+Math.sin(tt*0.7+k.length)*0.15);
+    try{ENS.draw(c,k,{t:tt+k.length*0.37,r:W/2/2.25,col:d.col,st:'move',hp:1})}catch(_){}
+    c.restore();
+  }
+}
 function bestiaryTab(){
   const dtn={phys:'Физический урон',magic:'Магический урон',mixed:'Физ. и маг. урон'};
   const card=(k,o,boss)=>{
     const dt=boss?'mixed':(EDT[k]||'phys');
     const map=o.map?MAPS[o.map].n:'любая карта';
-    const st='<div class="st">Здоровье '+o.hp+' · Урон '+o.dmg+' · Скорость '+o.sp+(o.armor?' · Броня '+o.armor:'')+(o.mres?' · Сопр. магии '+Math.round(o.mres*100)+'%':'')+'</div>';
-    return '<div class="be"><span class="ic '+dt+'" style="--bc:'+o.col+'"></span><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · Волна '+(4*(BOSS_ORDER.indexOf(k)+1)):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
+    const st='<div class="bst">Здоровье '+o.hp+' · Урон '+o.dmg+' · Скорость '+o.sp+(o.armor?' · Броня '+o.armor:'')+(o.mres?' · Сопр. магии '+Math.round(o.mres*100)+'%':'')+'</div>';
+    return '<div class="be"><canvas class="ic '+dt+'" data-et="'+(boss?'boss_'+k:k)+'" width="128" height="128" style="--bc:'+o.col+'"></canvas><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · Волна '+(4*(BOSS_ORDER.indexOf(k)+1)):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
   };
   let h='<section><p class="s" style="color:var(--dim)">Красная пунктирная обводка у врага = физический урон (против него работает броня). Синее свечение = магический урон (против него работает сопротивление магии).</p>';
   h+='<h2 class="sec">Враги</h2><div class="bs">';
@@ -64,7 +82,7 @@ function bestiaryTab(){
     if(!ks.length)continue;
     h+='<h2 class="sec" style="margin-top:14px">Только на карте: '+MAPS[mk].n+'</h2><div class="bs">'+ks.map(k=>card(k,ET[k],false)).join('')+'</div>';
   }
-  const other=Object.keys(ET).filter(k=>ET[k].from>=99);
+  const other=Object.keys(ET).filter(k=>ET[k].from>=99&&k.indexOf('boss_')!==0);
   if(other.length)h+='<h2 class="sec" style="margin-top:14px">Призванные</h2><div class="bs">'+other.map(k=>card(k,ET[k],false)).join('')+'</div>';
   h+='<h2 class="sec" style="margin-top:14px">Боссы</h2><div class="bs">'+Object.keys(BOSS).map(k=>card(k,BOSS[k],true)).join('')+'</div></section>';
   return h;

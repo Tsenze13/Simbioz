@@ -93,6 +93,11 @@ with sync_playwright() as p:
         g.p.mana=999;g.ult.cd=0;try{S.castUlt();for(let i=0;i<180;i++)S.update(1/60);S.render()}catch(e){bad.push(k+': '+e.message)}}return bad}""")
     check('ульта с печатями мастерства у всех мастеров', not r, r)
 
+    r = J("""()=>new Promise(res=>{const S=window.__sb;S.quitToMenu();S.setTab('bestiary');setTimeout(()=>{const cv=[...document.querySelectorAll('canvas[data-et]')];
+        const first=cv[0].getContext('2d').getImageData(0,0,cv[0].width,cv[0].height).data;let px=0;for(let i=3;i<first.length;i+=4)if(first[i]>0)px++;
+        const dup=cv.filter(c=>c.dataset.et.indexOf('boss_')===0).length;S.setTab('play');res({n:cv.length,px,bossCards:dup})},400)})""")
+    check('бестиарий: живые спрайты врагов, боссы без дублей', r['n'] > 30 and r['px'] > 200 and r['bossCards'] == 6, r)
+
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);
         S.learnSkill(id);const s=g.slots.find(x=>x&&x.id===id);if(!s)continue;s.lv=5;if(S.TREE[id])g.nodes[id]={a:3,b:3,c:3};
