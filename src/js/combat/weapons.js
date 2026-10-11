@@ -2,7 +2,7 @@
 function rockPos(g){
   const l=g.el.earth;
   if(!l)return [];
-  const n=[0,2,3,3,4,5][l],R=(62+5*l)*(1+g.S.area*0.5),out=[];
+  const n=[0,2,3,3,4,5,6,6,7][l],R=(62+5*l)*(1+g.S.area*0.5),out=[];
   for(let i=0;i<n;i++){const a=g.rockAng+i*TAU/n;out.push({x:g.p.x+Math.cos(a)*R,y:g.p.y+Math.sin(a)*R,r:9+l})}
   return out;
 }
@@ -12,7 +12,7 @@ function weapons(dt){
   if(e.fire>0&&cd('fire')){
     const l=e.fire,t=nearest(p.x,p.y,480);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.24;
         shoot({vis:'fire',x:p.x,y:p.y,vx:Math.cos(a)*310,vy:Math.sin(a)*310,r:7,dmg:10+5*l,dt:'magic',life:1.5,blast:(36+6*l)*ar,st:{burn:[2.5*l,3]},col:'#ff6a2b',src:'auto'});
@@ -23,7 +23,7 @@ function weapons(dt){
   if(e.water>0&&cd('water')){
     const l=e.water,t=nearest(p.x,p.y,460);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.4;
         shoot({vis:'wave',x:p.x,y:p.y,vx:Math.cos(a)*195,vy:Math.sin(a)*195,r:(18+4*l)*ar,dmg:7+4*l,dt:'magic',life:1.7,pierce:99,knock:130,col:'#3aa7ff',st:{slow:[0.55,1.4+0.2*l],wet:2},src:'auto',ang:a});
@@ -34,12 +34,12 @@ function weapons(dt){
   if(e.air>0&&cd('air')){
     const l=e.air,t=nearest(p.x,p.y,420);
     if(t){
-      const n=[0,1,2,2,3,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,2,2,3,4,4,5,6][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.2;
         shoot({vis:'blade',x:p.x,y:p.y,vx:Math.cos(a)*540,vy:Math.sin(a)*540,r:6,dmg:5+3*l,dt:'phys',life:0.75,pierce:1+Math.floor(l/2),col:'#8febd0',src:'auto'});
       }
-      g.cdw.air=0.62-0.05*l;
+      g.cdw.air=Math.max(0.24,0.62-0.05*l);
     }else g.cdw.air=0.1;
   }
   if(e.metal>0){
@@ -105,7 +105,7 @@ function weapons(dt){
   if(e.wood>0&&cd('wood')){
     const l=e.wood,t=nearest(p.x,p.y,460);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.5;
         shoot({vis:'seed',homing:true,x:p.x,y:p.y,vx:Math.cos(a)*240,vy:Math.sin(a)*240,r:6,dmg:6+3*l,dt:'magic',life:2.4,col:'#9ad16a',st:{poison:[3+1.5*l,3],slow:[0.8,1]},src:'auto'});

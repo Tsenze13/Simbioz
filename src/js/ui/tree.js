@@ -20,7 +20,7 @@ function openTree(){
   g.treeOpen=true;
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
-  if(!trSel||(trSel!=='__pas'&&trSel!=='__ult'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:ELSK[g.start]}
+  if(!trSel||(trSel!=='__pas'&&trSel!=='__ult'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:(ELSK[g.start]||'__pas')}
   $('tree').hidden=false;renderTree();
 }
 function closeTree(){const g=G;if(!g)return;g.treeOpen=false;$('tree').hidden=true;$('tip').hidden=true;treeBadge()}
@@ -47,7 +47,7 @@ function renderTree(){
   const g=G;
   $('trSp').textContent='Очков навыков: '+g.sp+'. Очко за каждый уровень. Тратятся на навыки, мутации, пассивку героя и ульту (с '+ULT_LV+' уровня).';
   let h='<h4>Герой</h4>';
-  h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+EL[g.start].c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+EL[g.start].c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
+  h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+hEl(g.start).c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+hEl(g.start).c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
   const ui=ultInfo();
   h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
   const row=id=>{
@@ -64,7 +64,7 @@ function renderTree(){
   trThumbs();
   trPv=null;
   if(trSel==='__pas'){
-    const H=HPAS[g.start],l=g.pl||0,col=EL[g.start].c;
+    const H=HPAS[g.start],l=g.pl||0,col=hEl(g.start).c;
     let d='<div class="th" style="--c1:'+col+'"><strong style="color:'+col+'">'+H.n+'</strong><span>Пассивка героя «'+CLS[g.start].n+'» · ур. '+l+'/3</span></div><p style="margin:0;color:#c5cbdd">Работает всегда. Каждый уровень стоит 1 очко навыков и открывается на нужном уровне героя.</p>';
     H.pd.forEach((t,i)=>{const done=i<l,next=i===l,ok=g.p.lv>=PASR[i];
       d+='<div class="nd'+(done?' max':'')+'" style="--c1:'+col+'"><div><strong>Уровень '+(i+1)+'</strong><p>'+t+'</p></div>'+(!done&&!ok?'<span class="rq">Нужен уровень героя '+PASR[i]+'</span>':'')+'<button type="button" data-pas="1"'+(next&&pasCan()?'':' disabled')+'>'+(done?'Открыто':'+1 · 1 очко')+'</button></div>'});
@@ -99,24 +99,25 @@ function ultTreeHtml(){
   let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков навыков: '+g.sp+' · открыть с '+ULT_LV+' ур., уровни 2 и 3 — с '+ultNeedLv(2)+' и '+ultNeedLv(3)+' ур. героя</span></div>';
   if(!g.ult.kind){
     const lvOk=g.p.lv>=ULT_LV;
-    d+='<p style="margin:0;color:#c5cbdd">Выберите направление ульты. Выбор один на забег. Ульта симбиоза доступна, если этот симбиоз уже изучен.</p>';
+    d+='<p style="margin:0;color:#c5cbdd">'+(isAva(g)?'Выберите ульту одного из изученных симбиозов. Выбор один на забег.':'Ульта вашего героя: откройте её за 1 очко навыков.')+'</p>';
     const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&lvOk&&g.sp>0?'':' disabled')+'>Выбрать · 1 очко</button></div>';
-    d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',EL[g.start].c);
+    if(!isAva(g))d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',hEl(g.start).c);
     for(const id of SYM_IDS){
       if(!g.symKnown[id])continue;
       d+=opt('sym:'+id,symUltName(id),'«'+AB[id].n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',true,'',AB[id].c1);
     }
-    if(!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
+    if(isAva(g)&&!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
     if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Ульта открывается с '+ULT_LV+' уровня героя (сейчас '+g.p.lv+').</p>';
     return d;
   }
   d+='<p style="margin:0;color:#c5cbdd"><b style="color:'+ui.c1+'">'+ui.n+'.</b> '+ui.d+'</p>';
   d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div>'+(g.ult.lv<3&&!ultCanUp()?'<span class="rq">Нужен '+ultNeedLv(g.ult.lv+1)+' ур. героя</span>':'')+'<button type="button" data-ultlv="1"'+(ultCanUp()&&g.sp>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко')+'</button></div>';
-  d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати симбиозов — добавляют ульте эффекты</h4>';
+  if(!isAva(g)){d+='<p style="margin:0;color:var(--dim)">Печати мастерства своей стихии появятся в следующей версии.</p>';return d}
+  d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати стихий — добавляют ульте эффекты изученных стихий</h4>';
   for(const p of EK){
-    if(p===g.start)continue;
-    const sid=symFor(g.start,p);if(!sid)continue;
-    const has=g.ult.seals[p],known=g.symKnown[sid];
+    if(!g.el[p]&&!g.ult.seals[p])continue;
+    const sid=symFor(g.start,p)||'';
+    const has=g.ult.seals[p],known=true;
     d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.sp>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко')+'</button></div>';
   }
   return d;
@@ -128,7 +129,7 @@ $('trDet').addEventListener('click',e=>{
   if(b.hasAttribute('data-pas')){pasUp()}
   else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
   else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
-  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&g.symKnown[symFor(g.start,p)]){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
+  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&isAva(g)&&g.el[p]>0){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
   else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-node')){

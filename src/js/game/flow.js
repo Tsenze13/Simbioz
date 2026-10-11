@@ -93,7 +93,7 @@ function movePlayer(dt){
     if(g.hat){g.hat.t+=dt/g.hat.dur;if(g.hat.t>=1)g.hat=null}
     g.hmv+=(Math.min(1,spd/(150*Math.max(.6,g.E.spd)))-g.hmv)*Math.min(1,dt*10);
     g.hph+=dt*spd*0.085;
-    g.hch=HTD.step(g.hsim,g.start||'fire',dt,p.x,p.y,g.hf);
+    g.hch=HTD.step(g.hsim,heroBody(g),dt,p.x,p.y,g.hf);
   }
   cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);
   cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
@@ -279,7 +279,7 @@ function startRun(el){
   G=mkState(el,biomeFor(1));
   const g=G;
   mode='play';
-  g.el[el]=1;
+  if(el==='avatar')g.pending++;else g.el[el]=1;
   recalc();
   g.p.gold=30+25*(SAVE.meta.startgold||0);
   cam.x=-VW/2;cam.y=-VH/2;

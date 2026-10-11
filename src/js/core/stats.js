@@ -16,6 +16,7 @@ function recalc(){
   if(g.cls)for(const k in g.cls.st)it[k]=(it[k]||0)+g.cls.st[k];
   {const Gr=GROW[g.start],lv=(p.lv||1)-1;if(Gr&&lv>0)for(const k in Gr.st)it[k]=(it[k]||0)+Gr.st[k]*lv}
   if(g.inv)for(const s of INVEST){const n=g.inv[s.k]||0;if(n)for(const q in s.st)it[q]=(it[q]||0)+s.st[q]*n}
+  if(isAva(g)){const n=EK.filter(k=>g.el[k]>0).length;it.dm=(it.dm||0)+PV('avatar',[0,.06,.09,.12])*n}
   {const a=PV('air',[0,.06,.1,.14]);if(a)it.spd=(it.spd||0)+a;const m=PV('metal',[0,.06,.1,.14]);if(m)it.crit=(it.crit||0)+m;if(g.start==='air'&&g.pl>=2)it.drc=(it.drc||0)+0.15}
   const x=k=>it[k]||0;
   S.maxHp=100+12*ml('hp')+25*cl('hp')+x('hp');

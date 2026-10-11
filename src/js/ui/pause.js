@@ -48,7 +48,7 @@ function dmgRows(g){
   const D=g.dmgBy||{},ks=Object.keys(D).filter(k=>D[k]>=1).sort((a,b)=>D[b]-D[a]),tot=ks.reduce((s,k)=>s+D[k],0)||1,top=D[ks[0]]||1;
   if(!ks.length)return '<p class="sub" style="margin:0">Урона не нанесено.</p>';
   const fmt=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e4?Math.round(v/1e3)+'K':String(Math.round(v));
-  const col=k=>k==='__ult'?'#ffd36b':AB[k]?AB[k].c1:k==='__gun'?'#e8eef8':k==='__dot'?'#ff9a3c':k==='__auto'?EL[g.start].c:'#9cc4ff';
+  const col=k=>k==='__ult'?'#ffd36b':AB[k]?AB[k].c1:k==='__gun'?'#e8eef8':k==='__dot'?'#ff9a3c':k==='__auto'?hEl(g.start).c:'#9cc4ff';
   return ks.slice(0,8).map(k=>'<div class="dr" style="--c1:'+col(k)+'"><span>'+dmgLabel(k)+'</span><i style="width:'+Math.max(1,D[k]/top*100).toFixed(1)+'%"></i><b>'+fmt(D[k])+' · '+Math.round(D[k]/tot*100)+'%</b></div>').join('');
 }
 function showOver(win,add){

@@ -6,10 +6,14 @@ function gainXp(v){
 }
 function buildChoices(){
   const g=G,pool=[];
+  if(isAva(g)&&!EK.some(k=>g.el[k]>0)){ /* первая карточка Аватара — выбор стихии */
+    return shuffle(EK.slice()).slice(0,3).map(k=>({w:1,kind:'el',key:k,tag:'Первая стихия',title:EL[k].n,sub:'Открывает: '+EW[k].w,desc:EW[k].d+'. Закроет противоположную стихию «'+EL[OPP[k]].n+'».',c1:EL[k].c,c2:EL[k].c2}));
+  }
   for(const k of EK){
-    const l=g.el[k],E=EL[k];
+    const l=g.el[k],E=EL[k],cap=elCap(k);
+    if(cap<=0)continue;
     if(l===0){if(g.el[OPP[k]]>0)continue;pool.push({w:2.2,kind:'el',key:k,tag:'Новая стихия',title:E.n,sub:'Открывает: '+EW[k].w,desc:EW[k].d+'. Закроет противоположную стихию «'+EL[OPP[k]].n+'».',c1:E.c,c2:E.c2})}
-    else if(l<(k===g.start?5:4))pool.push({w:3,kind:'el',key:k,tag:'Стихия',title:E.n,sub:'Уровень '+l+' → '+(l+1),desc:EUP[k][l-1],c1:E.c,c2:E.c2});
+    else if(l<cap)pool.push({w:l>=5?2.4:3,kind:'el',key:k,tag:l>=5?'Мастерство стихии':'Стихия',title:E.n,sub:'Уровень '+l+' → '+(l+1),desc:EUP[k][l-1],c1:E.c,c2:E.c2});
   }
   if(g.el.metal>0&&g.guns.length<((g.cls&&g.cls.maxGuns)||3)){
     const have=new Set(g.guns.map(x=>x.t));if(g.hand)have.add(g.hand.t);

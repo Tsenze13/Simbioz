@@ -41,7 +41,7 @@ let hc={};
 let dockRefs={sk:[],bag:[]};
 const pips=(n,max)=>{let h='';for(let i=1;i<=(max||5);i++)h+='<u'+(i<=n?' class="on"':'')+'></u>';return h};
 function buildTopHud(){
-  const g=G,E=EL[g.start];
+  const g=G,E=hEl(g.start);
   $('portrait').style.setProperty('--c1',E.c);$('pel').textContent=E.n;$('pname').textContent=CLS[g.start].n;
   $('portOrb').style.setProperty('--c1',E.c);$('portOrb').style.setProperty('--c2',E.c2);
 }
@@ -50,7 +50,7 @@ function renderDock(){
   const sig=g.pl+':'+(pasCan()?1:0)+'|'+g.slots.map(s=>s?s.id+s.lv:'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+(g.ult.kind||'')+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
   if(g.dockSig===sig)return;
   g.dockSig=sig;
-  {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+EL[g.start].c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
+  {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+hEl(g.start).c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
   let h='';
   for(let i=0;i<5;i++){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
@@ -59,7 +59,7 @@ function renderDock(){
       h+='<button class="slot sk" type="button" tabindex="-1" data-k="s" data-i="'+i+'" style="--c1:'+a.c1+';--c2:'+a.c2+'"><span class="ic">'+icon(a.gl)+'</span><span class="key">'+key+'</span><span class="cost">'+a.mana+'</span><span class="lv">'+pips(s.lv)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
     }else h+='<button class="slot empty" type="button" tabindex="-1" data-k="s" data-i="'+i+'"><span class="key">'+key+'</span></button>';
   }
-  const u=ultInfo(),E=EL[g.start];
+  const u=ultInfo(),E=hEl(g.start);
   h+='<button class="slot ult'+(g.ult.lv?'':' locked')+'" type="button" tabindex="-1" data-k="u" data-i="0" style="--c1:'+u.c1+';--c2:'+u.c2+'"><span class="ic">'+(g.ult.lv?icon('ult'):'<b style="font-size:11px;line-height:1.1;text-align:center">🔒<br>'+ULT_LV+' ур.</b>')+'</span><span class="key">'+keyName(SAVE.keys.ult)+'</span><span class="cost">'+u.mana+'</span><span class="lv">'+pips(g.ult.lv,3)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
   $('skills').innerHTML=h;
   let b='';

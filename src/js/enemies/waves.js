@@ -50,10 +50,10 @@ function genStock(mid){
   const list=shuffle(M.pool.filter(id=>!have(id))).slice(0,M.cnt);
   const owned=id=>g.slots.some(s=>s&&s.id===id);
   if(M.scrolls){
-    const cands=shuffle(SKILL_IDS.concat(SYM_IDS).filter(k=>!owned(k)));
+    const cands=shuffle((isAva(g)?SKILL_IDS.concat(SYM_IDS):SKILL_IDS.filter(k=>AB[k].els[0]===g.start)).filter(k=>!owned(k)));
     for(let i=0;i<M.scrolls&&i<cands.length;i++)list.push('scr:'+cands[i]);
   }
-  if(M.fscroll){
+  if(M.fscroll&&isAva(g)){
     const cands=shuffle(FUSE_IDS.filter(k=>!owned(k)));
     if(cands.length)list.push('scr:'+cands[0]);
   }

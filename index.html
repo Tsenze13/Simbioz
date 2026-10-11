@@ -192,6 +192,7 @@ h1{margin:0;font:700 clamp(40px,4.4vw,60px)/.95 var(--f-display);letter-spacing:
 .mpanel{padding:clamp(18px,4vh,36px) 24px clamp(18px,4vh,36px) 8px;overflow:auto;touch-action:pan-y;min-width:0}
 .mpanel>section{display:grid;gap:18px;max-width:880px}
 .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick.ava{grid-column:1/-1}.pick.ava .orb{background:conic-gradient(#ff6a2b,#3aa7ff,#c9974f,#8febd0,#e8eef8,#7fd15a,#ff6a2b)!important;box-shadow:0 0 14px rgba(216,200,255,.6)}
 .pick{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;align-items:center;text-align:left;padding:12px;background:rgba(23,28,41,.9);border:1px solid var(--line);border-radius:8px;min-width:0}
 .pick .orb{--s:38px;grid-row:1/3}
 .pick b{font:700 20px/1.1 var(--f-display)}
@@ -413,7 +414,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.27 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.28 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -745,6 +746,46 @@ function bubbles(c,t){c.save();for(let i=0;i<16;i++){const p=(t*.12*(.6+hv(i)*.8
  c.strokeStyle=`rgba(160,230,255,${.6*(1-p)})`;c.lineWidth=.8;ell(c,x,y,r,r);c.stroke();c.fillStyle=`rgba(255,255,255,${.7*(1-p)})`;ell(c,x-r*.35,y-r*.35,r*.25,r*.25);c.fill()}c.restore()}
 
 /* ===== ЗЕМЛЯ — Каменный страж ===== */
+HEROES.avatar={n:'Аватар',c:'#d8c8ff',hw:28,jaw:.66,chin:146,skin:['#f8e2d8','#dcb4a8','#5a4a6e'],iris:['#fff2b0','#c47bff'],eyeGlow:1,lip:['#d08a8a','#8a4a56'],
+ rim:'#e0c8ff',brow:'#3a2a5a',blush:'#e0707a',smirk:.3,cutY:68,
+ bg(c,t,m){bgBase(c,m?'#2a1e4a':'#2a0e1a','#06040e',t);
+  c.save();c.globalCompositeOperation='lighter';const EC=['#ff6a2b','#3aa7ff','#c9974f','#8febd0','#e8eef8','#7fd15a'];
+  for(let i=0;i<6;i++){const a=t*.35+i*TAU/6,x=100+Math.cos(a)*78,y=96+Math.sin(a)*40;c.fillStyle=RG(c,x,y,26,[[0,rgba(EC[i],.55)],[1,rgba(EC[i],0)]]);c.fillRect(x-26,y-26,52,52);c.beginPath();c.arc(x,y,3.2,0,TAU);c.fillStyle=rgba('#ffffff',.85);c.fill()}
+  c.restore()},
+ back(c,t,m){ // длинные волосы
+  for(const s of[-1,1]){const w=Math.sin(t*1.4+s)*4;
+   c.beginPath();c.moveTo(100+s*20,56);c.bezierCurveTo(100+s*46,62,100+s*40+w,120,100+s*52+w,200);c.lineTo(100+s*22,200);c.bezierCurveTo(100+s*30,150,100+s*26,110,100+s*22,90);c.closePath();
+   c.fillStyle=LG(c,100+s*20,60,100+s*50,200,[[0,'#3a2a6a'],[.5,'#9a8ad8'],[1,'#e8e0ff']]);c.fill();stroke(c,INK,2);
+   for(let k=0;k<5;k++){c.beginPath();c.moveTo(100+s*(24+k*3),70+k*6);c.bezierCurveTo(100+s*(40+k*2),110,100+s*(34+k*3)+w,150,100+s*(44+k*2)+w,196);stroke(c,k%2?'#fff4d0':'#c9b3ff',1,.35)}}},
+ body(c,t,m,br){
+  c.beginPath();c.moveTo(4,200);c.quadraticCurveTo(16,154,60,146);c.lineTo(86,140);c.lineTo(100,166);c.lineTo(114,140);c.lineTo(140,146);c.quadraticCurveTo(184,154,196,200);c.closePath();
+  c.fillStyle=LG(c,0,140,200,200,[[0,'#f0f8ff'],[.5,'#b8d8f0'],[1,'#5a7aa0']]);c.fill();stroke(c,INK,2.2);
+  fold(c,50,160,64,200,[52,182],.18);fold(c,150,160,136,200,[148,182],.18);
+  for(const s of[-1,1]){c.beginPath();c.moveTo(100+s*14,140);c.quadraticCurveTo(100+s*30,170,100+s*24,200);stroke(c,'#c0c8d8',3,.9);c.beginPath();c.moveTo(100+s*14,140);c.quadraticCurveTo(100+s*30,170,100+s*24,200);stroke(c,'#ffffff',1,.7)}
+  // водяная лента
+  c.save();c.globalCompositeOperation='lighter';
+  for(let k=0;k<2;k++){c.beginPath();for(let a=0;a<=TAU+.01;a+=.12){const x=100+Math.cos(a+t*.8)*84,y=184+Math.sin(a+t*.8)*12+Math.sin(a*3+t*2+k)*4;a?c.lineTo(x,y):c.moveTo(x,y)}stroke(c,k?'#fff2b0':'#e8e0ff',k?1.4:4,k?.6:.3)}
+  c.restore();
+  // камень-капля на груди
+  c.beginPath();c.moveTo(100,160);c.quadraticCurveTo(108,172,100,180);c.quadraticCurveTo(92,172,100,160);c.fillStyle=RG(c,98,170,10,[[0,'#ffffff'],[.3,'#fff2b0'],[1,'#1a6ac0']]);c.fill();stroke(c,INK,1.6);
+  glow(c,100,172,18,'#e0c8ff',.4+.15*Math.sin(t*2))},
+ front(c,t,m){
+  // пробор и передние пряди
+  c.beginPath();c.moveTo(100,48);c.bezierCurveTo(70,46,66,66,70,100);c.bezierCurveTo(74,80,84,62,100,58);c.bezierCurveTo(116,62,126,80,130,100);c.bezierCurveTo(134,66,130,46,100,48);c.closePath();
+  c.fillStyle=LG(c,70,46,130,100,[[0,'#b8a8ec'],[.5,'#5a4a9a'],[1,'#9a8ad8']]);c.fill();stroke(c,INK,2);
+  for(let k=0;k<6;k++){c.beginPath();c.moveTo(100-k*2,52);c.bezierCurveTo(84-k,60,76-k,74,74-k*.5,96);stroke(c,'#fff4d0',.9,.4);c.beginPath();c.moveTo(100+k*2,52);c.bezierCurveTo(116+k,60,124+k,74,126+k*.5,96);stroke(c,'#fff4d0',.9,.4)}
+  // диадема
+  c.beginPath();c.moveTo(72,72);c.quadraticCurveTo(100,60,128,72);stroke(c,'#2a3040',4.2,1);c.beginPath();c.moveTo(72,72);c.quadraticCurveTo(100,60,128,72);stroke(c,'#e0ecff',2,1);
+  c.beginPath();c.moveTo(100,58);c.lineTo(106,66);c.lineTo(100,76);c.lineTo(94,66);c.closePath();c.fillStyle=RG(c,98,64,9,[[0,'#ffffff'],[.3,'#fff2b0'],[1,'#1a5ab0']]);c.fill();stroke(c,INK,1.4);
+  glow(c,100,66,16,'#7fe0ff',.45+.2*Math.sin(t*2.4));
+  // слеза-метка
+  c.beginPath();c.moveTo(80,108);c.quadraticCurveTo(78,114,80,118);stroke(c,'#e0c8ff',1.4,.8)},
+ light(c,t,m){soft(c,100,40,140,'#e0c8ff',.25,'soft-light');soft(c,180,170,110,'#000000',.3,'multiply')}
+};
+function bubbles(c,t){c.save();for(let i=0;i<16;i++){const p=(t*.12*(.6+hv(i)*.8)+hv(i*5))%1,x=hv(i*3)*200+Math.sin(t+i)*6,y=210-p*230,r=1+hv(i*7)*3;
+ c.strokeStyle=`rgba(160,230,255,${.6*(1-p)})`;c.lineWidth=.8;ell(c,x,y,r,r);c.stroke();c.fillStyle=`rgba(255,255,255,${.7*(1-p)})`;ell(c,x-r*.35,y-r*.35,r*.25,r*.25);c.fill()}c.restore()}
+
+/* ===== ЗЕМЛЯ — Каменный страж ===== */
 HEROES.earth={n:'Каменный страж',c:'#c9974f',hw:35,jaw:.92,top:52,chin:150,skin:['#e8b88e','#b47a52','#4a2614'],iris:['#c8a070','#5a3a1a'],lip:['#a86a56','#6a3a2a'],
  rim:'#ffb860',brow:'#3a2010',blush:'#c0503a',stub:.25,folds:1,smirk:0,cutY:74,
  bg(c,t,m){bgBase(c,m?'#3a2a16':'#3a1208','#080604',t);
@@ -1023,7 +1064,7 @@ function draw(c,key,t,hp,seed){
  c.save();c.globalCompositeOperation='overlay';c.globalAlpha=.12;c.drawImage(grain(),0,0);c.restore();
  c.restore();
 }
-window.PORTRAIT={draw,HEROES,keys:['fire','water','earth','air','metal','wood']};
+window.PORTRAIT={draw,HEROES,keys:['fire','water','earth','air','metal','wood','avatar']};
 })();
 
 </script>
@@ -1094,13 +1135,20 @@ const EW={
   wood:{w:'Семена-шипы',d:'Самонаведение, яд и замедление',dt:'magic'}
 };
 const EUP={
-  fire:['Урон и взрыв больше','+1 огненный шар','Урон и ожог сильнее','+1 шар, взрыв шире'],
-  water:['Волна шире и сильнее','+1 волна','Шире и быстрее','+1 волна, сильнее'],
-  earth:['+1 камень','Камни сильнее','+1 камень','+1 камень, орбита шире'],
-  air:['+1 лезвие','Быстрее, пробивают больше','+1 лезвие','+1 лезвие, бег быстрее'],
-  metal:['+1 ствол','Быстрее и мощнее','+1 ствол','Ещё быстрее'],
-  wood:['+1 семя','Яд сильнее','+1 семя','+1 семя, быстрее']
+  fire:['Урон и взрыв больше','+1 огненный шар','Урон и ожог сильнее','+1 шар, взрыв шире','Мастерство: урон и взрыв больше','Мастерство: +1 огненный шар','Мастерство: шары быстрее, ожог сильнее'],
+  water:['Волна шире и сильнее','+1 волна','Шире и быстрее','+1 волна, сильнее','Мастерство: волна шире и сильнее','Мастерство: +1 волна','Мастерство: волны быстрее и сильнее'],
+  earth:['+1 камень','Камни сильнее','+1 камень','+1 камень, орбита шире','Мастерство: +1 камень','Мастерство: камни сильнее','Мастерство: +1 камень, орбита шире'],
+  air:['+1 лезвие','Быстрее, пробивают больше','+1 лезвие','+1 лезвие, бег быстрее','Мастерство: лезвия сильнее','Мастерство: +1 лезвие','Мастерство: +1 лезвие, быстрее'],
+  metal:['+1 ствол','Быстрее и мощнее','+1 ствол','Ещё быстрее','Мастерство: стволы мощнее','Мастерство: стволы быстрее','Мастерство: стволы мощнее'],
+  wood:['+1 семя','Яд сильнее','+1 семя','+1 семя, быстрее','Мастерство: яд сильнее','Мастерство: +1 семя','Мастерство: +1 семя, быстрее']
 };
+/* Аватар — герой-смешиватель. Не стихия: в EK его нет. */
+const AVA_EL={n:'Аватар',c:'#d8c8ff',c2:'#ffffff',d:'Повелитель стихий: единственный, кто смешивает до трёх стихий и учит симбиозы.'};
+function hEl(k){return EL[k]||AVA_EL}
+const HEROK=EK.concat(['avatar']);
+function isAva(g){return !!g&&g.start==='avatar'}
+/* предел уровня стихии: мастер — только своя, до 8; Аватар — любая, до 4 */
+function elCap(k){const g=G;if(isAva(g))return 4;return k===g.start?8:0}
 const ELSK={fire:'fireball',water:'spring',earth:'quake',air:'bolt',metal:'volley',wood:'whip'};
 /* классы по стартовой стихии: плюсы, минусы и особенность */
 /* рост характеристик героя за уровень и его главный атрибут (как в Dota 2) */
@@ -1110,6 +1158,7 @@ const GROW={
   earth:{main:'def',st:{armor:0.6,hp:6},t:'Каменный страж с каждым уровнем всё прочнее'},
   air:{main:'spd',st:{spd:0.009,crit:0.003},t:'Налётчик с каждым уровнем быстрее и точнее'},
   metal:{main:'as',st:{cdr:0.007,dm:0.008,armor:0.2},t:'Солдат с каждым уровнем стреляет быстрее'},
+  avatar:{main:'dmg',st:{dm:0.012,cdr:0.004,hp:3,armor:0.2},t:'Аватар растёт во всём понемногу'},
   wood:{main:'def',st:{regen:0.09,hp:3,ls:0.002,armor:0.35},t:'Друид с каждым уровнем живучее'}
 };
 const HST=[
@@ -1138,6 +1187,7 @@ const CLS={
     plus:'+10% скорости, +8% шанса крита, рывок перезаряжается на 38% быстрее.',minus:'−22 здоровья, −3 брони.'},
   metal:{n:'Солдат',role:'Стрелок',st:{armor:4,area:-0.12,mana:-20,cdr:-0.05},maxGuns:5,manax:1.15,
     plus:'+4 брони. До 5 орудий вместо 3 и пробитие пуль +1.',minus:'−12% размаха, −20 маны, навыки дороже на 15%.'},
+  avatar:{n:'Аватар',role:'Мастер симбиоза',st:{},plus:'Единственный, кто берёт чужие стихии: до трёх (кроме противоположных). Учит симбиозы, их слияния и ульты симбиозов.',minus:'Каждая стихия — максимум 4 уровень. Нет своей ульты: только ульты изученных симбиозов.'},
   wood:{n:'Друид',role:'Выживание и яды',st:{regen:0.9,ls:0.04,spd:-0.05,armor:-2},dot:1.35,
     plus:'+0.9 регенерации, +4% вампиризма, яд и горение на 35% сильнее. Умирая отравленным, враг заражает соседей.',minus:'−5% скорости, −2 брони.'}
 };
@@ -1151,7 +1201,8 @@ const HMECH={
   earth:{n:'Стойкость',d:'Стоя на месте, каждую секунду наращиваете каменную плиту (до 5, +3 брони за каждую). Рывок тратит плиты: ударная волна шире, сильнее и дольше оглушает'},
   air:{n:'Импульс',d:'Бег копит импульс, остановка гасит. На максимуме следующий снаряд бьёт ×2.5 критом и отбрасывает'},
   metal:{n:'Арсенал',d:'Каждый ствол (и пистолет в руке) усиливает урон всех стволов на 6%. Ничего нажимать не нужно: собирай оружие и модификации'},
-  wood:{n:'Сезоны',d:'Каждая волна — новый сезон. Весна: +2 регенерации. Лето: яд +40%. Осень: шипы +30%. Зима: корни держат на 50% дольше'}
+  wood:{n:'Сезоны',d:'Каждая волна — новый сезон. Весна: +2 регенерации. Лето: яд +40%. Осень: шипы +30%. Зима: корни держат на 50% дольше'},
+  avatar:{n:'Симбиоз',d:'Стихии не конфликтуют, а усиливают друг друга: изучай симбиозы двух стихий, сливай навыки и бери ульту симбиоза. Пассивка «Равновесие» даёт урон за каждую стихию'}
 };
 const HPAS={
   fire:{n:'Раскалённая кровь',ic:'🔥',pd:['+8% урона по горящим врагам','+15% урона по горящим, горение длится на 1 с дольше','+25% урона по горящим; взрывы горящих врагов при смерти вдвое сильнее и шире']},
@@ -1159,17 +1210,19 @@ const HPAS={
   earth:{n:'Каменная кожа',ic:'⛰',pd:['−6% входящего урона','−10% входящего урона','−14% входящего урона; раз в 20 с каменный щит на 3 с']},
   air:{n:'Попутный ветер',ic:'🌪',pd:['+6% скорости','+10% скорости, рывок перезаряжается на 15% быстрее','+14% скорости; после рывка +20% урона на 2 с']},
   metal:{n:'Боевая выучка',ic:'⚙',pd:['+6% шанса крита','+10% шанса крита, +10% урона огнестрела','+14% шанса крита; каждый 8-й выстрел орудия усиленный (×2,5 урона, пробивает)']},
-  wood:{n:'Живой яд',ic:'🌿',pd:['+15% урона яда','+30% урона яда, яд накапливается до 3 стаков','+45% урона яда; смерть отравленного врага лечит вас на 1% здоровья']}
+  wood:{n:'Живой яд',ic:'🌿',pd:['+15% урона яда','+30% урона яда, яд накапливается до 3 стаков','+45% урона яда; смерть отравленного врага лечит вас на 1% здоровья']},
+  avatar:{n:'Равновесие',ic:'✦',pd:['+6% урона за каждую изученную стихию','+9% урона за каждую стихию','+12% урона за каждую стихию']}
 };
 const PV=(k,arr)=>{const g=G;return(g&&g.start===k)?arr[g.pl||0]:0};
 function pasCan(){const g=G;if(!g)return false;const l=g.pl||0;return l<3&&g.sp>0&&g.p.lv>=PASR[l]}
-function pasUp(){const g=G;if(!pasCan())return false;g.pl=(g.pl||0)+1;g.sp--;g.dockSig='';recalc();sfx(860,0.16,'triangle',0.05,420);toast(HPAS[g.start].n+' · ур. '+g.pl,HPAS[g.start].pd[g.pl-1]);ring(g.p.x,g.p.y,90,EL[g.start].c,0.6);return true}
+function pasUp(){const g=G;if(!pasCan())return false;g.pl=(g.pl||0)+1;g.sp--;g.dockSig='';recalc();sfx(860,0.16,'triangle',0.05,420);toast(HPAS[g.start].n+' · ур. '+g.pl,HPAS[g.start].pd[g.pl-1]);ring(g.p.x,g.p.y,90,hEl(g.start).c,0.6);return true}
 function pShade(h,a){const n=parseInt(h.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(v+(a<0?v*a:(255-v)*a))));return'rgb('+f(r)+','+f(gg)+','+f(b)+')'}
 function pIcon(c,k,t,lv){
- const W=c.canvas.width,col=EL[k].c;c.save();c.setTransform(1,0,0,1,0,0);c.scale(W/54,W/54);c.clearRect(0,0,54,54);
+ const W=c.canvas.width,col=hEl(k).c;c.save();c.setTransform(1,0,0,1,0,0);c.scale(W/54,W/54);c.clearRect(0,0,54,54);
  const gr=c.createRadialGradient(27,22,2,27,27,30);gr.addColorStop(0,pShade(col,-.3));gr.addColorStop(1,'#06080c');c.fillStyle=gr;c.beginPath();c.arc(27,27,27,0,TAU);c.fill();
  c.translate(27,27);c.globalAlpha=lv?1:.4;const p=Math.sin(t*3)*.5+.5;c.lineJoin='round';
  if(k==='fire'){c.fillStyle='#c0201a';c.beginPath();c.moveTo(0,-16);c.quadraticCurveTo(14,2,0,14);c.quadraticCurveTo(-14,2,0,-16);c.fill();c.fillStyle=col;c.beginPath();c.moveTo(0,-4);c.quadraticCurveTo(7+p*2,4,0,12);c.quadraticCurveTo(-7,4,0,-4);c.fill();c.fillStyle='#ffd27a';c.beginPath();c.moveTo(0,3);c.quadraticCurveTo(3,7,0,11);c.quadraticCurveTo(-3,7,0,3);c.fill()}
+ else if(k==='avatar'){const EC=['#ff6a2b','#3aa7ff','#c9974f','#8febd0','#e8eef8','#7fd15a'];for(let i=0;i<6;i++){const a=t*.8+i*TAU/6;c.fillStyle=EC[i];c.beginPath();c.arc(Math.cos(a)*11,Math.sin(a)*11,4,0,TAU);c.fill()}c.fillStyle='#ffffff';c.beginPath();c.arc(0,0,4+p*1.5,0,TAU);c.fill()}
  else if(k==='water'){c.strokeStyle='#cfefff';c.lineWidth=3;c.lineCap='round';for(let i=0;i<3;i++){c.beginPath();for(let x=-15;x<=15;x+=2){const y=-9+i*9+Math.sin(x*.28+t*3+i)*3;x===-15?c.moveTo(x,y):c.lineTo(x,y)}c.stroke()}}
  else if(k==='earth'){c.fillStyle='#8a8070';c.beginPath();c.moveTo(-14,-6);c.lineTo(-4,-15);c.lineTo(10,-13);c.lineTo(16,0);c.lineTo(10,13);c.lineTo(-6,15);c.lineTo(-15,6);c.closePath();c.fill();c.strokeStyle='#1a1610';c.lineWidth=2;c.stroke();c.strokeStyle='rgba(255,200,90,'+(.6+.4*p)+')';c.beginPath();c.moveTo(-6,-8);c.lineTo(2,-2);c.lineTo(-2,6);c.stroke()}
  else if(k==='air'){c.strokeStyle='#e6fff7';c.lineWidth=3;c.lineCap='round';const s=Math.sin(t*3)*2;c.beginPath();c.moveTo(-15,-6);c.lineTo(8+s,-6);c.arc(8+s,-10,4,Math.PI/2,-Math.PI*.9,true);c.stroke();c.beginPath();c.moveTo(-13,4);c.lineTo(11-s,4);c.arc(11-s,8,4,-Math.PI/2,Math.PI*.9);c.stroke()}
@@ -1178,7 +1231,7 @@ function pIcon(c,k,t,lv){
  c.restore()}
 function pasTip(){
   const g=G,H=HPAS[g.start],l=g.pl||0;
-  return '<div class="tn" style="color:'+EL[g.start].c+'">'+H.n+'</div><div class="tm">Пассивка героя · ур. '+l+'/3</div>'+H.pd.map((d,i)=>'<div class="pl'+(i<l?' on':'')+'">'+(i+1)+'. '+d+(i>=l?' <span style="color:var(--dim)">(ур. героя '+PASR[i]+')</span>':'')+'</div>').join('')+'<div class="tu">'+(l>=3?'Максимум.':(pasCan()?'Нажмите, чтобы прокачать за 1 очко.':'Качается очками навыков (T).'))+'</div>';
+  return '<div class="tn" style="color:'+hEl(g.start).c+'">'+H.n+'</div><div class="tm">Пассивка героя · ур. '+l+'/3</div>'+H.pd.map((d,i)=>'<div class="pl'+(i<l?' on':'')+'">'+(i+1)+'. '+d+(i>=l?' <span style="color:var(--dim)">(ур. героя '+PASR[i]+')</span>':'')+'</div>').join('')+'<div class="tu">'+(l>=3?'Максимум.':(pasCan()?'Нажмите, чтобы прокачать за 1 очко.':'Качается очками навыков (T).'))+'</div>';
 }
 
 /* ---------- значки (svg, 24x24) ---------- */
@@ -1585,6 +1638,7 @@ function symFor(x,y){for(const k of SYM_IDS){const p=AB[k].pair;if((p[0]===x&&p[
 
 /* ---------- ульты (R) ---------- */
 const ULT={
+  avatar:{n:'Великий симбиоз',d:'Ульта одного из изученных симбиозов: выбирается в древе.',mana:90,cd:80},
   fire:{n:'Метеоритный дождь',d:'Каскад метеоритов обрушивается на большую область у цели.',mana:90,cd:80},
   water:{n:'Цунами',d:'Гигантская волна проходит сквозь всех, отбрасывает и мочит врагов.',mana:90,cd:75},
   earth:{n:'Землетрясение',d:'Земля раскалывается по всему экрану: оглушение и тяжёлый урон.',mana:100,cd:80},
@@ -2501,6 +2555,7 @@ function recalc(){
   if(g.cls)for(const k in g.cls.st)it[k]=(it[k]||0)+g.cls.st[k];
   {const Gr=GROW[g.start],lv=(p.lv||1)-1;if(Gr&&lv>0)for(const k in Gr.st)it[k]=(it[k]||0)+Gr.st[k]*lv}
   if(g.inv)for(const s of INVEST){const n=g.inv[s.k]||0;if(n)for(const q in s.st)it[q]=(it[q]||0)+s.st[q]*n}
+  if(isAva(g)){const n=EK.filter(k=>g.el[k]>0).length;it.dm=(it.dm||0)+PV('avatar',[0,.06,.09,.12])*n}
   {const a=PV('air',[0,.06,.1,.14]);if(a)it.spd=(it.spd||0)+a;const m=PV('metal',[0,.06,.1,.14]);if(m)it.crit=(it.crit||0)+m;if(g.start==='air'&&g.pl>=2)it.drc=(it.drc||0)+0.15}
   const x=k=>it[k]||0;
   S.maxHp=100+12*ml('hp')+25*cl('hp')+x('hp');
@@ -3510,7 +3565,7 @@ function symUltName(id){return 'Великий симбиоз: '+AB[id].n}
 function ultInfo(){
   const g=G,k=g.ult.kind;
   if(k&&k.indexOf('sym:')===0){const id=k.slice(4),a=AB[id];return {n:symUltName(id),d:'«'+a.n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',mana:95,cd:75,c1:a.c1,c2:a.c2}}
-  const u=ULT[g.start];return {n:u.n,d:u.d,mana:u.mana,cd:u.cd,c1:EL[g.start].c,c2:EL[g.start].c2};
+  const u=ULT[g.start];return {n:u.n,d:u.d,mana:u.mana,cd:u.cd,c1:hEl(g.start).c,c2:hEl(g.start).c2};
 }
 function symUlt(id,lv,c){
   const g=G,a=AB[id],pr=skillPr({id:id,lv:5});
@@ -3537,7 +3592,7 @@ function castUlt(){
   for(const p of ultMods())ultMod(p,ep.x,ep.y,g.ult.lv);
   tagNew(L0,'__ult');g.curSk=null;
   g.shake=Math.max(g.shake,8);g.zk=Math.max(g.zk,0.045);
-  ring(g.p.x,g.p.y,160,EL[g.start].c,0.6);
+  ring(g.p.x,g.p.y,160,hEl(g.start).c,0.6);
   toast(u.n,ultMods().length?('+ '+ultMods().map(p=>ULTMOD[p]).join(', ')):'');
   sfx(220,0.4,'sawtooth',0.06,260);
 }
@@ -3546,7 +3601,7 @@ function castUlt(){
 function rockPos(g){
   const l=g.el.earth;
   if(!l)return [];
-  const n=[0,2,3,3,4,5][l],R=(62+5*l)*(1+g.S.area*0.5),out=[];
+  const n=[0,2,3,3,4,5,6,6,7][l],R=(62+5*l)*(1+g.S.area*0.5),out=[];
   for(let i=0;i<n;i++){const a=g.rockAng+i*TAU/n;out.push({x:g.p.x+Math.cos(a)*R,y:g.p.y+Math.sin(a)*R,r:9+l})}
   return out;
 }
@@ -3556,7 +3611,7 @@ function weapons(dt){
   if(e.fire>0&&cd('fire')){
     const l=e.fire,t=nearest(p.x,p.y,480);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.24;
         shoot({vis:'fire',x:p.x,y:p.y,vx:Math.cos(a)*310,vy:Math.sin(a)*310,r:7,dmg:10+5*l,dt:'magic',life:1.5,blast:(36+6*l)*ar,st:{burn:[2.5*l,3]},col:'#ff6a2b',src:'auto'});
@@ -3567,7 +3622,7 @@ function weapons(dt){
   if(e.water>0&&cd('water')){
     const l=e.water,t=nearest(p.x,p.y,460);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.4;
         shoot({vis:'wave',x:p.x,y:p.y,vx:Math.cos(a)*195,vy:Math.sin(a)*195,r:(18+4*l)*ar,dmg:7+4*l,dt:'magic',life:1.7,pierce:99,knock:130,col:'#3aa7ff',st:{slow:[0.55,1.4+0.2*l],wet:2},src:'auto',ang:a});
@@ -3578,12 +3633,12 @@ function weapons(dt){
   if(e.air>0&&cd('air')){
     const l=e.air,t=nearest(p.x,p.y,420);
     if(t){
-      const n=[0,1,2,2,3,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,2,2,3,4,4,5,6][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.2;
         shoot({vis:'blade',x:p.x,y:p.y,vx:Math.cos(a)*540,vy:Math.sin(a)*540,r:6,dmg:5+3*l,dt:'phys',life:0.75,pierce:1+Math.floor(l/2),col:'#8febd0',src:'auto'});
       }
-      g.cdw.air=0.62-0.05*l;
+      g.cdw.air=Math.max(0.24,0.62-0.05*l);
     }else g.cdw.air=0.1;
   }
   if(e.metal>0){
@@ -3649,7 +3704,7 @@ function weapons(dt){
   if(e.wood>0&&cd('wood')){
     const l=e.wood,t=nearest(p.x,p.y,460);
     if(t){
-      const n=[0,1,1,2,2,3][l],base=Math.atan2(t.y-p.y,t.x-p.x);
+      const n=[0,1,1,2,2,3,3,4,4][l],base=Math.atan2(t.y-p.y,t.x-p.x);
       for(let i=0;i<n;i++){
         const a=base+(i-(n-1)/2)*0.5;
         shoot({vis:'seed',homing:true,x:p.x,y:p.y,vx:Math.cos(a)*240,vy:Math.sin(a)*240,r:6,dmg:6+3*l,dt:'magic',life:2.4,col:'#9ad16a',st:{poison:[3+1.5*l,3],slow:[0.8,1]},src:'auto'});
@@ -4456,10 +4511,10 @@ function genStock(mid){
   const list=shuffle(M.pool.filter(id=>!have(id))).slice(0,M.cnt);
   const owned=id=>g.slots.some(s=>s&&s.id===id);
   if(M.scrolls){
-    const cands=shuffle(SKILL_IDS.concat(SYM_IDS).filter(k=>!owned(k)));
+    const cands=shuffle((isAva(g)?SKILL_IDS.concat(SYM_IDS):SKILL_IDS.filter(k=>AB[k].els[0]===g.start)).filter(k=>!owned(k)));
     for(let i=0;i<M.scrolls&&i<cands.length;i++)list.push('scr:'+cands[i]);
   }
-  if(M.fscroll){
+  if(M.fscroll&&isAva(g)){
     const cands=shuffle(FUSE_IDS.filter(k=>!owned(k)));
     if(cands.length)list.push('scr:'+cands[0]);
   }
@@ -4576,10 +4631,14 @@ function gainXp(v){
 }
 function buildChoices(){
   const g=G,pool=[];
+  if(isAva(g)&&!EK.some(k=>g.el[k]>0)){ /* первая карточка Аватара — выбор стихии */
+    return shuffle(EK.slice()).slice(0,3).map(k=>({w:1,kind:'el',key:k,tag:'Первая стихия',title:EL[k].n,sub:'Открывает: '+EW[k].w,desc:EW[k].d+'. Закроет противоположную стихию «'+EL[OPP[k]].n+'».',c1:EL[k].c,c2:EL[k].c2}));
+  }
   for(const k of EK){
-    const l=g.el[k],E=EL[k];
+    const l=g.el[k],E=EL[k],cap=elCap(k);
+    if(cap<=0)continue;
     if(l===0){if(g.el[OPP[k]]>0)continue;pool.push({w:2.2,kind:'el',key:k,tag:'Новая стихия',title:E.n,sub:'Открывает: '+EW[k].w,desc:EW[k].d+'. Закроет противоположную стихию «'+EL[OPP[k]].n+'».',c1:E.c,c2:E.c2})}
-    else if(l<(k===g.start?5:4))pool.push({w:3,kind:'el',key:k,tag:'Стихия',title:E.n,sub:'Уровень '+l+' → '+(l+1),desc:EUP[k][l-1],c1:E.c,c2:E.c2});
+    else if(l<cap)pool.push({w:l>=5?2.4:3,kind:'el',key:k,tag:l>=5?'Мастерство стихии':'Стихия',title:E.n,sub:'Уровень '+l+' → '+(l+1),desc:EUP[k][l-1],c1:E.c,c2:E.c2});
   }
   if(g.el.metal>0&&g.guns.length<((g.cls&&g.cls.maxGuns)||3)){
     const have=new Set(g.guns.map(x=>x.t));if(g.hand)have.add(g.hand.t);
@@ -4741,7 +4800,7 @@ function movePlayer(dt){
     if(g.hat){g.hat.t+=dt/g.hat.dur;if(g.hat.t>=1)g.hat=null}
     g.hmv+=(Math.min(1,spd/(150*Math.max(.6,g.E.spd)))-g.hmv)*Math.min(1,dt*10);
     g.hph+=dt*spd*0.085;
-    g.hch=HTD.step(g.hsim,g.start||'fire',dt,p.x,p.y,g.hf);
+    g.hch=HTD.step(g.hsim,heroBody(g),dt,p.x,p.y,g.hf);
   }
   cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);
   cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
@@ -4927,7 +4986,7 @@ function startRun(el){
   G=mkState(el,biomeFor(1));
   const g=G;
   mode='play';
-  g.el[el]=1;
+  if(el==='avatar')g.pending++;else g.el[el]=1;
   recalc();
   g.p.gold=30+25*(SAVE.meta.startgold||0);
   cam.x=-VW/2;cam.y=-VH/2;
@@ -5108,7 +5167,7 @@ let hc={};
 let dockRefs={sk:[],bag:[]};
 const pips=(n,max)=>{let h='';for(let i=1;i<=(max||5);i++)h+='<u'+(i<=n?' class="on"':'')+'></u>';return h};
 function buildTopHud(){
-  const g=G,E=EL[g.start];
+  const g=G,E=hEl(g.start);
   $('portrait').style.setProperty('--c1',E.c);$('pel').textContent=E.n;$('pname').textContent=CLS[g.start].n;
   $('portOrb').style.setProperty('--c1',E.c);$('portOrb').style.setProperty('--c2',E.c2);
 }
@@ -5117,7 +5176,7 @@ function renderDock(){
   const sig=g.pl+':'+(pasCan()?1:0)+'|'+g.slots.map(s=>s?s.id+s.lv:'-').join(',')+'|'+g.bag.map(b=>b?b.id+':'+b.ch:'-').join(',')+'|'+g.ult.lv+(g.ult.kind||'')+'|'+g.start+'|'+JSON.stringify(SAVE.keys);
   if(g.dockSig===sig)return;
   g.dockSig=sig;
-  {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+EL[g.start].c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
+  {const l=g.pl||0;$('pasw').innerHTML='<button class="slot pas'+(pasCan()?' can':'')+'" type="button" tabindex="-1" data-k="p" data-i="0" style="--c1:'+hEl(g.start).c+'"><canvas width="104" height="104" id="pasCv"></canvas><span class="pp">'+[0,1,2].map(i=>'<b class="'+(i<l?'on':'')+'"></b>').join('')+'</span></button>'}
   let h='';
   for(let i=0;i<5;i++){
     const s=g.slots[i],key=keyName(SAVE.keys['s'+(i+1)]);
@@ -5126,7 +5185,7 @@ function renderDock(){
       h+='<button class="slot sk" type="button" tabindex="-1" data-k="s" data-i="'+i+'" style="--c1:'+a.c1+';--c2:'+a.c2+'"><span class="ic">'+icon(a.gl)+'</span><span class="key">'+key+'</span><span class="cost">'+a.mana+'</span><span class="lv">'+pips(s.lv)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
     }else h+='<button class="slot empty" type="button" tabindex="-1" data-k="s" data-i="'+i+'"><span class="key">'+key+'</span></button>';
   }
-  const u=ultInfo(),E=EL[g.start];
+  const u=ultInfo(),E=hEl(g.start);
   h+='<button class="slot ult'+(g.ult.lv?'':' locked')+'" type="button" tabindex="-1" data-k="u" data-i="0" style="--c1:'+u.c1+';--c2:'+u.c2+'"><span class="ic">'+(g.ult.lv?icon('ult'):'<b style="font-size:11px;line-height:1.1;text-align:center">🔒<br>'+ULT_LV+' ур.</b>')+'</span><span class="key">'+keyName(SAVE.keys.ult)+'</span><span class="cost">'+u.mana+'</span><span class="lv">'+pips(g.ult.lv,3)+'</span><span class="cdov"></span><span class="cdt"></span></button>';
   $('skills').innerHTML=h;
   let b='';
@@ -5359,7 +5418,7 @@ function openTree(){
   g.treeOpen=true;
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
-  if(!trSel||(trSel!=='__pas'&&trSel!=='__ult'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:ELSK[g.start]}
+  if(!trSel||(trSel!=='__pas'&&trSel!=='__ult'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:(ELSK[g.start]||'__pas')}
   $('tree').hidden=false;renderTree();
 }
 function closeTree(){const g=G;if(!g)return;g.treeOpen=false;$('tree').hidden=true;$('tip').hidden=true;treeBadge()}
@@ -5386,7 +5445,7 @@ function renderTree(){
   const g=G;
   $('trSp').textContent='Очков навыков: '+g.sp+'. Очко за каждый уровень. Тратятся на навыки, мутации, пассивку героя и ульту (с '+ULT_LV+' уровня).';
   let h='<h4>Герой</h4>';
-  h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+EL[g.start].c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+EL[g.start].c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
+  h+='<button type="button" data-sk="__pas" class="'+(trSel==='__pas'?'sel':'')+'" style="--c1:'+hEl(g.start).c+'"><span class="tl"><b>'+HPAS[g.start].n+'</b><span class="rtag" style="color:'+hEl(g.start).c+'">пассивка</span></span><small>'+(g.pl||0)+'/3</small></button>';
   const ui=ultInfo();
   h+='<button type="button" data-sk="__ult" class="'+(trSel==='__ult'?'sel':'')+(g.ult.lv?'':' lock')+'" style="--c1:'+ui.c1+'"><span class="tl"><b>'+(g.ult.lv?ui.n:'Ульта')+'</b><span class="rtag" style="color:#ffd36b">ульта</span></span><small>'+(g.ult.lv?g.ult.lv+'/3':'🔒 '+ULT_LV)+'</small></button>';
   const row=id=>{
@@ -5403,7 +5462,7 @@ function renderTree(){
   trThumbs();
   trPv=null;
   if(trSel==='__pas'){
-    const H=HPAS[g.start],l=g.pl||0,col=EL[g.start].c;
+    const H=HPAS[g.start],l=g.pl||0,col=hEl(g.start).c;
     let d='<div class="th" style="--c1:'+col+'"><strong style="color:'+col+'">'+H.n+'</strong><span>Пассивка героя «'+CLS[g.start].n+'» · ур. '+l+'/3</span></div><p style="margin:0;color:#c5cbdd">Работает всегда. Каждый уровень стоит 1 очко навыков и открывается на нужном уровне героя.</p>';
     H.pd.forEach((t,i)=>{const done=i<l,next=i===l,ok=g.p.lv>=PASR[i];
       d+='<div class="nd'+(done?' max':'')+'" style="--c1:'+col+'"><div><strong>Уровень '+(i+1)+'</strong><p>'+t+'</p></div>'+(!done&&!ok?'<span class="rq">Нужен уровень героя '+PASR[i]+'</span>':'')+'<button type="button" data-pas="1"'+(next&&pasCan()?'':' disabled')+'>'+(done?'Открыто':'+1 · 1 очко')+'</button></div>'});
@@ -5438,24 +5497,25 @@ function ultTreeHtml(){
   let d='<div class="th" style="--c1:#ffd36b"><strong style="color:#ffd36b">Ульта</strong><span>Очков навыков: '+g.sp+' · открыть с '+ULT_LV+' ур., уровни 2 и 3 — с '+ultNeedLv(2)+' и '+ultNeedLv(3)+' ур. героя</span></div>';
   if(!g.ult.kind){
     const lvOk=g.p.lv>=ULT_LV;
-    d+='<p style="margin:0;color:#c5cbdd">Выберите направление ульты. Выбор один на забег. Ульта симбиоза доступна, если этот симбиоз уже изучен.</p>';
+    d+='<p style="margin:0;color:#c5cbdd">'+(isAva(g)?'Выберите ульту одного из изученных симбиозов. Выбор один на забег.':'Ульта вашего героя: откройте её за 1 очко навыков.')+'</p>';
     const opt=(key,name,desc,ok,why,col)=>'<div class="nd" style="--c1:'+col+'"><div><strong>'+name+'</strong><p>'+desc+'</p></div>'+(ok?'':'<span class="rq">'+why+'</span>')+'<button type="button" data-ult="'+key+'"'+(ok&&lvOk&&g.sp>0?'':' disabled')+'>Выбрать · 1 очко</button></div>';
-    d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',EL[g.start].c);
+    if(!isAva(g))d+=opt('hero','Ульта героя: '+ULT[g.start].n,ULT[g.start].d,true,'',hEl(g.start).c);
     for(const id of SYM_IDS){
       if(!g.symKnown[id])continue;
       d+=opt('sym:'+id,symUltName(id),'«'+AB[id].n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',true,'',AB[id].c1);
     }
-    if(!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
+    if(isAva(g)&&!SYM_IDS.some(id=>g.symKnown[id]))d+='<p style="margin:0;color:var(--dim)">Ульты симбиозов появятся здесь, когда вы изучите симбиоз.</p>';
     if(!lvOk)d+='<p style="margin:0;color:#e0a46a">Ульта открывается с '+ULT_LV+' уровня героя (сейчас '+g.p.lv+').</p>';
     return d;
   }
   d+='<p style="margin:0;color:#c5cbdd"><b style="color:'+ui.c1+'">'+ui.n+'.</b> '+ui.d+'</p>';
   d+='<div class="nd'+(g.ult.lv>=3?' max':'')+'" style="--c1:#ffd36b"><div><strong>Уровень ульты</strong> <span class="pips">'+[1,2,3].map(k=>'<i class="'+(k<=g.ult.lv?'on':'')+'"></i>').join('')+'</span><p>Каждый уровень заметно усиливает урон и размах ульты.</p></div>'+(g.ult.lv<3&&!ultCanUp()?'<span class="rq">Нужен '+ultNeedLv(g.ult.lv+1)+' ур. героя</span>':'')+'<button type="button" data-ultlv="1"'+(ultCanUp()&&g.sp>0?'':' disabled')+'>'+(g.ult.lv>=3?'Макс.':'+1 · 1 очко')+'</button></div>';
-  d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати симбиозов — добавляют ульте эффекты</h4>';
+  if(!isAva(g)){d+='<p style="margin:0;color:var(--dim)">Печати мастерства своей стихии появятся в следующей версии.</p>';return d}
+  d+='<h4 style="margin:4px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">Печати стихий — добавляют ульте эффекты изученных стихий</h4>';
   for(const p of EK){
-    if(p===g.start)continue;
-    const sid=symFor(g.start,p);if(!sid)continue;
-    const has=g.ult.seals[p],known=g.symKnown[sid];
+    if(!g.el[p]&&!g.ult.seals[p])continue;
+    const sid=symFor(g.start,p)||'';
+    const has=g.ult.seals[p],known=true;
     d+='<div class="nd'+(has?' max':'')+'" style="--c1:'+EL[p].c+'"><div><strong>Печать: '+ULTMOD[p]+'</strong><p>'+ULTMODD[p]+'.</p></div>'+(known||has?'':'<span class="rq">Нужен симбиоз «'+AB[sid].n+'»'+(symForbidden(sid)?' (только свитком)':'')+'</span>')+'<button type="button" data-seal="'+p+'"'+(!has&&known&&g.sp>0?'':' disabled')+'>'+(has?'Открыта':'Открыть · 1 очко')+'</button></div>';
   }
   return d;
@@ -5467,7 +5527,7 @@ $('trDet').addEventListener('click',e=>{
   if(b.hasAttribute('data-pas')){pasUp()}
   else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
   else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
-  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&g.symKnown[symFor(g.start,p)]){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
+  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&isAva(g)&&g.el[p]>0){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
   else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
   else if(b.hasAttribute('data-node')){
@@ -5574,7 +5634,7 @@ function renderShop(){
       st+='<button class="btn alt sagecard" type="button" data-inv="'+s.k+'"'+(full?' disabled':'')+'><span><b>'+s.n+'</b> · '+n+'/'+INV_MAX+'<br><small>'+s.d+'</small></span><span class="price'+(can?'':' no')+'">'+(full?'макс.':coin+pr)+'</span></button>';
     }
     for(const k of EK){
-      const l=g.el[k],cap=(k===g.start?5:4);
+      const l=g.el[k],cap=elCap(k);
       if(l<1||l>=cap)continue;
       const pr=awkPrice(),can=g.p.gold>=pr;
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';
@@ -5691,7 +5751,7 @@ function dmgRows(g){
   const D=g.dmgBy||{},ks=Object.keys(D).filter(k=>D[k]>=1).sort((a,b)=>D[b]-D[a]),tot=ks.reduce((s,k)=>s+D[k],0)||1,top=D[ks[0]]||1;
   if(!ks.length)return '<p class="sub" style="margin:0">Урона не нанесено.</p>';
   const fmt=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e4?Math.round(v/1e3)+'K':String(Math.round(v));
-  const col=k=>k==='__ult'?'#ffd36b':AB[k]?AB[k].c1:k==='__gun'?'#e8eef8':k==='__dot'?'#ff9a3c':k==='__auto'?EL[g.start].c:'#9cc4ff';
+  const col=k=>k==='__ult'?'#ffd36b':AB[k]?AB[k].c1:k==='__gun'?'#e8eef8':k==='__dot'?'#ff9a3c':k==='__auto'?hEl(g.start).c:'#9cc4ff';
   return ks.slice(0,8).map(k=>'<div class="dr" style="--c1:'+col(k)+'"><span>'+dmgLabel(k)+'</span><i style="width:'+Math.max(1,D[k]/top*100).toFixed(1)+'%"></i><b>'+fmt(D[k])+' · '+Math.round(D[k]/tot*100)+'%</b></div>').join('');
 }
 function showOver(win,add){
@@ -5743,11 +5803,12 @@ function routeHtml(){
 }
 function playTab(){
   let picks='';
-  for(const k of EK){
-    const E=EL[k];
-    picks+='<button class="pick'+(menuEl===k?' on':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+E.n+'</b><small>'+EW[k].w+'</small></button>';
+  for(const k of HEROK){
+    const E=hEl(k),ava=k==='avatar';
+    picks+='<button class="pick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+(ava?'Аватар':E.n)+'</b><small>'+(ava?'Смешивает стихии':EW[k].w)+'</small></button>';
   }
-  const E=EL[menuEl],u=ULT[menuEl],sk=AB[ELSK[menuEl]];
+  const ava=menuEl==='avatar',E=hEl(menuEl),u=ULT[menuEl],sk=AB[ELSK[menuEl]]||{n:'Навыки изученных стихий',d:'Плюс симбиозы двух стихий и их слияния'};
+  const ew=EW[menuEl]||{w:'Автоатаки всех изученных стихий',d:'Каждая стихия добавляет свою',dt:'magic'};
   let syms='';
   for(const k of SYM_IDS){
     const a=AB[k];
@@ -5756,8 +5817,8 @@ function playTab(){
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
-    +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
+    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
+    +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
     +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
 function upTab(){
@@ -8409,9 +8470,10 @@ function drawPlayer(g){
   }
   ctx.globalAlpha=1;
   ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(p.x+3,p.y+10,13,6,0,0,TAU);ctx.fill();
+  if(isAva(g))drawAvaHalo(g);
   ctx.save();ctx.translate(p.x,p.y);
   ctx.globalCompositeOperation='lighter';
-  glow(0,0,150,EL[g.start||'fire'].c,0.10);
+  glow(0,0,150,hEl(g.start||'fire').c,0.10);
   for(const k of EK){
     const l=g.el[k];if(!l)continue;
     glow(0,0,34+l*5,EL[k].c,0.20+0.05*l);
@@ -8420,7 +8482,7 @@ function drawPlayer(g){
   if(p.inv>0&&Math.floor(anim*20)%2===0)ctx.globalAlpha=0.45;
   if(g.hf!==undefined){
     ctx.save();ctx.rotate(g.hf);ctx.scale(1.32,1.32);
-    HTD.draw(ctx,g.start||'fire',{ph:g.hph,mv:g.hmv,t:anim,dash:g.dashT>0,ch:g.hch,atk:g.hat?g.hat.t:-1,aim:clamp(angd(g.hla,g.hf),-1,1),gun:g.hand?{aim:clamp(angd(g.hand.aim,g.hf),-.9,.9),fl:g.hand.fl,rec:g.hand.rec}:null});
+    HTD.draw(ctx,heroBody(g),{ph:g.hph,mv:g.hmv,t:anim,dash:g.dashT>0,ch:g.hch,atk:g.hat?g.hat.t:-1,aim:clamp(angd(g.hla,g.hf),-1,1),gun:g.hand?{aim:clamp(angd(g.hand.aim,g.hf),-.9,.9),fl:g.hand.fl,rec:g.hand.rec}:null});
     ctx.restore();
   }else{ctx.fillStyle='#f1ecdf';ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill()}
   const owned=EK.filter(k=>g.el[k]>0);
@@ -8453,8 +8515,17 @@ function drawPlayer(g){
   if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
   drawDashBar(g);drawHeroRes(g);drawItemFx(g);
 }
+/* Аватар рисуется телом Мистика, вокруг кружат шары изученных стихий */
+function heroBody(g){return isAva(g)?'water':(g.start||'fire')}
+function drawAvaHalo(g){
+  const p=g.p,own=EK.filter(k=>g.el[k]>0),n=Math.max(1,own.length);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle='rgba(216,200,255,'+(0.18+0.08*Math.sin(anim*3))+')';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(p.x,p.y+4,26,12,0,0,TAU);ctx.stroke();
+  own.forEach((k,i)=>{const a=anim*1.6+i*TAU/n,x=p.x+Math.cos(a)*26,y=p.y+4+Math.sin(a)*12;glow(x,y,10,EL[k].c,0.6);ctx.globalAlpha=1;ctx.fillStyle=EL[k].c2;ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fill()});
+  ctx.restore();
+}
 function drawHeroRes(g){
-  const p=g.p,k=g.start;if(!g.cls)return;
+  const p=g.p,k=g.start;if(!g.cls||isAva(g))return;
   const w=46,x0=p.x-w/2,y0=p.y+38;let f=0,col='#fff',lab='',pulse=false;
   if(k==='metal')return; /* у Солдата механика пассивная — без полоски */
   ctx.save();
@@ -8482,7 +8553,7 @@ function drawDashBar(g){
   const w=22,gap=3,tw=mx*w+(mx-1)*gap,x0=p.x-tw/2,y0=p.y+31;
   ctx.save();ctx.globalAlpha=al;
   ctx.fillStyle='rgba(6,8,14,.7)';ctx.fillRect(x0-2,y0-2,tw+4,8);
-  const cl=EL[g.start||'air'].c;
+  const cl=hEl(g.start||'air').c;
   for(let j=0;j<mx;j++){
     const x=x0+j*(w+gap);
     ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(x,y0,w,4);

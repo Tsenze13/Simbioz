@@ -21,11 +21,12 @@ function routeHtml(){
 }
 function playTab(){
   let picks='';
-  for(const k of EK){
-    const E=EL[k];
-    picks+='<button class="pick'+(menuEl===k?' on':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+E.n+'</b><small>'+EW[k].w+'</small></button>';
+  for(const k of HEROK){
+    const E=hEl(k),ava=k==='avatar';
+    picks+='<button class="pick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+(ava?'Аватар':E.n)+'</b><small>'+(ava?'Смешивает стихии':EW[k].w)+'</small></button>';
   }
-  const E=EL[menuEl],u=ULT[menuEl],sk=AB[ELSK[menuEl]];
+  const ava=menuEl==='avatar',E=hEl(menuEl),u=ULT[menuEl],sk=AB[ELSK[menuEl]]||{n:'Навыки изученных стихий',d:'Плюс симбиозы двух стихий и их слияния'};
+  const ew=EW[menuEl]||{w:'Автоатаки всех изученных стихий',d:'Каждая стихия добавляет свою',dt:'magic'};
   let syms='';
   for(const k of SYM_IDS){
     const a=AB[k];
@@ -34,8 +35,8 @@ function playTab(){
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
   return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+' Прочие стихии можно прокачать только до 4 уровня.</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+EW[menuEl].w+'. '+EW[menuEl].d+' ('+DT[EW[menuEl].dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+' Вместо неё можно выбрать ульту изученного симбиоза.</dd><dt>Противоположность</dt><dd>«'+EL[OPP[menuEl]].n+'» взять нельзя. Всего не больше трёх стихий: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево.</dd></dl>'
-    +'<h2 class="sec" style="margin-top:6px">Симбиозы этой стихии (усиливают ульту)</h2><div class="chips">'+syms+'</div></div>'
+    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
+    +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
     +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
 }
 function upTab(){

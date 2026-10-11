@@ -188,6 +188,7 @@ h1{margin:0;font:700 clamp(40px,4.4vw,60px)/.95 var(--f-display);letter-spacing:
 .mpanel{padding:clamp(18px,4vh,36px) 24px clamp(18px,4vh,36px) 8px;overflow:auto;touch-action:pan-y;min-width:0}
 .mpanel>section{display:grid;gap:18px;max-width:880px}
 .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick.ava{grid-column:1/-1}.pick.ava .orb{background:conic-gradient(#ff6a2b,#3aa7ff,#c9974f,#8febd0,#e8eef8,#7fd15a,#ff6a2b)!important;box-shadow:0 0 14px rgba(216,200,255,.6)}
 .pick{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;align-items:center;text-align:left;padding:12px;background:rgba(23,28,41,.9);border:1px solid var(--line);border-radius:8px;min-width:0}
 .pick .orb{--s:38px;grid-row:1/3}
 .pick b{font:700 20px/1.1 var(--f-display)}

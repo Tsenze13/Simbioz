@@ -93,7 +93,7 @@ function renderShop(){
       st+='<button class="btn alt sagecard" type="button" data-inv="'+s.k+'"'+(full?' disabled':'')+'><span><b>'+s.n+'</b> · '+n+'/'+INV_MAX+'<br><small>'+s.d+'</small></span><span class="price'+(can?'':' no')+'">'+(full?'макс.':coin+pr)+'</span></button>';
     }
     for(const k of EK){
-      const l=g.el[k],cap=(k===g.start?5:4);
+      const l=g.el[k],cap=elCap(k);
       if(l<1||l>=cap)continue;
       const pr=awkPrice(),can=g.p.gold>=pr;
       st+='<button class="btn alt sagecard" type="button" data-awk="'+k+'" style="--c1:'+EL[k].c+'"><span class="orb sm" style="--c1:'+EL[k].c+';--c2:'+EL[k].c2+'"></span><span><b>Пробуждение: '+EL[k].n+'</b> · ур. '+l+' → '+(l+1)+'<br><small>Стихия становится сильнее, как за карточку уровня</small></span><span class="price'+(can?'':' no')+'">'+coin+pr+'</span></button>';

@@ -273,6 +273,46 @@ function bubbles(c,t){c.save();for(let i=0;i<16;i++){const p=(t*.12*(.6+hv(i)*.8
  c.strokeStyle=`rgba(160,230,255,${.6*(1-p)})`;c.lineWidth=.8;ell(c,x,y,r,r);c.stroke();c.fillStyle=`rgba(255,255,255,${.7*(1-p)})`;ell(c,x-r*.35,y-r*.35,r*.25,r*.25);c.fill()}c.restore()}
 
 /* ===== ЗЕМЛЯ — Каменный страж ===== */
+HEROES.avatar={n:'Аватар',c:'#d8c8ff',hw:28,jaw:.66,chin:146,skin:['#f8e2d8','#dcb4a8','#5a4a6e'],iris:['#fff2b0','#c47bff'],eyeGlow:1,lip:['#d08a8a','#8a4a56'],
+ rim:'#e0c8ff',brow:'#3a2a5a',blush:'#e0707a',smirk:.3,cutY:68,
+ bg(c,t,m){bgBase(c,m?'#2a1e4a':'#2a0e1a','#06040e',t);
+  c.save();c.globalCompositeOperation='lighter';const EC=['#ff6a2b','#3aa7ff','#c9974f','#8febd0','#e8eef8','#7fd15a'];
+  for(let i=0;i<6;i++){const a=t*.35+i*TAU/6,x=100+Math.cos(a)*78,y=96+Math.sin(a)*40;c.fillStyle=RG(c,x,y,26,[[0,rgba(EC[i],.55)],[1,rgba(EC[i],0)]]);c.fillRect(x-26,y-26,52,52);c.beginPath();c.arc(x,y,3.2,0,TAU);c.fillStyle=rgba('#ffffff',.85);c.fill()}
+  c.restore()},
+ back(c,t,m){ // длинные волосы
+  for(const s of[-1,1]){const w=Math.sin(t*1.4+s)*4;
+   c.beginPath();c.moveTo(100+s*20,56);c.bezierCurveTo(100+s*46,62,100+s*40+w,120,100+s*52+w,200);c.lineTo(100+s*22,200);c.bezierCurveTo(100+s*30,150,100+s*26,110,100+s*22,90);c.closePath();
+   c.fillStyle=LG(c,100+s*20,60,100+s*50,200,[[0,'#3a2a6a'],[.5,'#9a8ad8'],[1,'#e8e0ff']]);c.fill();stroke(c,INK,2);
+   for(let k=0;k<5;k++){c.beginPath();c.moveTo(100+s*(24+k*3),70+k*6);c.bezierCurveTo(100+s*(40+k*2),110,100+s*(34+k*3)+w,150,100+s*(44+k*2)+w,196);stroke(c,k%2?'#fff4d0':'#c9b3ff',1,.35)}}},
+ body(c,t,m,br){
+  c.beginPath();c.moveTo(4,200);c.quadraticCurveTo(16,154,60,146);c.lineTo(86,140);c.lineTo(100,166);c.lineTo(114,140);c.lineTo(140,146);c.quadraticCurveTo(184,154,196,200);c.closePath();
+  c.fillStyle=LG(c,0,140,200,200,[[0,'#f0f8ff'],[.5,'#b8d8f0'],[1,'#5a7aa0']]);c.fill();stroke(c,INK,2.2);
+  fold(c,50,160,64,200,[52,182],.18);fold(c,150,160,136,200,[148,182],.18);
+  for(const s of[-1,1]){c.beginPath();c.moveTo(100+s*14,140);c.quadraticCurveTo(100+s*30,170,100+s*24,200);stroke(c,'#c0c8d8',3,.9);c.beginPath();c.moveTo(100+s*14,140);c.quadraticCurveTo(100+s*30,170,100+s*24,200);stroke(c,'#ffffff',1,.7)}
+  // водяная лента
+  c.save();c.globalCompositeOperation='lighter';
+  for(let k=0;k<2;k++){c.beginPath();for(let a=0;a<=TAU+.01;a+=.12){const x=100+Math.cos(a+t*.8)*84,y=184+Math.sin(a+t*.8)*12+Math.sin(a*3+t*2+k)*4;a?c.lineTo(x,y):c.moveTo(x,y)}stroke(c,k?'#fff2b0':'#e8e0ff',k?1.4:4,k?.6:.3)}
+  c.restore();
+  // камень-капля на груди
+  c.beginPath();c.moveTo(100,160);c.quadraticCurveTo(108,172,100,180);c.quadraticCurveTo(92,172,100,160);c.fillStyle=RG(c,98,170,10,[[0,'#ffffff'],[.3,'#fff2b0'],[1,'#1a6ac0']]);c.fill();stroke(c,INK,1.6);
+  glow(c,100,172,18,'#e0c8ff',.4+.15*Math.sin(t*2))},
+ front(c,t,m){
+  // пробор и передние пряди
+  c.beginPath();c.moveTo(100,48);c.bezierCurveTo(70,46,66,66,70,100);c.bezierCurveTo(74,80,84,62,100,58);c.bezierCurveTo(116,62,126,80,130,100);c.bezierCurveTo(134,66,130,46,100,48);c.closePath();
+  c.fillStyle=LG(c,70,46,130,100,[[0,'#b8a8ec'],[.5,'#5a4a9a'],[1,'#9a8ad8']]);c.fill();stroke(c,INK,2);
+  for(let k=0;k<6;k++){c.beginPath();c.moveTo(100-k*2,52);c.bezierCurveTo(84-k,60,76-k,74,74-k*.5,96);stroke(c,'#fff4d0',.9,.4);c.beginPath();c.moveTo(100+k*2,52);c.bezierCurveTo(116+k,60,124+k,74,126+k*.5,96);stroke(c,'#fff4d0',.9,.4)}
+  // диадема
+  c.beginPath();c.moveTo(72,72);c.quadraticCurveTo(100,60,128,72);stroke(c,'#2a3040',4.2,1);c.beginPath();c.moveTo(72,72);c.quadraticCurveTo(100,60,128,72);stroke(c,'#e0ecff',2,1);
+  c.beginPath();c.moveTo(100,58);c.lineTo(106,66);c.lineTo(100,76);c.lineTo(94,66);c.closePath();c.fillStyle=RG(c,98,64,9,[[0,'#ffffff'],[.3,'#fff2b0'],[1,'#1a5ab0']]);c.fill();stroke(c,INK,1.4);
+  glow(c,100,66,16,'#7fe0ff',.45+.2*Math.sin(t*2.4));
+  // слеза-метка
+  c.beginPath();c.moveTo(80,108);c.quadraticCurveTo(78,114,80,118);stroke(c,'#e0c8ff',1.4,.8)},
+ light(c,t,m){soft(c,100,40,140,'#e0c8ff',.25,'soft-light');soft(c,180,170,110,'#000000',.3,'multiply')}
+};
+function bubbles(c,t){c.save();for(let i=0;i<16;i++){const p=(t*.12*(.6+hv(i)*.8)+hv(i*5))%1,x=hv(i*3)*200+Math.sin(t+i)*6,y=210-p*230,r=1+hv(i*7)*3;
+ c.strokeStyle=`rgba(160,230,255,${.6*(1-p)})`;c.lineWidth=.8;ell(c,x,y,r,r);c.stroke();c.fillStyle=`rgba(255,255,255,${.7*(1-p)})`;ell(c,x-r*.35,y-r*.35,r*.25,r*.25);c.fill()}c.restore()}
+
+/* ===== ЗЕМЛЯ — Каменный страж ===== */
 HEROES.earth={n:'Каменный страж',c:'#c9974f',hw:35,jaw:.92,top:52,chin:150,skin:['#e8b88e','#b47a52','#4a2614'],iris:['#c8a070','#5a3a1a'],lip:['#a86a56','#6a3a2a'],
  rim:'#ffb860',brow:'#3a2010',blush:'#c0503a',stub:.25,folds:1,smirk:0,cutY:74,
  bg(c,t,m){bgBase(c,m?'#3a2a16':'#3a1208','#080604',t);
@@ -551,6 +591,6 @@ function draw(c,key,t,hp,seed){
  c.save();c.globalCompositeOperation='overlay';c.globalAlpha=.12;c.drawImage(grain(),0,0);c.restore();
  c.restore();
 }
-window.PORTRAIT={draw,HEROES,keys:['fire','water','earth','air','metal','wood']};
+window.PORTRAIT={draw,HEROES,keys:['fire','water','earth','air','metal','wood','avatar']};
 })();
 

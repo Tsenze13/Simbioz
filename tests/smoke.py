@@ -25,6 +25,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 1366, 'height': 768})
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.on('console', lambda m: errs.append('console: ' + m.text[:200]) if m.type == 'error' and 'Failed to load resource' not in m.text else None)
     pg.add_init_script("localStorage.setItem('simbioz-debug','1')")
     pg.goto(HTML.as_uri())
     time.sleep(1)
@@ -48,6 +49,27 @@ with sync_playwright() as p:
     check('итоги забега: урон по источникам', r['src'] > 0 and r['rows'] > 0 and r['over'], r)
     r = J("()=>{const S=window.__sb;S.SAVE.tut={};S.SAVE.hints=true;S.quitToMenu();S.startRun('fire');S.update(1/60);return document.getElementById('hint').innerText}")
     check('подсказка новичку', 'Управление' in r, r[:40])
+
+    print('Мастера стихий и Аватар')
+    r = J("""()=>{const S=window.__sb,out={};for(const k of ['fire','water','earth','air','metal','wood']){S.quitToMenu();S.startRun(k);const g=S.G;
+        const els=new Set();for(let i=0;i<300;i++)for(const c of S.buildChoices())if(c.kind==='el'||c.kind==='skill')els.add(c.kind==='el'?c.key:S.AB[c.key].els?S.AB[c.key].els[0]:'sym');
+        g.el[k]=7;const up=S.buildChoices().length;out[k]=[...els]}return out}""")
+    check('мастер берёт только свою стихию', all(v == [k] for k, v in r.items()), r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;g.el.fire=8;S.startWave(3);const e=S.spawnEnemy('wisp');e.hp=e.max=1e6;
+        for(let i=0;i<200;i++){e.x=g.p.x+120;e.y=g.p.y;g.p.inv=1;S.update(1/60)}return {dmg:Math.round(1e6-e.hp),cards:S.buildChoices().filter(c=>c.kind==='el').length}}""")
+    check('стихия 8 уровня работает, дальше не качается', r['dmg'] > 0 and r['cards'] == 0, r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('avatar');const g=S.G;S.update(1/60);
+        const first=(g.choices||[]).map(c=>c.kind+':'+c.key);if(g.lvlOpen)S.pickCard(0);
+        const e1=Object.keys(g.el).filter(k=>g.el[k]>0);
+        for(let i=0;i<20;i++){g.p.xp=g.p.need;S.gainXp(0)}g.pending=0;
+        for(const k of ['fire','air','metal','water','earth','wood'])if(!g.el[S.OPP?0:0]&&!g.el[({fire:'water',water:'fire',earth:'air',air:'earth',metal:'wood',wood:'metal'})[k]])g.el[k]=Math.max(g.el[k],2);
+        S.recalc();const els=Object.keys(g.el).filter(k=>g.el[k]>0);
+        const kinds=new Set();for(let i=0;i<200;i++)for(const c of S.buildChoices())kinds.add(c.kind);
+        S.startWave(4);for(let i=0;i<600;i++){g.p.inv=1;if(i%100===0){for(const s of g.slots)if(s)s.cd=0;g.p.mana=999;for(let j=0;j<5;j++)S.castSlot(j)}S.update(1/60);if(i%200===0)S.render()}
+        S.openTree();document.querySelector('#trList [data-sk="__ult"]').click();const ultHtml=document.getElementById('trDet').innerText;S.closeTree();
+        return {first,e1,els,kinds:[...kinds],kills:g.kills,heroUlt:ultHtml.includes('Ульта героя')}}""")
+    check('Аватар: первая карточка — выбор стихии', len(r['first']) == 3 and all(x.startswith('el:') for x in r['first']) and len(r['e1']) == 1, r)
+    check('Аватар смешивает и учит симбиозы', len(r['els']) == 3 and 'skill' in r['kinds'] and r['kills'] > 0 and not r['heroUlt'], r)
 
     print('Все навыки с мутациями')
     r = J("""()=>{const S=window.__sb;let bad=[];for(const id of Object.keys(S.AB)){try{S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(3);

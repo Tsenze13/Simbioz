@@ -8,9 +8,10 @@ function drawPlayer(g){
   }
   ctx.globalAlpha=1;
   ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(p.x+3,p.y+10,13,6,0,0,TAU);ctx.fill();
+  if(isAva(g))drawAvaHalo(g);
   ctx.save();ctx.translate(p.x,p.y);
   ctx.globalCompositeOperation='lighter';
-  glow(0,0,150,EL[g.start||'fire'].c,0.10);
+  glow(0,0,150,hEl(g.start||'fire').c,0.10);
   for(const k of EK){
     const l=g.el[k];if(!l)continue;
     glow(0,0,34+l*5,EL[k].c,0.20+0.05*l);
@@ -19,7 +20,7 @@ function drawPlayer(g){
   if(p.inv>0&&Math.floor(anim*20)%2===0)ctx.globalAlpha=0.45;
   if(g.hf!==undefined){
     ctx.save();ctx.rotate(g.hf);ctx.scale(1.32,1.32);
-    HTD.draw(ctx,g.start||'fire',{ph:g.hph,mv:g.hmv,t:anim,dash:g.dashT>0,ch:g.hch,atk:g.hat?g.hat.t:-1,aim:clamp(angd(g.hla,g.hf),-1,1),gun:g.hand?{aim:clamp(angd(g.hand.aim,g.hf),-.9,.9),fl:g.hand.fl,rec:g.hand.rec}:null});
+    HTD.draw(ctx,heroBody(g),{ph:g.hph,mv:g.hmv,t:anim,dash:g.dashT>0,ch:g.hch,atk:g.hat?g.hat.t:-1,aim:clamp(angd(g.hla,g.hf),-1,1),gun:g.hand?{aim:clamp(angd(g.hand.aim,g.hf),-.9,.9),fl:g.hand.fl,rec:g.hand.rec}:null});
     ctx.restore();
   }else{ctx.fillStyle='#f1ecdf';ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill()}
   const owned=EK.filter(k=>g.el[k]>0);
@@ -52,8 +53,17 @@ function drawPlayer(g){
   if(g.leapH){ctx.restore();ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(p.x,p.y+10,16-g.leapH*0.1,7,0,0,TAU);ctx.fill()}
   drawDashBar(g);drawHeroRes(g);drawItemFx(g);
 }
+/* Аватар рисуется телом Мистика, вокруг кружат шары изученных стихий */
+function heroBody(g){return isAva(g)?'water':(g.start||'fire')}
+function drawAvaHalo(g){
+  const p=g.p,own=EK.filter(k=>g.el[k]>0),n=Math.max(1,own.length);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle='rgba(216,200,255,'+(0.18+0.08*Math.sin(anim*3))+')';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(p.x,p.y+4,26,12,0,0,TAU);ctx.stroke();
+  own.forEach((k,i)=>{const a=anim*1.6+i*TAU/n,x=p.x+Math.cos(a)*26,y=p.y+4+Math.sin(a)*12;glow(x,y,10,EL[k].c,0.6);ctx.globalAlpha=1;ctx.fillStyle=EL[k].c2;ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fill()});
+  ctx.restore();
+}
 function drawHeroRes(g){
-  const p=g.p,k=g.start;if(!g.cls)return;
+  const p=g.p,k=g.start;if(!g.cls||isAva(g))return;
   const w=46,x0=p.x-w/2,y0=p.y+38;let f=0,col='#fff',lab='',pulse=false;
   if(k==='metal')return; /* у Солдата механика пассивная — без полоски */
   ctx.save();
@@ -81,7 +91,7 @@ function drawDashBar(g){
   const w=22,gap=3,tw=mx*w+(mx-1)*gap,x0=p.x-tw/2,y0=p.y+31;
   ctx.save();ctx.globalAlpha=al;
   ctx.fillStyle='rgba(6,8,14,.7)';ctx.fillRect(x0-2,y0-2,tw+4,8);
-  const cl=EL[g.start||'air'].c;
+  const cl=hEl(g.start||'air').c;
   for(let j=0;j<mx;j++){
     const x=x0+j*(w+gap);
     ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(x,y0,w,4);

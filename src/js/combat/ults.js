@@ -61,7 +61,7 @@ function symUltName(id){return 'Великий симбиоз: '+AB[id].n}
 function ultInfo(){
   const g=G,k=g.ult.kind;
   if(k&&k.indexOf('sym:')===0){const id=k.slice(4),a=AB[id];return {n:symUltName(id),d:'«'+a.n+'» тройной силы с вашими мутациями: главный удар в прицел и два отголоска рядом.',mana:95,cd:75,c1:a.c1,c2:a.c2}}
-  const u=ULT[g.start];return {n:u.n,d:u.d,mana:u.mana,cd:u.cd,c1:EL[g.start].c,c2:EL[g.start].c2};
+  const u=ULT[g.start];return {n:u.n,d:u.d,mana:u.mana,cd:u.cd,c1:hEl(g.start).c,c2:hEl(g.start).c2};
 }
 function symUlt(id,lv,c){
   const g=G,a=AB[id],pr=skillPr({id:id,lv:5});
@@ -88,7 +88,7 @@ function castUlt(){
   for(const p of ultMods())ultMod(p,ep.x,ep.y,g.ult.lv);
   tagNew(L0,'__ult');g.curSk=null;
   g.shake=Math.max(g.shake,8);g.zk=Math.max(g.zk,0.045);
-  ring(g.p.x,g.p.y,160,EL[g.start].c,0.6);
+  ring(g.p.x,g.p.y,160,hEl(g.start).c,0.6);
   toast(u.n,ultMods().length?('+ '+ultMods().map(p=>ULTMOD[p]).join(', ')):'');
   sfx(220,0.4,'sawtooth',0.06,260);
 }
