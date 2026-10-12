@@ -1,0 +1,30 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Симбиоз 3D — прототип</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1420;font:14px/1.35 system-ui,sans-serif;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#hud{position:fixed;left:12px;top:10px;right:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;pointer-events:none}
+#hud h1{font-size:16px;margin:0 8px 0 0;text-shadow:0 1px 3px #000;flex-basis:100%}
+#st{font-size:13px;opacity:.9;text-shadow:0 1px 3px #000;flex-basis:100%;margin-bottom:4px}
+.b{pointer-events:auto;background:rgba(10,14,24,.72);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:7px 10px;font:600 13px system-ui,sans-serif;cursor:pointer}
+.b:hover{background:rgba(30,40,64,.85)}
+#help{position:fixed;left:12px;bottom:10px;font-size:12px;opacity:.85;text-shadow:0 1px 3px #000;pointer-events:none;max-width:560px}
+#nums{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.dn{position:absolute;left:0;top:0;font:800 16px system-ui,sans-serif;text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 6px rgba(0,0,0,.6);will-change:transform}
+#joy{position:fixed;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);display:none;pointer-events:none}
+#knob{position:absolute;left:30px;top:30px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.5)}
+@media(max-width:600px){.b{padding:6px 8px;font-size:12px}#help{display:none}}
+</style></head><body>
+<canvas id="c"></canvas><div id="nums"></div><div id="joy"><div id="knob"></div></div>
+<div id="hud"><h1>Симбиоз 3D · прототип</h1><div id="st">загрузка…</div>
+<button class="b" id="bl" type="button">⚡ Молния (Q)</button><button class="b" id="ba" type="button">Авто-молния: вкл</button>
+<button class="b" id="bc" type="button">Камера: сверху</button><button class="b" id="bt" type="button">Время: день</button>
+<button class="b" id="bq" type="button">Качество: Высокое</button><button class="b" id="bs" type="button">Врагов: 40</button></div>
+<div id="help">WASD или стрелки — бег (на телефоне — веди пальцем). Огненные шары летят сами. Q — молния, C — камера, N — день/вечер, G — качество, B — стресс-тест 200 врагов. Герой бессмертный: это проверка вида и скорости, не игра.</div>
+<script>
+/*THREE*/
+</script>
+<script>
+/*PROTO*/
+</script>
+</body></html>
