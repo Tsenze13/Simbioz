@@ -375,6 +375,53 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 .route>.rt{align-content:start}
 .controw{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #ffd36b;border-radius:10px;background:linear-gradient(120deg,rgba(255,211,107,.12),var(--panel2));margin-bottom:12px}
 .controw>div{flex:1;display:grid;gap:2px}.controw b{font:700 16px var(--f-display);color:#ffd36b}
+.trnote{margin:4px 2px 10px;font-size:12.5px;color:var(--dim)}
+/* меню «Играть» (0.38): всё на одном экране, кнопка старта всегда видна */
+.play2{display:flex!important;flex-direction:column;gap:14px;max-width:1100px!important;min-height:100%}
+.pgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+.pcol,.pside{display:grid;gap:10px;min-width:0}
+.hpicks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.hpick{display:grid;grid-template-columns:auto 1fr;gap:1px 9px;align-items:center;text-align:left;padding:8px 9px;background:rgba(23,28,41,.9);border:1px solid var(--line);border-radius:8px;min-width:0;cursor:pointer;color:inherit}
+.hpick .orb{--s:26px;grid-row:1/3}
+.hpick b{font:700 15px/1.1 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hpick small{color:var(--dim);font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hpick.on{border-color:var(--c1);box-shadow:0 0 0 1px var(--c1),0 0 22px -8px var(--c1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(23,28,41,.92))}
+.hpick:hover{border-color:var(--c1)}
+.hpick.ava .orb{background:conic-gradient(#ff6a2b,#3aa7ff,#c9974f,#8febd0,#e8eef8,#7fd15a,#ff6a2b)!important}
+.play2 .pdetail{gap:6px;padding:12px 14px}
+.play2 .pdetail .mpc{width:110px;height:132px;margin:0 0 6px 12px}
+.play2 .pdetail h3{font-size:26px;line-height:1}
+.prole{font-size:12.5px;color:var(--dim)}
+.pdesc{margin:2px 0 4px;font-size:13.5px;line-height:1.4}
+.pmore summary{cursor:pointer;color:var(--c1);font-size:13px;font-weight:700;margin:4px 0}
+.pmore dl{margin-top:6px}
+.chrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.mroute{display:grid;gap:5px;padding:10px 12px;background:rgba(23,28,41,.8);border:1px solid var(--line);border-radius:8px;font-size:13px}
+.mdesc{color:var(--dim);font-size:12.5px;margin-bottom:2px}
+.mr{display:grid;grid-template-columns:22px 1fr;gap:0 8px;align-items:baseline}
+.mr .mn{grid-row:1/3;width:20px;height:20px;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);display:grid;place-items:center;font-size:11px;font-weight:700}
+.mr i{font-style:normal;font-weight:700}.mr em{font-style:normal;color:var(--dim);font-size:12px}
+.mr .mb{grid-column:2;color:var(--dim);font-size:12px}
+.mhint{color:var(--dim);font-size:11.5px;margin-top:2px}
+.play2 .ascrow{margin-top:0}
+.startbar{position:sticky;bottom:0;z-index:2;margin-top:auto;display:flex;align-items:center;gap:16px;padding:12px 14px;border:1px solid var(--line2);border-radius:12px;
+  background:linear-gradient(180deg,rgba(20,24,36,.94),rgba(12,15,24,.98));box-shadow:0 -10px 30px rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+.btn.big{font-size:20px;padding:14px 30px;min-width:220px}
+.sbinfo{font-size:13px;color:var(--dim);line-height:1.4}.sbinfo b{font-family:var(--f-display);font-size:15px}
+.sbinfo .kh{font-size:11.5px;opacity:.75}
+@media (max-width:980px){.pgrid{grid-template-columns:minmax(0,1fr)}.hpicks{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:760px){.hpicks{grid-template-columns:repeat(2,minmax(0,1fr))}.btn.big{min-width:0;flex:1;padding:12px 16px;font-size:18px}.sbinfo .kh{display:none}.startbar{gap:10px;padding:10px}
+  .play2 .pdetail .mpc{width:84px;height:100px}}
+.hpick b{white-space:normal;overflow:visible;line-height:1.05}
+.hpick small{display:none}
+.hpick{min-height:48px}
+.play2 .pdetail{display:block}
+.play2 .pdetail .mpc{float:left;margin:0 14px 6px 0}
+.play2 .pdetail dl{clear:none;margin-top:6px}
+.play2 .pdetail .pmore{clear:both;padding-top:4px}
+@media (max-width:760px){.startbar{flex-direction:column;align-items:stretch;gap:6px}.btn.big{width:100%}.sbinfo{text-align:center;font-size:12px}
+  .play2 .pdetail .mpc{width:76px;height:92px}}
+.hpick .orb{grid-row:auto}.hpick{grid-template-rows:1fr}.hpick b{align-self:center}
 </style>
 
 <div id="stage">
@@ -428,7 +475,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.38-бета · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.39-бета · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -1164,7 +1211,7 @@ const EUP={
   water:['Волна шире и сильнее','+1 волна','Шире и быстрее','+1 волна, сильнее','Мастерство: волна шире и сильнее','Мастерство: +1 волна','Мастерство: волны быстрее и сильнее'],
   earth:['+1 камень','Камни сильнее','+1 камень','+1 камень, орбита шире','Мастерство: +1 камень','Мастерство: камни сильнее','Мастерство: +1 камень, орбита шире'],
   air:['+1 лезвие','Быстрее, пробивают больше','+1 лезвие','+1 лезвие, бег быстрее','Мастерство: лезвия сильнее','Мастерство: +1 лезвие','Мастерство: +1 лезвие, быстрее'],
-  metal:['+1 ствол','Быстрее и мощнее','+1 ствол','Ещё быстрее','Мастерство: стволы мощнее','Мастерство: стволы быстрее','Мастерство: стволы мощнее'],
+  metal:['Урон всех стволов +33%','Урон стволов +25%','Урон +20%, пули пробивают ещё 1 врага','Мастерство: урон стволов +17%','Мастерство: урон стволов +14%','Мастерство: урон стволов +13%','Мастерство: урон стволов +11%'],
   wood:['+1 семя','Яд сильнее','+1 семя','+1 семя, быстрее','Мастерство: яд сильнее','Мастерство: +1 семя','Мастерство: +1 семя, быстрее']
 };
 /* Аватар — герой-смешиватель. Не стихия: в EK его нет. */
@@ -6162,12 +6209,18 @@ function renderTree(){
     const a=AB[id],s=slotOf(id),why=skillAvail(id);
     h+='<button type="button" data-sk="'+id+'" class="'+(trSel===id?'sel':'')+(why&&!s?' lock':'')+'" style="--c1:'+(a.c1||'#9cc4ff')+'"><canvas class="tth" data-id="'+id+'" width="104" height="60"></canvas><span class="tl"><b>'+a.n+'</b>'+(a.cat==='sym'?'<span class="rtag" style="color:'+a.c2+'">'+EL[a.pair[0]].n+' + '+EL[a.pair[1]].n+'</span>':roleTag(a))+'</span><small>'+(s?'ур.'+s.lv:(why?'🔒':'—'))+'</small></button>';
   };
-  for(const k of EK){
-    const blocked=g.el[OPP[k]]>0&&!g.el[k];
-    h+='<h4 style="--ec:'+EL[k].c+'"><span class="eo"></span>'+EL[k].n+(g.el[k]?' · ур. '+g.el[k]:(blocked?' · закрыта':''))+'</h4>';
+  /* только стихии героя: мастер видит свою, Аватар — изученные (и симбиозы из них) */
+  const els=isAva(g)?EK.filter(k=>g.el[k]>0):[g.start];
+  for(const k of els){
+    h+='<h4 style="--ec:'+EL[k].c+'"><span class="eo"></span>'+EL[k].n+(g.el[k]?' · ур. '+g.el[k]:'')+'</h4>';
     SKILL_IDS.filter(id=>AB[id].els[0]===k).forEach(row);
   }
-  h+='<h4>Симбиозы</h4>';SYM_IDS.forEach(row);
+  if(isAva(g)){
+    if(!els.length)h+='<p class="trnote">Выберите первую стихию на повышении уровня — здесь появятся её навыки.</p>';
+    const sy=SYM_IDS.filter(id=>AB[id].pair.every(k=>g.el[k]>0));
+    h+='<h4>Симбиозы</h4>';
+    if(sy.length)sy.forEach(row);else h+='<p class="trnote">Симбиоз открывается, когда изучены обе его стихии.</p>';
+  }
   $('trList').innerHTML=h;
   trThumbs();
   trPv=null;
@@ -6475,7 +6528,7 @@ function dmgRows(g){
 }
 function showOver(win,add){
   const g=G;
-  $('goT').textContent=win?((g.ch||1)>=CHAP.length?'Пожиратель повержен':'Глава '+(g.ch||1)+' пройдена'):(g.endless?'Бесконечный режим окончен':'Аватар пал');
+  $('goT').textContent=win?((g.ch||1)>=CHAP.length?'Пожиратель повержен':'Глава '+(g.ch||1)+' пройдена'):(g.endless?'Бесконечный режим окончен':(isAva(g)?'Аватар':CLS[g.start].n)+' пал');
   $('goW').textContent=g.wave;$('goLv').textContent=g.p.lv;$('goK').textContent=g.kills;$('goE').textContent='+'+add;
   $('goBuild').innerHTML=buildChips(g);
   {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}
@@ -6526,26 +6579,45 @@ function routeHtml(){
   const card=(id,lab,boss)=>{const M=MAPS[id];return '<div class="rt" style="--c1:'+M.glow+';--a:'+M.acc+';--b:'+M.base+'"><span class="msw"></span><b>'+M.n+'</b><small>'+lab+' · босс: '+BOSS[boss].n+'</small><em class="up">▲ '+M.mods.buff.n+'</em><em class="dn">▼ '+M.mods.debuff.n+'</em></div>'};
   return card(C.maps[0],'Карта 1',C.boss[0])+'<div class="rfork">'+card(C.maps[1],'Карта 2 · путь А',C.boss[1])+card(C.maps[2],'Карта 2 · путь Б',C.boss[1])+'</div>'+card(C.maps[3],'Карта 3 · логово',C.boss[2]);
 }
+function heroName(k){return k==='avatar'?'Аватар':CLS[k].n}
 function playTab(){
+  /* герои: имя персонажа, роль, стихия маленьким шрифтом */
   let picks='';
   for(const k of HEROK){
     const E=hEl(k),ava=k==='avatar';
-    picks+='<button class="pick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+(ava?'Аватар':E.n)+'</b><small>'+(ava?'Смешивает стихии':EW[k].w)+'</small></button>';
+    picks+='<button class="hpick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+heroName(k)+'</b><small>'+(ava?'Смешивает стихии':CLS[k].role+' · '+E.n.toLowerCase())+'</small></button>';
   }
   const ava=menuEl==='avatar',E=hEl(menuEl),u=ULT[menuEl],sk=AB[ELSK[menuEl]]||{n:'Навыки изученных стихий',d:'Плюс симбиозы двух стихий и их слияния'};
   const ew=EW[menuEl]||{w:'Автоатаки всех изученных стихий',d:'Каждая стихия добавляет свою',dt:'magic'};
-  let syms='';
-  for(const k of SYM_IDS){
-    const a=AB[k];
-    if(a.pair.indexOf(menuEl)<0)continue;
-    const other=a.pair[0]===menuEl?a.pair[1]:a.pair[0];
-    syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
-  }
+  const C=CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)],A=ASC[Math.min(SAVE.ascSel||0,SAVE.asc||0)];
   const rs=runSavedLine();
-  return '<section>'+(rs?'<div class="controw"><div><b>Сохранённый забег</b><span class="sub">'+rs+'</span></div><button class="btn" type="button" data-cont="1">Продолжить</button></div>':'')+'<div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
-    +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
-    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">'+(runSaved()?'Новый забег (сохранённый пропадёт)':'Начать забег')+'</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
+  /* маршрут главы — три строки */
+  const mrow=(n,ids,b,fin)=>'<div class="mr"><span class="mn">'+n+'</span><span>'+ids.map(id=>'<i style="color:'+MAPS[id].glow+'">'+MAPS[id].n+'</i>').join(' <em>или</em> ')+'</span><span class="mb">'+(fin?'хранитель: ':'босс: ')+BOSS[b].n+'</span></div>';
+  return '<section class="play2">'
+    +(rs?'<div class="controw"><div><b>Сохранённый забег</b><span class="sub">'+rs+'</span></div><button class="btn" type="button" data-cont="1">Продолжить</button></div>':'')
+    +'<div class="pgrid"><div class="pcol">'
+      +'<h2 class="sec">Герой</h2><div class="hpicks">'+picks+'</div>'
+      +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas>'
+        +'<h3 style="color:'+E.c+'">'+heroName(menuEl)+'</h3><div class="prole">'+(ava?'Мастер всех стихий':CLS[menuEl].role+' · стихия «'+E.n+'»')+'</div>'
+        +'<p class="pdesc">'+E.d+'</p>'
+        +'<dl><dt>Автоатака</dt><dd>'+ew.w+'</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Ульта</dt><dd><b>'+u.n+'</b> (с '+ULT_LV+' ур.)</dd></dl>'
+        +'<details class="pmore"><summary>Подробнее о герое</summary><dl>'
+          +'<dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+'</dd>'
+          +'<dt>Автоатака</dt><dd>'+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd>'
+          +'<dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b>: '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd>'
+          +'<dt>Первый навык</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта</dt><dd>'+u.d+'</dd>'
+          +'<dt>Стихии</dt><dd>'+(ava?'До трёх: по одной из пар огонь/вода, земля/воздух, металл/дерево, каждая до 4 уровня. Учит симбиозы.':'Только своя — до 8 уровня. Смешивать стихии умеет только Аватар.')+'</dd>'
+        +'</dl>'+(ava?'<div class="chips" style="margin-top:6px">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</details>'
+      +'</div>'
+    +'</div><div class="pside">'
+      +'<h2 class="sec">Глава</h2>'+chapRow()
+      +'<div class="mroute"><div class="mdesc">'+C.d+'</div>'+mrow('1',[C.maps[0]],C.boss[0])+mrow('2',[C.maps[1],C.maps[2]],C.boss[1])+mrow('3',[C.maps[3]],C.boss[2],true)
+        +'<div class="mhint">12 волн на карту · после босса — безопасная зона и выбор пути</div></div>'
+      +'<h2 class="sec" style="margin-top:14px">Сложность</h2>'+ascRow()
+    +'</div></div>'
+    +'<div class="startbar"><button class="btn big" type="button" data-start="1">'+(rs?'Новый забег':'Начать забег')+'</button>'
+      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span></div>'
+    +'</section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -6694,7 +6766,7 @@ function toggleMute(){SAVE.muted=!SAVE.muted;store();if(mode==='menu'&&menuTab==
 addEventListener('keydown',e=>{
   const c=e.code;
   if(listening){e.preventDefault();finishListen(c);return}
-  if(mode==='menu')return;
+  if(mode==='menu'){if((c==='Enter'||c==='NumpadEnter')&&menuTab==='play'&&!e.repeat&&!(document.activeElement&&document.activeElement.tagName==='INPUT')){e.preventDefault();startRun(menuEl)}return}
   const act=KEYMAP[c];
   if(c==='Space'||c.startsWith('Arrow')||c==='Tab')e.preventDefault();
   codes[c]=true;
