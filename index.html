@@ -429,6 +429,14 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 @media (min-width:1600px) and (min-height:860px){#menu{zoom:1.2}}
 @media (min-width:2100px) and (min-height:1100px){#menu{zoom:1.45}}
 .mpanel{display:flex;flex-direction:column}.mpanel>section{flex:none}.play2{margin:auto 0}
+/* совместная игра */
+#coopBar{position:absolute;right:12px;top:120px;display:grid;gap:6px;pointer-events:none;z-index:3}
+#coopBar .cb{min-width:190px;padding:7px 10px;background:rgba(12,15,24,.82);border:1px solid var(--line2);border-radius:8px;display:grid;gap:3px}
+#coopBar .cb b{font:700 14px var(--f-display)}#coopBar .cb small{color:var(--dim);font-size:11.5px}
+#coopBar .cb i{display:block;height:6px;background:#2a1418;border-radius:3px;overflow:hidden}#coopBar .cb u{display:block;height:100%;background:linear-gradient(90deg,#ff5a6a,#ff9a8a)}
+#coopBar .cb em{font-style:normal;font-size:12px;color:#ffd36b}#coopBar .cb.down{border-color:#ff6b7a}
+#coopWait{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);padding:14px 22px;background:rgba(10,12,20,.9);border:1px solid var(--line2);border-radius:12px;font:700 18px var(--f-display);z-index:40;text-align:center}
+#coopWait small{display:block;font:400 13px var(--f-body);color:var(--dim);margin-top:4px}
 </style>
 
 <div id="stage">
@@ -2197,6 +2205,8 @@ let uiTouch=false;
 const fmt=t=>{t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 const armorRed=a=>clamp(a/(25+Math.abs(a)),-0.5,0.9);
 const needFor=l=>{const X=BAL.xp;return Math.floor((X.base+l*X.lin+l*l*X.quad)*(1+Math.max(0,l-X.lateFrom)*X.lateK))};
+/* «на экране» для логики игры: вдвоём — прямоугольник вокруг текущего героя, одинаковый у всех */
+const simVis=(x,y,m)=>{if(!COOP)return vis(x,y,m);const p=G.p;return Math.abs(x-p.x)<simVW()/2+m&&Math.abs(y-p.y)<simVH()/2+m};
 const vis=(x,y,m)=>x>VX-m&&x<VX+VW+m&&y>VY-m&&y<VY+VH+m;
 const dist2=(a,b)=>{const dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy};
 function distSeg(px,py,x1,y1,x2,y2){
@@ -2385,7 +2395,7 @@ function poolsTick(dt){
   if(!g.pools.length)return;
   if(g.pt.length<300){
     for(const pl of g.pools){
-      if(pl.kind!=='lava'||!vis(pl.x,pl.y,pl.r))continue;
+      if(pl.kind!=='lava'||!simVis(pl.x,pl.y,pl.r))continue;
       if(Math.random()<dt*3){
         const a=rnd(0,TAU),d=Math.sqrt(Math.random())*pl.r*0.9;
         g.pt.push({x:pl.x+Math.cos(a)*d,y:pl.y+Math.sin(a)*d,vx:rnd(-10,10),vy:rnd(-60,-25),life:1.1,max:1.1,col:Math.random()<0.5?'#ffb347':'#ff6a2b',size:2.2});
@@ -2820,7 +2830,7 @@ function openSafeZone(){
     return {x,y}};
   opts.forEach((o,i)=>{const q=spot(i?1:-1);g.portals.push(Object.assign({x:q.x,y:q.y,bob:rnd(0,TAU)},o))});
   for(const m of (g.merch||[]).concat(g.evts||[]))for(const q of g.portals)if(Math.hypot(m.x-q.x,m.y-q.y)<150&&m.y<g.p.y-60){const s=freeSpot(m.x,g.p.y+rnd(150,230),48,160);m.x=s.x;m.y=s.y}
-  saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
+  if(!COOP)saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
   toast('Безопасная зона','Забег сохранён. Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
 }
 function nearPortal(){
@@ -2833,7 +2843,7 @@ function portalName(q){return q.risk?'Тропа испытаний':MAPS[q.map]
 function usePortal(q){
   const g=G;
   g.safe=false;g.portals=[];g.risk=!!q.risk;if(g.risk)g.riskRun=true;g.evts=[];g.merch=[];
-  enterBiome(q.map);placeFeature();clearRun();
+  enterBiome(q.map);coopGather();placeFeature();clearRun();
   if(g.risk)toast('Тропа испытаний','Враги на '+Math.round((BAL.chap.riskHp-1)*100)+'% крепче, золота на '+Math.round((BAL.chap.riskGold-1)*100)+'% больше. Победа даст +'+Math.round((BAL.chap.riskEss-1)*100)+'% эссенции.');
   sfx(260,0.5,'sine',0.06,500);
   startWave(g.wave+1);
@@ -3250,7 +3260,7 @@ function usePickup(type){
   else if(type==='bomb'){
     const dmg=(40+SW()*14);
     for(const e of g.en){
-      if(e.dead||!vis(e.x,e.y,40))continue;
+      if(e.dead||!simVis(e.x,e.y,40))continue;
       hitEnemy(e,dmg,{dt:'magic',aoe:true,col:'#ffb347'});
       if(!e.dead)knockE(e,e.x-p.x,e.y-p.y,220);
     }
@@ -3566,7 +3576,7 @@ CAST.vacuum=()=>{const g=G;for(const m of g.gem)m.fly=true;g.vac=3;ring(g.p.x,g.
 CAST.slowAll=(pr)=>{G.slowAll=pr.t;G.slowAllF=pr.f;ring(G.p.x,G.p.y,Math.max(W,H)*0.5,'#e8c98f',0.6)};
 CAST.nuke=(pr)=>{
   const g=G;
-  for(const e of g.en){if(!e.dead&&vis(e.x,e.y,40))hitEnemy(e,pr.dmg,{dt:pr.dt,aoe:true,col:'#b79bff'})}
+  for(const e of g.en){if(!e.dead&&simVis(e.x,e.y,40))hitEnemy(e,pr.dmg,{dt:pr.dt,aoe:true,col:'#b79bff'})}
   g.shake=Math.max(g.shake,10);ring(g.p.x,g.p.y,Math.max(W,H)*0.6,'#b79bff',0.6);
 };
 
@@ -4074,7 +4084,7 @@ function ultMod(p,x,y,lv){
 }
 const ULT_LV=BAL.hero.ultLv;
 /* Печати мастерства: у мастеров вместо печатей симбиозов. fx(x,y,lv) — после удара ульты в точке (x,y). */
-function onScreen(){const g=G;return g.en.filter(e=>!e.dead&&!e.sub&&vis(e.x,e.y,40))}
+function onScreen(){const g=G;return g.en.filter(e=>!e.dead&&!e.sub&&simVis(e.x,e.y,40))}
 const MSEAL={
   fire:[{k:'ash',n:'Пепелище',d:'Ульта оставляет горящую землю на 6 с',fx(x,y,lv){addZone(x,y,{vis:'wildfire',r:150,life:6,dps:12+8*lv+SW()*1.5,dt:'magic',col:'#ff7a3a',st:{burn:[6+2*lv,3]}})}},
     {k:'nova',n:'Сверхновая',d:'Мощный взрыв в центре удара',fx(x,y,lv){explodeAt(x,y,220,60+30*lv+SW()*4,{dt:'magic',col:'#ffb347',knock:320,shake:9})}},
@@ -4645,8 +4655,8 @@ function bossKeyFor(w){
 }
 function spawnR(){return Math.hypot(simVW(),simVH())/2+160}
 function spawnPos(){
-  const a=rnd(0,TAU),d=Math.hypot(simVW(),simVH())/2+rnd(40,140);
-  return {x:G.p.x+Math.cos(a)*d,y:G.p.y+Math.sin(a)*d};
+  const a=rnd(0,TAU),d=Math.hypot(simVW(),simVH())/2+rnd(40,140),hp=COOP?pickOf(heroList().length?heroList():COOP.H).p:G.p;
+  return {x:hp.x+Math.cos(a)*d,y:hp.y+Math.sin(a)*d};
 }
 function spawnAt(type,x,y,hm,dm,opts){
   const g=G,d=ET[type],F=MAPS[g.map].foe;
@@ -4733,7 +4743,9 @@ function hurtPlayer(d,dt,att){
     const ae=g.bag.findIndex(b=>b&&b.id==='aegis');
     if(ae>=0){g.bag[ae]=null;recalc();reviveP(0.5,'Эгида спасла вас');return}
     if(g.metaRevive&&!g.revived){g.revived=true;reviveP(0.4,'Второе дыхание');return}
-    p.hp=0;endRun(false);
+    p.hp=0;
+    if(COOP){coopDown(g);return}
+    endRun(false);
   }
 }
 function reviveP(frac,msg){
@@ -4909,13 +4921,14 @@ function bossAI(e,dt,p,d,spMul){
   if(e.root<=0&&d>e.r+p.r-4){e.x+=(p.x-e.x)/d*e.sp*spMul*dt;e.y+=(p.y-e.y)/d*e.sp*spMul*dt}
 }
 function updEnemies(dt){
-  const g=G,p=g.p,en=g.en,kdr=MAPS[g.map].ice?2.2:6;
+  let g=G,p=g.p;const en=g.en,kdr=MAPS[g.map].ice?2.2:6,g0=G;
   for(const b of en){
     if(b.dead||b.ai!=='banner')continue;
     for(const o of en){if(o===b||o.dead)continue;const ax=o.x-b.x,ay=o.y-b.y;if(ax*ax+ay*ay<170*170)o.buf=0.25}
   }
   for(const e of en){
     if(e.dead)continue;
+    if(COOP){g=G=nearHero(e.x,e.y);p=g.p} /* вдвоём враг идёт к ближайшему живому герою */
     g.atkSrc=e.name||e.def.n;
     e.flash=Math.max(0,e.flash-dt);e.rockCd=Math.max(0,e.rockCd-dt);e.ovl=Math.max(0,e.ovl-dt);e.slam=Math.max(0,e.slam-dt);e.cc=Math.max(0,e.cc-dt);
     if(e.wet>0)e.wet-=dt;
@@ -5072,6 +5085,7 @@ function updEnemies(dt){
     if(pd2<rr*rr&&e.ai!=='boss'&&e.ai!=='nest'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
     else if(e.ai==='boss'&&pd2<rr*rr&&!locked)hurtPlayer(e.dmg,'phys',{e:e,melee:true,boss:true});
   }
+  if(COOP){G=g=g0;p=g.p}
   /* препятствия карты */
   if(g.solids.length)for(const e of en){if(!e.dead&&e.ai!=='specter'&&e.ai!=='nest')obsE(e)}
   /* разделение, столкновения с передачей импульса */
@@ -5114,7 +5128,7 @@ function updEnemies(dt){
   compact(g.en);
 }
 function updEnemyProj(dt){
-  const g=G,p=g.p;
+  const g=G,p=g.p,g0=G;
   for(const b of g.eps){
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     if(b.life<=0){b.dead=true;continue}
@@ -5126,8 +5140,9 @@ function updEnemyProj(dt){
     }
     if(!blocked)for(const s of g.solids){const dx=b.x-s.x,dy=b.y-s.y;if(dx*dx+dy*dy<(s.r+b.r)*(s.r+b.r)){blocked=true;break}}
     if(blocked){b.dead=true;puff(b.x,b.y,b.col,3,60,0.25,2);continue}
-    const dx=p.x-b.x,dy=p.y-b.y,rr=p.r+b.r;
-    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{src:b.src||'Вражеский снаряд'});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}
+    for(const hh of heroList()){if(b.dead)break;G=hh;const g=hh,p=hh.p;const dx=p.x-b.x,dy=p.y-b.y,rr=p.r+b.r;
+    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{src:b.src||'Вражеский снаряд'});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}}
+    G=g0;
   }
   for(const t of g.tgs){
     t.t-=dt;
@@ -5146,6 +5161,7 @@ function updEnemyProj(dt){
       }
       if(t.hitEn){for(const e of g.en){if(e.dead)continue;const ex=e.x-t.x,ey=e.y-t.y,rr=t.r+e.r;if(ex*ex+ey*ey<=rr*rr){hitEnemy(e,t.hitEn*(t.fx==='bolt'&&e.wet>0?2:1),{dt:'magic',src:'skill',aoe:true,col:t.col,st:t.fx==='bolt'?{stun:0.5}:(t.fx==='roots'?{stun:1.1}:null)});if(!e.dead&&t.fx==='meteor')knockE(e,ex,ey,200)}}}
       if(t.patch)addPatch(t.x,t.y,t.patch.r,t.patch.life,t.patch.dps,'fire');
+      for(const hh of heroList()){G=hh;const g=hh,p=hh.p,dx=p.x-t.x,dy=p.y-t.y;
       if(dx*dx+dy*dy<(t.r+p.r*0.6)*(t.r+p.r*0.6)){
         const hz=t.env?(t.hz||(t.fx==='meteor'?'bombs':(t.fx==='bolt'?'strike':''))):'';
         if(hz&&imm(hz)){
@@ -5157,14 +5173,16 @@ function updEnemyProj(dt){
           if(t.fx==='roots'&&g.dashT<=0){g.rootT=1.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.9,txt:'Опутан! Рывок освободит',big:false,col:'#9fe07a'})}
         }
       }
+      }G=g0;
     }else if(t.dmg>0){
       const n=Math.floor(Math.hypot(t.x2-t.x,t.y2-t.y)/40);
       for(let i=0;i<n;i++)puff(t.x+(t.x2-t.x)*i/n,t.y+(t.y2-t.y)*i/n,t.col,2,80,0.35,3);
       g.shake=Math.max(g.shake,5);
-      if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'});
+      for(const hh of heroList()){G=hh;const p=hh.p;if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'})}G=g0;
     }
   }
 }
+function heroList(){return COOP?COOP.H.filter(h=>!h.down):[G]}
 function compact(a){let j=0;for(let i=0;i<a.length;i++){if(!a[i].dead)a[j++]=a[i]}a.length=j}
 
 /* ---------- волны ---------- */
@@ -5199,10 +5217,10 @@ function endWave(){
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;
+  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;coopWaveHeal();
   if(longBreak){stockMerchants();spawnEvents()}else{g.merch=[];g.evts=[]}
   trialReward();
-  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead)g.relicQ=bk}
+  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead){g.relicQ=bk;if(COOP)for(const h of COOP.H)h.relicQ=bk}}
   if(bossKeyFor(g.wave)&&!g.endless&&g.wave<WAVES_TOTAL){openSafeZone();sfx(500,0.4,'triangle',0.06,300);return}
   if(!longBreak){toast('Волна '+g.wave+' пройдена','Передышка '+BAL.wave.shortInter+' с. Торговцы — после следующей волны');sfx(500,0.3,'triangle',0.05,300);return}
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза '+BAL.wave.interTime+' секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
@@ -5435,6 +5453,10 @@ function applyChoice(c){
 const DASH_CD=BAL.hero.dashCd;
 function getInput(){
   if(G&&G.inp){const q=G.inp;let x=q.x,y=q.y,m=Math.hypot(x,y);if(m>1){x/=m;y/=m;m=1}return {x,y,m}} /* совместная игра: ввод героя приходит по сети */
+  return readMove();
+}
+/* движение с клавиатуры, джойстика или мыши этого устройства */
+function readMove(){
   const k=SAVE.keys;
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
@@ -5606,19 +5628,19 @@ function worldUpdate(dt){
 }
 function heroPost(dt){
   const g=G,p=g.p,S=g.S;
-  /* кристаллы и монеты */
-  for(const m of g.gem){
+  /* кристаллы и монеты (упавший герой не собирает) */
+  if(!g.down)for(const m of g.gem){
     const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy)||1;
     if(!m.fly&&(m.vx||m.vy)){m.x+=m.vx*dt;m.y+=m.vy*dt;const f=Math.exp(-4.5*dt);m.vx*=f;m.vy*=f;if(Math.abs(m.vx)+Math.abs(m.vy)<4)m.vx=m.vy=0}
     if(d<S.magnet)m.fly=true;
     if(m.fly){const s=g.vac>0?900:400;m.x+=dx/d*s*dt;m.y+=dy/d*s*dt}
     if(d<p.r+7){
       m.dead=true;
-      if(m.k==='coin'){p.gold+=Math.max(1,Math.round(m.v*(1+S.goldm)*(g.risk?BAL.chap.riskGold:1)));sfx(900,0.03,'sine',0.015)}
-      else{gainXp(m.v);sfx(600+Math.min(600,m.v*30+p.lv*8),0.04,'sine',0.02)}
+      if(m.k==='coin'){shareGold(Math.max(1,Math.round(m.v*(1+S.goldm)*(g.risk?BAL.chap.riskGold:1))));sfx(900,0.03,'sine',0.015)}
+      else{shareXp(m.v);sfx(600+Math.min(600,m.v*30+p.lv*8),0.04,'sine',0.02)}
     }
   }
-  for(const q of g.pk){
+  if(!g.down)for(const q of g.pk){
     q.life-=dt;
     if(q.life<=0){q.dead=true;continue}
     const dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy)||1;
@@ -5705,6 +5727,7 @@ function payEssence(win){
   return add;
 }
 function endRun(win){
+  if(COOP)G=COOP.H[COOP.me];
   const g=G;
   if(g.over)return;
   clearRun();
@@ -5716,6 +5739,7 @@ function endRun(win){
   sfx(140,0.5,'sawtooth',0.06,-80);
 }
 function winRun(){
+  if(COOP)G=COOP.H[COOP.me];
   const g=G;
   clearRun();
   g.over=true;mode='over';g.victory=true;
@@ -5748,6 +5772,7 @@ function startRun(el,ch){
   hintQ=[];hintT=0;$('hint').hidden=true;tut('move');
 }
 function quitToMenu(){
+  coopEnd();
   mode='menu';G=null;hintQ=[];hintT=0;$('hint').hidden=true;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
   $('hud').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
   $('menu').hidden=false;
@@ -5938,6 +5963,233 @@ function runAct(k,name,args){
   const me=G;G=COOP.H[k];
   try{f(...(args||[]))}catch(e){console.error(e)}finally{G=me}
 }
+/* =====================================================================
+   СОВМЕСТНАЯ ИГРА: несколько героев в одном мире.
+   Каждый герой — свой объект состояния (как G в одиночной игре). Поля мира (враги, волна,
+   карта, торговцы…) у всех героев — общие: это свойства-ссылки на один объект W.
+   Переключение «чей сейчас ход» — просто G=H[i]: весь старый код работает как раньше.
+   Всё случайное во время такта идёт от общего сида (Math.random подменяется), поэтому
+   у обоих игроков мир считается одинаково — по сети передаются только нажатия (lockstep.js).
+   ===================================================================== */
+const WORLD_KEYS=['map','binst','ox','oy','gk','solids','pools','decors','pch','sk','dv','rt','wind','hzT','bliz',
+  'wave','phase','wt','inter','waveDur','spawnT','evT','eliteT','endT','bossRef','bossDead','bossKills','endless','victory','over','paused',
+  'kills','t','slowmo','zk','slowAll','slowAllF','en','eps','tgs','gem','pk','merch','evts','feat','portals','safe','risk','riskRun',
+  'curseW','trialW','ch','asc','essPaid','darkAdd','flashA','atkSrc','stockT'];
+/* общий генератор случайных чисел (mulberry32) */
+function seedRng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+function withSim(fn){const r=Math.random;Math.random=COOP.rng;try{return fn()}finally{Math.random=r}}
+function worldify(h,W){
+  for(const k of WORLD_KEYS){
+    if(!(k in W))W[k]=h[k];
+    delete h[k];
+    Object.defineProperty(h,k,{get(){return W[k]},set(v){W[k]=v},enumerable:true,configurable:true});
+  }
+}
+/* cfg: {seed, ch, asc, heroes:[{start,meta,name}], me, net} */
+function coopStart(cfg){
+  clearRun();
+  const ch=clamp(cfg.ch||1,1,CHAP.length),map=CHAP[ch-1].maps[0];
+  COOP={H:[],me:cfg.me,cfg,net:cfg.net||null,W:{},rng:seedRng(cfg.seed),tick:0};lsReset();
+  withSim(()=>{
+    cfg.heroes.forEach((hc,i)=>{
+      const h=mkState(hc.start,map);
+      worldify(h,COOP.W);
+      h.idx=i;h.name=hc.name||('Игрок '+(i+1));h.meta=hc.meta||{};
+      h.metaRevive=(h.meta.revive||0)>0;
+      h.inp={x:0,y:0,ax:0,ay:0,aim:false,held:0};
+      h.down=false;h.rev=0;
+      COOP.H.push(h);
+    });
+    const W=COOP.W;W.ch=ch;W.asc=cfg.asc||0;
+    COOP.H.forEach((h,i)=>{
+      G=h;
+      if(h.start==='avatar')h.pending++;else h.el[h.start]=1;
+      h.p.x=(i-(COOP.H.length-1)/2)*60;h.p.y=0;
+      recalc();h.p.hp=h.S.maxHp;h.p.mana=h.S.maxMana;
+      h.p.gold=30+25*(h.meta.startgold||0);
+    });
+    G=COOP.H[0];
+    placeFeature();
+    startWave(1);
+  });
+  G=COOP.H[COOP.me];
+  mode='play';
+  cam.x=G.p.x-VW/2;cam.y=G.p.y-VH/2;
+  $('menu').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
+  $('hud').hidden=false;
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  hc={};buildTopHud();showBiome(G.map);
+  hintQ=[];hintT=0;$('hint').hidden=true;
+  coopHud(true);
+}
+function coopEnd(){
+  if(!COOP)return;
+  if(COOP.net)netClose();
+  COOP=null;coopHud(false);
+}
+/* такт мира: все герои + враги. dt фиксированный */
+function coopTick(dt){
+  const H=COOP.H,W=COOP.W;
+  COOP.tick++;
+  if(W.over)return;
+  if(W.paused||H.some(h=>h.lvlOpen||h.shopOpen||h.treeOpen))return;
+  G=H[0];
+  if(W.slowmo>0){W.slowmo-=dt;dt*=0.35}
+  W.zk=Math.max(0,W.zk-dt*0.2);
+  gatherWorld(G,G.p.x,G.p.y);
+  W.t+=dt;
+  for(const h of H){G=h;if(h.down){h.p.vx=h.p.vy=0;continue}heroUpdate(dt)}
+  const al=heroList();G=al.length?al[Math.floor(Math.random()*al.length)]:H[0];
+  worldUpdate(dt);
+  for(const h of H){G=h;heroPost(dt)}
+  reviveTick(dt);
+  G=H[COOP.me];
+}
+function nearHero(x,y){
+  let b=null,bd=1e18;
+  for(const h of COOP.H){if(h.down)continue;const d=(h.p.x-x)**2+(h.p.y-y)**2;if(d<bd){bd=d;b=h}}
+  return b||COOP.H[0];
+}
+function coopDown(g){
+  g.down=true;g.rev=0;g.p.hp=0;g.chan=null;
+  puff(g.p.x,g.p.y,'#ff6b7a',24,200,0.6,3);ring(g.p.x,g.p.y,90,'#ff6b7a',0.6);
+  if(COOP.H.every(h=>h.down)){G=COOP.H[COOP.me];endRun(false);return}
+  if(isLocal())toast('Вы упали','Друг может поднять вас — пусть постоит рядом 2,5 секунды');
+  else{const me=G;G=COOP.H[COOP.me];toast(me.name+' упал','Подойдите и постойте рядом, чтобы поднять');G=me}
+}
+function reviveTick(dt){
+  for(const d of COOP.H){
+    if(!d.down)continue;
+    const near=COOP.H.some(h=>!h.down&&(h.p.x-d.p.x)**2+(h.p.y-d.p.y)**2<75*75);
+    d.rev=near?d.rev+dt:Math.max(0,d.rev-dt*0.5);
+    if(d.rev>=2.5){
+      const me=G;G=d;
+      d.down=false;d.rev=0;d.p.hp=d.S.maxHp*0.4;d.p.inv=2;
+      ring(d.p.x,d.p.y,120,'#9fffb0',0.6);puff(d.p.x,d.p.y,'#9fffb0',20,200,0.6,3);
+      G=me;
+    }
+  }
+}
+/* опыт и золото — общие */
+function shareXp(v){if(!COOP){gainXp(v);return}const me=G;for(const h of COOP.H){G=h;gainXp(v)}G=me}
+function shareGold(n){if(!COOP){G.p.gold+=n;return}for(const h of COOP.H)h.p.gold+=n}
+/* после волны: все встают и лечатся */
+function coopWaveHeal(){
+  if(!COOP)return;
+  const me=G;
+  for(const h of COOP.H){G=h;if(h.down){h.down=false;h.rev=0;h.p.hp=1}heal(h.S.maxHp*ascMod('heal'));h.p.mana=h.S.maxMana}
+  G=me;
+}
+/* после портала: друзья переносятся к вошедшему */
+function coopGather(){
+  if(!COOP)return;
+  let i=0;for(const h of COOP.H){if(h===G)continue;i++;h.p.x=G.p.x+i*50;h.p.y=G.p.y+20;h.p.vx=h.p.vy=0;h.down=false;if(h.p.hp<=0)h.p.hp=h.S.maxHp*0.4}
+}
+/* ---------- полоска друга и состояние сети ---------- */
+function coopHud(on){
+  let el=$('coopBar');
+  if(!on){if(el)el.hidden=true;const w=$('coopWait');if(w)w.hidden=true;return}
+  if(!el){el=document.createElement('div');el.id='coopBar';$('hud').appendChild(el)}
+  el.hidden=false;
+  if(!$('coopWait')){const w=document.createElement('div');w.id='coopWait';w.hidden=true;document.body.appendChild(w)}
+}
+function coopHudTick(){
+  if(!COOP)return;
+  const el=$('coopBar');if(!el)return;
+  let h='';
+  COOP.H.forEach((q,i)=>{if(i===COOP.me)return;
+    const E=hEl(q.start),st=q.down?'упал — подойди и подними':q.lvlOpen?'выбирает карточку':q.shopOpen?'в лавке':q.treeOpen?'в древе навыков':'';
+    h+='<div class="cb"><b style="color:'+E.c+'">'+q.name+'</b><small>'+(q.start==='avatar'?'Аватар':CLS[q.start].n)+' · ур. '+q.p.lv+'</small>'
+      +'<i><u style="width:'+Math.round(clamp(q.p.hp/q.S.maxHp,0,1)*100)+'%"></u></i>'+(st?'<em>'+st+'</em>':'')+'</div>'});
+  const me=COOP.H[COOP.me];
+  if(me.down)h+='<div class="cb down"><b>Вы упали</b><em>Друг поднимет вас, если постоит рядом ('+Math.round(me.rev/2.5*100)+'%)</em></div>';
+  if(el._h!==h){el._h=h;el.innerHTML=h}
+}
+/* имена над героями */
+function drawNameTags(){
+  if(!COOP)return;
+  ctx.save();ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+  COOP.H.forEach((h,i)=>{const p=h.p,E=hEl(h.start);ctx.fillStyle='rgba(0,0,0,.55)';const w=ctx.measureText(h.name).width+10;ctx.fillRect(p.x-w/2,p.y-46,w,16);
+    ctx.fillStyle=i===COOP.me?'#ffffff':E.c;ctx.fillText(h.name,p.x,p.y-34);
+    if(h.down){ctx.strokeStyle='#9fffb0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,30,-Math.PI/2,-Math.PI/2+TAU*h.rev/2.5);ctx.stroke();ctx.fillStyle='#ff6b7a';ctx.fillText('упал',p.x,p.y+44)}});
+  ctx.restore();ctx.textAlign='left';
+}
+/* =====================================================================
+   LOCKSTEP: мир считается тактами по 1/60 с. На каждый такт у каждого игрока есть «ввод»
+   (движение, прицел, зажатые навыки) и список действий. Свой ввод отправляется на D тактов
+   вперёд; такт выполняется, только когда пришёл ввод всех игроков — поэтому мир у всех одинаков.
+   Без сети (COOP.net=null) — тот же цикл, но второй герой стоит или управляется тестом.
+   ===================================================================== */
+const LS={dt:1/60,acc:0,D:4,t:0,inq:{},cmds:[],sentT:-1,waitT:0,hash:{},bad:0};
+/* ввод этого устройства, округлённый до целых: у всех применяется одно и то же число */
+function sampleInput(){
+  const g=COOP.H[COOP.me],mv=(g.lvlOpen||g.shopOpen||g.treeOpen||COOP.W.paused)?{x:0,y:0}:readMove();
+  let aim=0,ax=0,ay=0;
+  if(mouse.on&&!uiTouch){const w=s2w(mouse.x,mouse.y);ax=Math.round(w.x);ay=Math.round(w.y);aim=1}
+  let held=0;for(let i=0;i<5;i++)if(codes[SAVE.keys['s'+(i+1)]])held|=1<<i;
+  return [Math.round(mv.x*100),Math.round(mv.y*100),ax,ay,aim,held];
+}
+function applyInput(h,q){
+  if(!q)return;
+  h.inp.x=q[0]/100;h.inp.y=q[1]/100;h.inp.ax=q[2];h.inp.ay=q[3];h.inp.aim=!!q[4];h.inp.held=q[5]|0;
+}
+function lsReset(){LS.acc=0;LS.t=0;LS.inq={};LS.cmds=[];LS.sentT=-1;LS.waitT=0;LS.hash={};LS.bad=0}
+/* команда A(...) в сетевой игре — копится и уходит вместе с ближайшим вводом */
+function netCmd(name,args){LS.cmds.push([name,args||[]])}
+/* выполнить такт t: действия игроков по порядку, ввод, затем мир */
+function lsRun(t){
+  const slot=LS.inq[t]||{};
+  withSim(()=>{
+    for(let i=0;i<COOP.H.length;i++){const m=slot[i];if(!m)continue;applyInput(COOP.H[i],m.i);for(const c of (m.c||[]))runAct(i,c[0],c[1])}
+    coopTick(LS.dt);
+  });
+  delete LS.inq[t];
+  if(t%30===0){LS.hash[t]=stateHash();netHash(t,LS.hash[t])}
+}
+/* каждый кадр */
+function coopFrame(raw){
+  if(!COOP||mode!=='play')return;
+  LS.acc=Math.min(LS.acc+raw,0.25);
+  if(!COOP.net){
+    /* без сети: свой ввод сразу, второй герой — как задаст тест (COOP.H[i].inp) */
+    let n=0;
+    while(LS.acc>=LS.dt&&n<6){LS.acc-=LS.dt;n++;
+      const q=sampleInput();applyInput(COOP.H[COOP.me],q);
+      const cm=LS.cmds;LS.cmds=[];
+      withSim(()=>{for(const c of cm)runAct(COOP.me,c[0],c[1]);coopTick(LS.dt)});LS.t++}
+    return;
+  }
+  let n=0;
+  while(LS.acc>=LS.dt&&n<8){
+    /* свой ввод на такт t+D (один раз на такт) */
+    const st=LS.t+LS.D;
+    if(LS.sentT<st){LS.sentT=st;const m={i:sampleInput(),c:LS.cmds};LS.cmds=[];(LS.inq[st]=LS.inq[st]||{})[COOP.me]=m;netSend({k:'in',t:st,m})}
+    const slot=LS.inq[LS.t];
+    const ready=LS.t<LS.D||(slot&&COOP.H.every((h,i)=>slot[i]));
+    if(!ready){LS.waitT+=raw;break}
+    LS.acc-=LS.dt;n++;LS.waitT=0;
+    lsRun(LS.t);LS.t++;
+  }
+  const w=$('coopWait');if(w){const show=LS.waitT>0.5;if(w.hidden===show){w.hidden=!show;w.innerHTML='Ждём друга…<small>Соединение подвисло или друг свернул игру</small>'}}
+}
+/* приём ввода друга */
+function lsRecv(from,m){
+  if(m.k==='in'){(LS.inq[m.t]=LS.inq[m.t]||{})[from]=m.m}
+  else if(m.k==='hash'){const mine=LS.hash[m.t];if(mine!==undefined&&mine!==m.h){LS.bad++;coopDesync(m.t)}}
+}
+/* отпечаток мира: если у игроков разный — значит, разошлись */
+function stateHash(){
+  let h=0;const add=v=>{h=(Math.imul(h^Math.round(v*16),16777619)+0x9e3779b9)|0};
+  const W=COOP.W;add(W.wave);add(W.t*60);add(W.en.length);add(W.kills);
+  for(const e of W.en){add(e.x);add(e.y);add(e.hp)}
+  for(const q of COOP.H){add(q.p.x);add(q.p.y);add(q.p.hp);add(q.p.lv);add(q.p.gold)}
+  return h>>>0;
+}
+/* временные заглушки сети (заменятся в net.js) */
+function netSend(m){}
+function netHash(t,h){}
+function netClose(){}
+function coopDesync(t){console.warn('рассинхрон на такте',t)}
 /* ---------- подсказки новичку: показываются по одному разу, выключаются в «Управлении» ---------- */
 const kb=a=>'<kbd>'+keyName(SAVE.keys[a])+'</kbd>';
 const TUT={
@@ -6028,6 +6280,7 @@ function setText(id,v){
   if(hc[id]!==v){hc[id]=v;$(id).textContent=v}
 }
 function hud(){
+  coopHudTick();
   if(mode!=='play'||!G)return;
   const g=G,p=g.p,S=g.S;
   renderDock();
@@ -10389,10 +10642,12 @@ function render(){
   const z=ZM*(1+(g.zk||0));
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-(cx+VW/2),-(cy+VH/2));
   drawGround(g,MP,cx,cy);
-  drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
-  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawWalls(g);drawSplashes(g);drawSpiralCore(g);drawJet(g);drawDebris(g);drawSmoke(g)}
-  drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g);drawLighting(g,cx,cy,z)}
-  if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
+  /* each — для каждого героя (в совместной игре у героев свои снаряды, зоны и эффекты) */
+  const each=f=>{if(!COOP||mode==='menu'){f(g);return}const me=G;for(const h of COOP.H){G=h;f(h)}G=me};
+  drawDecor(g,MP);drawPools(g,MP);each(drawScorch);drawPatches(g);drawSolids(g,MP);
+  if(mode!=='menu'){each(drawZones);each(drawBlasts);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);each(drawStructs);drawEnemies(g);each(drawWalls);each(drawSplashes);each(drawSpiralCore);drawJet(g);each(drawDebris);each(drawSmoke)}
+  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z)}
+  if(mode!=='menu'){each(drawSkillFx);each(drawProj);drawEnemyProj(g);each(drawTornados);each(drawBolts);drawSky(g);each(drawFlash);each(drawSparks);each(drawFx)}
   else drawFx(g);
   ctx.restore();
   drawAmb(MP);
@@ -10830,7 +11085,8 @@ function frame(t){
   const raw=(t-last)/1000,dt=Math.min(0.05,Math.max(0,raw));last=t;anim+=dt;
   if(SAVE.fps){if(raw>0&&raw<1)fpsA+=(1/raw-fpsA)*0.05;fpsT-=raw;if(fpsT<=0){fpsT=0.5;const el=$('fps');el.hidden=false;el.textContent=Math.round(fpsA)+' FPS'+(G&&mode==='play'?' · врагов '+G.en.length:'')}}else if(fpsT!==-1){fpsT=-1;$('fps').hidden=true}
   try{
-    if(mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen&&!G.over)update(dt);
+    if(COOP)coopFrame(raw>0&&raw<1?raw:dt);
+    else if(mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen&&!G.over)update(dt);
     else if(mode==='menu')demoUpdate(dt);
     ambUpdate(dt);render();hud();portraits();MUS.update();
   }catch(err){
@@ -10849,7 +11105,7 @@ if(DEBUG){
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,
     CLS,genStock,TREE,openTree,openLevelUp,GUNS,closeTree,renderTree,skillPr,
-    MAPS,CHAP,openSafeZone,placeFeature,featTick,nestSpawn,FEAT,saveRun,loadRun,runSaved,clearRun,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
+    coopStart,coopEnd,coopTick,get COOP(){return COOP},LS,stateHash,withSim,runAct,sampleInput,applyInput,lsReset,MAPS,CHAP,openSafeZone,placeFeature,featTick,nestSpawn,FEAT,saveRun,loadRun,runSaved,clearRun,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,

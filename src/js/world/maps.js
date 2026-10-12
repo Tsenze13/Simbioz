@@ -176,7 +176,7 @@ function poolsTick(dt){
   if(!g.pools.length)return;
   if(g.pt.length<300){
     for(const pl of g.pools){
-      if(pl.kind!=='lava'||!vis(pl.x,pl.y,pl.r))continue;
+      if(pl.kind!=='lava'||!simVis(pl.x,pl.y,pl.r))continue;
       if(Math.random()<dt*3){
         const a=rnd(0,TAU),d=Math.sqrt(Math.random())*pl.r*0.9;
         g.pt.push({x:pl.x+Math.cos(a)*d,y:pl.y+Math.sin(a)*d,vx:rnd(-10,10),vy:rnd(-60,-25),life:1.1,max:1.1,col:Math.random()<0.5?'#ffb347':'#ff6a2b',size:2.2});

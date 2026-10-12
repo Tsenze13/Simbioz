@@ -415,10 +415,12 @@ function render(){
   const z=ZM*(1+(g.zk||0));
   ctx.save();ctx.translate(W/2,H/2);ctx.scale(z,z);ctx.translate(-(cx+VW/2),-(cy+VH/2));
   drawGround(g,MP,cx,cy);
-  drawDecor(g,MP);drawPools(g,MP);drawScorch(g);drawPatches(g);drawSolids(g,MP);
-  if(mode!=='menu'){drawZones(g);drawBlasts(g);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);drawStructs(g);drawEnemies(g);drawWalls(g);drawSplashes(g);drawSpiralCore(g);drawJet(g);drawDebris(g);drawSmoke(g)}
-  drawRocks(g);drawPlayer(g);if(mode!=='menu'){drawGuns(g);drawMapFx(g);drawLighting(g,cx,cy,z)}
-  if(mode!=='menu'){drawSkillFx(g);drawProj(g);drawEnemyProj(g);drawTornados(g);drawBolts(g);drawSky(g);drawFlash(g);drawSparks(g);drawFx(g)}
+  /* each — для каждого героя (в совместной игре у героев свои снаряды, зоны и эффекты) */
+  const each=f=>{if(!COOP||mode==='menu'){f(g);return}const me=G;for(const h of COOP.H){G=h;f(h)}G=me};
+  drawDecor(g,MP);drawPools(g,MP);each(drawScorch);drawPatches(g);drawSolids(g,MP);
+  if(mode!=='menu'){each(drawZones);each(drawBlasts);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);each(drawStructs);drawEnemies(g);each(drawWalls);each(drawSplashes);each(drawSpiralCore);drawJet(g);each(drawDebris);each(drawSmoke)}
+  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z)}
+  if(mode!=='menu'){each(drawSkillFx);each(drawProj);drawEnemyProj(g);each(drawTornados);each(drawBolts);drawSky(g);each(drawFlash);each(drawSparks);each(drawFx)}
   else drawFx(g);
   ctx.restore();
   drawAmb(MP);

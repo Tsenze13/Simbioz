@@ -201,7 +201,7 @@ CAST.vacuum=()=>{const g=G;for(const m of g.gem)m.fly=true;g.vac=3;ring(g.p.x,g.
 CAST.slowAll=(pr)=>{G.slowAll=pr.t;G.slowAllF=pr.f;ring(G.p.x,G.p.y,Math.max(W,H)*0.5,'#e8c98f',0.6)};
 CAST.nuke=(pr)=>{
   const g=G;
-  for(const e of g.en){if(!e.dead&&vis(e.x,e.y,40))hitEnemy(e,pr.dmg,{dt:pr.dt,aoe:true,col:'#b79bff'})}
+  for(const e of g.en){if(!e.dead&&simVis(e.x,e.y,40))hitEnemy(e,pr.dmg,{dt:pr.dt,aoe:true,col:'#b79bff'})}
   g.shake=Math.max(g.shake,10);ring(g.p.x,g.p.y,Math.max(W,H)*0.6,'#b79bff',0.6);
 };
 

@@ -176,7 +176,7 @@ function openSafeZone(){
     return {x,y}};
   opts.forEach((o,i)=>{const q=spot(i?1:-1);g.portals.push(Object.assign({x:q.x,y:q.y,bob:rnd(0,TAU)},o))});
   for(const m of (g.merch||[]).concat(g.evts||[]))for(const q of g.portals)if(Math.hypot(m.x-q.x,m.y-q.y)<150&&m.y<g.p.y-60){const s=freeSpot(m.x,g.p.y+rnd(150,230),48,160);m.x=s.x;m.y=s.y}
-  saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
+  if(!COOP)saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
   toast('Безопасная зона','Забег сохранён. Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
 }
 function nearPortal(){
@@ -189,7 +189,7 @@ function portalName(q){return q.risk?'Тропа испытаний':MAPS[q.map]
 function usePortal(q){
   const g=G;
   g.safe=false;g.portals=[];g.risk=!!q.risk;if(g.risk)g.riskRun=true;g.evts=[];g.merch=[];
-  enterBiome(q.map);placeFeature();clearRun();
+  enterBiome(q.map);coopGather();placeFeature();clearRun();
   if(g.risk)toast('Тропа испытаний','Враги на '+Math.round((BAL.chap.riskHp-1)*100)+'% крепче, золота на '+Math.round((BAL.chap.riskGold-1)*100)+'% больше. Победа даст +'+Math.round((BAL.chap.riskEss-1)*100)+'% эссенции.');
   sfx(260,0.5,'sine',0.06,500);
   startWave(g.wave+1);

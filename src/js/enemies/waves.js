@@ -30,10 +30,10 @@ function endWave(){
   g.en.length=0;g.eps.length=0;g.tgs.length=0;
   for(const m of g.gem)m.fly=true;
   g.vac=4;
-  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;
+  heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;coopWaveHeal();
   if(longBreak){stockMerchants();spawnEvents()}else{g.merch=[];g.evts=[]}
   trialReward();
-  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead)g.relicQ=bk}
+  {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead){g.relicQ=bk;if(COOP)for(const h of COOP.H)h.relicQ=bk}}
   if(bossKeyFor(g.wave)&&!g.endless&&g.wave<WAVES_TOTAL){openSafeZone();sfx(500,0.4,'triangle',0.06,300);return}
   if(!longBreak){toast('Волна '+g.wave+' пройдена','Передышка '+BAL.wave.shortInter+' с. Торговцы — после следующей волны');sfx(500,0.3,'triangle',0.05,300);return}
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза '+BAL.wave.interTime+' секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));

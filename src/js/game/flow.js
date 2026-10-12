@@ -4,6 +4,10 @@
 const DASH_CD=BAL.hero.dashCd;
 function getInput(){
   if(G&&G.inp){const q=G.inp;let x=q.x,y=q.y,m=Math.hypot(x,y);if(m>1){x/=m;y/=m;m=1}return {x,y,m}} /* совместная игра: ввод героя приходит по сети */
+  return readMove();
+}
+/* движение с клавиатуры, джойстика или мыши этого устройства */
+function readMove(){
   const k=SAVE.keys;
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
@@ -175,19 +179,19 @@ function worldUpdate(dt){
 }
 function heroPost(dt){
   const g=G,p=g.p,S=g.S;
-  /* кристаллы и монеты */
-  for(const m of g.gem){
+  /* кристаллы и монеты (упавший герой не собирает) */
+  if(!g.down)for(const m of g.gem){
     const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy)||1;
     if(!m.fly&&(m.vx||m.vy)){m.x+=m.vx*dt;m.y+=m.vy*dt;const f=Math.exp(-4.5*dt);m.vx*=f;m.vy*=f;if(Math.abs(m.vx)+Math.abs(m.vy)<4)m.vx=m.vy=0}
     if(d<S.magnet)m.fly=true;
     if(m.fly){const s=g.vac>0?900:400;m.x+=dx/d*s*dt;m.y+=dy/d*s*dt}
     if(d<p.r+7){
       m.dead=true;
-      if(m.k==='coin'){p.gold+=Math.max(1,Math.round(m.v*(1+S.goldm)*(g.risk?BAL.chap.riskGold:1)));sfx(900,0.03,'sine',0.015)}
-      else{gainXp(m.v);sfx(600+Math.min(600,m.v*30+p.lv*8),0.04,'sine',0.02)}
+      if(m.k==='coin'){shareGold(Math.max(1,Math.round(m.v*(1+S.goldm)*(g.risk?BAL.chap.riskGold:1))));sfx(900,0.03,'sine',0.015)}
+      else{shareXp(m.v);sfx(600+Math.min(600,m.v*30+p.lv*8),0.04,'sine',0.02)}
     }
   }
-  for(const q of g.pk){
+  if(!g.down)for(const q of g.pk){
     q.life-=dt;
     if(q.life<=0){q.dead=true;continue}
     const dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy)||1;
@@ -274,6 +278,7 @@ function payEssence(win){
   return add;
 }
 function endRun(win){
+  if(COOP)G=COOP.H[COOP.me];
   const g=G;
   if(g.over)return;
   clearRun();
@@ -285,6 +290,7 @@ function endRun(win){
   sfx(140,0.5,'sawtooth',0.06,-80);
 }
 function winRun(){
+  if(COOP)G=COOP.H[COOP.me];
   const g=G;
   clearRun();
   g.over=true;mode='over';g.victory=true;
@@ -317,6 +323,7 @@ function startRun(el,ch){
   hintQ=[];hintT=0;$('hint').hidden=true;tut('move');
 }
 function quitToMenu(){
+  coopEnd();
   mode='menu';G=null;hintQ=[];hintT=0;$('hint').hidden=true;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
   $('hud').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
   $('menu').hidden=false;

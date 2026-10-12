@@ -88,6 +88,7 @@ function setText(id,v){
   if(hc[id]!==v){hc[id]=v;$(id).textContent=v}
 }
 function hud(){
+  coopHudTick();
   if(mode!=='play'||!G)return;
   const g=G,p=g.p,S=g.S;
   renderDock();

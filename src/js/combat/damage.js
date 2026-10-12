@@ -150,7 +150,7 @@ function usePickup(type){
   else if(type==='bomb'){
     const dmg=(40+SW()*14);
     for(const e of g.en){
-      if(e.dead||!vis(e.x,e.y,40))continue;
+      if(e.dead||!simVis(e.x,e.y,40))continue;
       hitEnemy(e,dmg,{dt:'magic',aoe:true,col:'#ffb347'});
       if(!e.dead)knockE(e,e.x-p.x,e.y-p.y,220);
     }

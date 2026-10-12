@@ -17,8 +17,8 @@ function bossKeyFor(w){
 }
 function spawnR(){return Math.hypot(simVW(),simVH())/2+160}
 function spawnPos(){
-  const a=rnd(0,TAU),d=Math.hypot(simVW(),simVH())/2+rnd(40,140);
-  return {x:G.p.x+Math.cos(a)*d,y:G.p.y+Math.sin(a)*d};
+  const a=rnd(0,TAU),d=Math.hypot(simVW(),simVH())/2+rnd(40,140),hp=COOP?pickOf(heroList().length?heroList():COOP.H).p:G.p;
+  return {x:hp.x+Math.cos(a)*d,y:hp.y+Math.sin(a)*d};
 }
 function spawnAt(type,x,y,hm,dm,opts){
   const g=G,d=ET[type],F=MAPS[g.map].foe;
@@ -105,7 +105,9 @@ function hurtPlayer(d,dt,att){
     const ae=g.bag.findIndex(b=>b&&b.id==='aegis');
     if(ae>=0){g.bag[ae]=null;recalc();reviveP(0.5,'Эгида спасла вас');return}
     if(g.metaRevive&&!g.revived){g.revived=true;reviveP(0.4,'Второе дыхание');return}
-    p.hp=0;endRun(false);
+    p.hp=0;
+    if(COOP){coopDown(g);return}
+    endRun(false);
   }
 }
 function reviveP(frac,msg){
@@ -281,13 +283,14 @@ function bossAI(e,dt,p,d,spMul){
   if(e.root<=0&&d>e.r+p.r-4){e.x+=(p.x-e.x)/d*e.sp*spMul*dt;e.y+=(p.y-e.y)/d*e.sp*spMul*dt}
 }
 function updEnemies(dt){
-  const g=G,p=g.p,en=g.en,kdr=MAPS[g.map].ice?2.2:6;
+  let g=G,p=g.p;const en=g.en,kdr=MAPS[g.map].ice?2.2:6,g0=G;
   for(const b of en){
     if(b.dead||b.ai!=='banner')continue;
     for(const o of en){if(o===b||o.dead)continue;const ax=o.x-b.x,ay=o.y-b.y;if(ax*ax+ay*ay<170*170)o.buf=0.25}
   }
   for(const e of en){
     if(e.dead)continue;
+    if(COOP){g=G=nearHero(e.x,e.y);p=g.p} /* вдвоём враг идёт к ближайшему живому герою */
     g.atkSrc=e.name||e.def.n;
     e.flash=Math.max(0,e.flash-dt);e.rockCd=Math.max(0,e.rockCd-dt);e.ovl=Math.max(0,e.ovl-dt);e.slam=Math.max(0,e.slam-dt);e.cc=Math.max(0,e.cc-dt);
     if(e.wet>0)e.wet-=dt;
@@ -444,6 +447,7 @@ function updEnemies(dt){
     if(pd2<rr*rr&&e.ai!=='boss'&&e.ai!=='nest'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
     else if(e.ai==='boss'&&pd2<rr*rr&&!locked)hurtPlayer(e.dmg,'phys',{e:e,melee:true,boss:true});
   }
+  if(COOP){G=g=g0;p=g.p}
   /* препятствия карты */
   if(g.solids.length)for(const e of en){if(!e.dead&&e.ai!=='specter'&&e.ai!=='nest')obsE(e)}
   /* разделение, столкновения с передачей импульса */
@@ -486,7 +490,7 @@ function updEnemies(dt){
   compact(g.en);
 }
 function updEnemyProj(dt){
-  const g=G,p=g.p;
+  const g=G,p=g.p,g0=G;
   for(const b of g.eps){
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     if(b.life<=0){b.dead=true;continue}
@@ -498,8 +502,9 @@ function updEnemyProj(dt){
     }
     if(!blocked)for(const s of g.solids){const dx=b.x-s.x,dy=b.y-s.y;if(dx*dx+dy*dy<(s.r+b.r)*(s.r+b.r)){blocked=true;break}}
     if(blocked){b.dead=true;puff(b.x,b.y,b.col,3,60,0.25,2);continue}
-    const dx=p.x-b.x,dy=p.y-b.y,rr=p.r+b.r;
-    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{src:b.src||'Вражеский снаряд'});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}
+    for(const hh of heroList()){if(b.dead)break;G=hh;const g=hh,p=hh.p;const dx=p.x-b.x,dy=p.y-b.y,rr=p.r+b.r;
+    if(dx*dx+dy*dy<rr*rr){b.dead=true;hurtPlayer(b.dmg,b.dt,{src:b.src||'Вражеский снаряд'});if(b.fx==='slow'){g.pslow=2.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.8,txt:'Замедлен',big:false,col:'#9fd0ff'})}}}
+    G=g0;
   }
   for(const t of g.tgs){
     t.t-=dt;
@@ -518,6 +523,7 @@ function updEnemyProj(dt){
       }
       if(t.hitEn){for(const e of g.en){if(e.dead)continue;const ex=e.x-t.x,ey=e.y-t.y,rr=t.r+e.r;if(ex*ex+ey*ey<=rr*rr){hitEnemy(e,t.hitEn*(t.fx==='bolt'&&e.wet>0?2:1),{dt:'magic',src:'skill',aoe:true,col:t.col,st:t.fx==='bolt'?{stun:0.5}:(t.fx==='roots'?{stun:1.1}:null)});if(!e.dead&&t.fx==='meteor')knockE(e,ex,ey,200)}}}
       if(t.patch)addPatch(t.x,t.y,t.patch.r,t.patch.life,t.patch.dps,'fire');
+      for(const hh of heroList()){G=hh;const g=hh,p=hh.p,dx=p.x-t.x,dy=p.y-t.y;
       if(dx*dx+dy*dy<(t.r+p.r*0.6)*(t.r+p.r*0.6)){
         const hz=t.env?(t.hz||(t.fx==='meteor'?'bombs':(t.fx==='bolt'?'strike':''))):'';
         if(hz&&imm(hz)){
@@ -529,13 +535,15 @@ function updEnemyProj(dt){
           if(t.fx==='roots'&&g.dashT<=0){g.rootT=1.2;if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.9,txt:'Опутан! Рывок освободит',big:false,col:'#9fe07a'})}
         }
       }
+      }G=g0;
     }else if(t.dmg>0){
       const n=Math.floor(Math.hypot(t.x2-t.x,t.y2-t.y)/40);
       for(let i=0;i<n;i++)puff(t.x+(t.x2-t.x)*i/n,t.y+(t.y2-t.y)*i/n,t.col,2,80,0.35,3);
       g.shake=Math.max(g.shake,5);
-      if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'});
+      for(const hh of heroList()){G=hh;const p=hh.p;if(distSeg(p.x,p.y,t.x,t.y,t.x2,t.y2)<t.w/2+p.r*0.6)hurtPlayer(t.dmg,t.dt,{src:t.src||'Удар по области'})}G=g0;
     }
   }
 }
+function heroList(){return COOP?COOP.H.filter(h=>!h.down):[G]}
 function compact(a){let j=0;for(let i=0;i<a.length;i++){if(!a[i].dead)a[j++]=a[i]}a.length=j}
 

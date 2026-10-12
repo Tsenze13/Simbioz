@@ -13,6 +13,8 @@ let uiTouch=false;
 const fmt=t=>{t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 const armorRed=a=>clamp(a/(25+Math.abs(a)),-0.5,0.9);
 const needFor=l=>{const X=BAL.xp;return Math.floor((X.base+l*X.lin+l*l*X.quad)*(1+Math.max(0,l-X.lateFrom)*X.lateK))};
+/* «на экране» для логики игры: вдвоём — прямоугольник вокруг текущего героя, одинаковый у всех */
+const simVis=(x,y,m)=>{if(!COOP)return vis(x,y,m);const p=G.p;return Math.abs(x-p.x)<simVW()/2+m&&Math.abs(y-p.y)<simVH()/2+m};
 const vis=(x,y,m)=>x>VX-m&&x<VX+VW+m&&y>VY-m&&y<VY+VH+m;
 const dist2=(a,b)=>{const dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy};
 function distSeg(px,py,x1,y1,x2,y2){

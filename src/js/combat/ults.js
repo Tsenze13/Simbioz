@@ -57,7 +57,7 @@ function ultMod(p,x,y,lv){
 }
 const ULT_LV=BAL.hero.ultLv;
 /* Печати мастерства: у мастеров вместо печатей симбиозов. fx(x,y,lv) — после удара ульты в точке (x,y). */
-function onScreen(){const g=G;return g.en.filter(e=>!e.dead&&!e.sub&&vis(e.x,e.y,40))}
+function onScreen(){const g=G;return g.en.filter(e=>!e.dead&&!e.sub&&simVis(e.x,e.y,40))}
 const MSEAL={
   fire:[{k:'ash',n:'Пепелище',d:'Ульта оставляет горящую землю на 6 с',fx(x,y,lv){addZone(x,y,{vis:'wildfire',r:150,life:6,dps:12+8*lv+SW()*1.5,dt:'magic',col:'#ff7a3a',st:{burn:[6+2*lv,3]}})}},
     {k:'nova',n:'Сверхновая',d:'Мощный взрыв в центре удара',fx(x,y,lv){explodeAt(x,y,220,60+30*lv+SW()*4,{dt:'magic',col:'#ffb347',knock:320,shake:9})}},
