@@ -47,7 +47,8 @@ const DEF={
        ...[0,1,2,3,4].map(i=>({n:'h'+i,ax:-1.5,ay:(i-2)*2.7,N:3,L:3.4,fan:(i-2)*.42,r:26,w:6}))],
  water:[-1,1].map((s,i)=>({n:'r'+i,ax:-4,ay:s*6,N:9,L:2.7,fan:s*.12,r:11,w:2.2})),
  air:[{n:'s0',ax:-4,ay:0,N:13,L:2.6,fan:0,r:9,w:2.6}],
- wood:[0,1,2,3,4,5,6].map(i=>({n:'l'+i,ax:-5,ay:(i-3)*3.4,N:2,L:6.5,fan:(i-3)*.3,r:30,w:1.2}))
+ wood:[0,1,2,3,4,5,6].map(i=>({n:'l'+i,ax:-5,ay:(i-3)*3.4,N:2,L:6.5,fan:(i-3)*.3,r:30,w:1.2})),
+ avatar:[...[0,1,2,3,4,5].map(i=>({n:'p'+i,ax:-4,ay:(i-2.5)*3.2,N:5,L:4.4,fan:(i-2.5)*.2,r:16,w:4})),{n:'hr',ax:-4,ay:0,N:4,L:3.4,fan:0,r:22,w:2}]
 };
 function mkSim(){return {init:false,last:null}}
 function simStep(st,key,dt,x,y,face){
@@ -270,6 +271,36 @@ H.wood=function(c,o){
   face(c,3.6,4.8,SK);
   E(c,7.4,0,1.9,2.6,'#58b04a',0);
   glow(c,0,0,30,'#58c040',.2);
+};
+// ───────── АВАТАР: повелитель всех стихий
+H.avatar=function(c,o){
+  const t=o.t,PR=['#ff7a3a','#3aa7ff','#c9974f','#8febd0','#c8d0e0','#58c040'];
+  const cyc=PR[Math.floor(t*1.5)%6],cyc2=PR[(Math.floor(t*1.5)+1)%6],mix=(t*1.5)%1;
+  feet(c,o,'#3a3050');
+  // призменная мантия: шесть лент — по цвету каждой стихии (физика)
+  for(let i=0;i<6;i++){const pts=chain(o,'p'+i,defOf('avatar','p'+i));
+    ribbon(c,pts,4.2,.8,LG(c,pts[0][0],pts[0][1],pts[pts.length-1][0],pts[pts.length-1][1],[[0,PR[i]],[.6,PR[i]+'aa'],[1,PR[i]+'00']]))}
+  // мантия-основа
+  E(c,-2,0,7.2,12,LG(c,0,-12,0,12,[[0,'#d8d0f4'],[.5,'#8a7ac0'],[1,'#4a3e78']]));
+  c.strokeStyle='#e8c84a';c.lineWidth=1.1;c.beginPath();c.ellipse(-2,0,7.2,12,0,1.2,5.08);c.stroke();
+  // наплечники с камнями
+  for(const s of[-1,1]){E(c,-1,s*9.6,4.6,4,RG(c,-2,s*8.6,6,[[0,'#fff2c0'],[.6,'#d9a63a'],[1,'#7a5a1a']]));E(c,-.6,s*9.6,1.5,1.5,s<0?cyc:cyc2,0);glow(c,-.6,s*9.6,5,s<0?cyc:cyc2,.5)}
+  const a1=arm(c,pushed(o,{hx:3}),-1,9,0,SK[0],'#b8acdc',7);
+  const a2=arm(c,pushed(o,{hx:3}),1,9,0,SK[0],'#b8acdc',7);
+  // призма между ладонями: переливается цветами стихий
+  {const bk=ballK(o);if(bk>.05){const px=Math.max(a1[0],a2[0])+4.5,py=(a1[1]+a2[1])/2*.2,s=4.6*bk;
+    glow(c,px,py,16*bk,cyc,.55);glow(c,px,py,10*bk,cyc2,.35*mix);
+    c.save();c.translate(px,py);c.rotate(t*1.8);
+    P(c,[[s,0],[0,-s*1.2],[-s,0],[0,s*1.2]],LG(c,-s,-s,s,s,[[0,'#ffffff'],[.35,cyc],[1,cyc2]]),'rgba(40,30,80,.8)',.8);
+    c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=.6;c.beginPath();c.moveTo(0,-s*1.2);c.lineTo(s*.3,0);c.lineTo(0,s*1.2);c.stroke();c.restore()}}
+  // волосы: серебряная коса (физика)
+  {const pts=chain(o,'hr',defOf('avatar','hr'));ribbon(c,pts,4.6,1.4,LG(c,pts[0][0],pts[0][1],pts[pts.length-1][0],pts[pts.length-1][1],[[0,'#f4f0ff'],[1,'#a89ad0']]))}
+  E(c,.2,0,6.6,6.6,RG(c,-1,-2,9,[[0,'#ffffff'],[1,'#b8b0d8']]));
+  face(c,2.8,5.2,SK,'#3a2a7a');
+  // венец с камнем
+  c.strokeStyle='#e8c84a';c.lineWidth=1.3;c.beginPath();c.arc(1.6,0,5.9,2.0,4.28);c.stroke();
+  E(c,-3.6,0,1.6,1.6,cyc,0);glow(c,-3.6,0,6,cyc,.7);
+  glow(c,0,0,30,cyc,.22);
 };
 function draw(c,key,o){
   o=Object.assign({ph:0,mv:0,t:0,dash:false},o);

@@ -36,7 +36,7 @@ function trailFx(dt,moving,dash){
   g.trT=dash?0.02:0.05;
   if(!moving&&!dash)return;
   const own=EK.filter(k=>g.el[k]>0);
-  const k=Math.random()<0.6?g.start:pickOf(own.length?own:[g.start]);
+  const k=isAva(g)?pickOf(own.length?own:['water']):(Math.random()<0.6?g.start:pickOf(own.length?own:[g.start]));
   const c=EL[k].c,c2=EL[k].c2;
   const base={x:p.x+rnd(-4,4),y:p.y+rnd(-2,8),life:0.45,max:0.45,col:Math.random()<0.4?c2:c,size:2.4};
   if(k==='fire'){base.vy=rnd(-45,-15);base.vx=rnd(-12,12)}

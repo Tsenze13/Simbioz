@@ -220,6 +220,10 @@ with sync_playwright() as p:
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air',1);const g=S.G;g.p.inv=1e9;S.enterBiome('maw',true);S.startWave(5);
         S.skyStrike(g.p.x+100,g.p.y,'#f4f08a',true);for(let i=0;i<20;i++){S.update(1/60);S.render()}return window.__x.SP?1:0}""")
     check('освещение на тёмной карте без ошибок', r == 1, r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('avatar',1);const g=S.G;S.pickCard(0);g.p.inv=1e9;S.startWave(2);const x0=g.p.x;let err=null;
+        S.key('KeyD',true);try{for(let i=0;i<120;i++){S.update(1/60);while(g.lvlOpen)S.pickCard(0);if(i%20===0)S.render()}}catch(e){err=e.message}S.key('KeyD',false);
+        return {moved:g.p.x-x0,err,body:g.hch&&Object.keys(g.hch).length}}""")
+    check('Аватар бегает со своим телом без ошибок', abs(r['moved']) > 1 and not r['err'] and r['body'] == 7, r)
     print('Реликвии, события, комбо, сложность')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
