@@ -418,3 +418,10 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 @media (max-width:760px){.startbar{flex-direction:column;align-items:stretch;gap:6px}.btn.big{width:100%}.sbinfo{text-align:center;font-size:12px}
   .play2 .pdetail .mpc{width:76px;height:92px}}
 .hpick .orb{grid-row:auto}.hpick{grid-template-rows:1fr}.hpick b{align-self:center}
+/* широкие экраны: кнопка сразу под содержимым, меню крупнее */
+.play2{min-height:0}
+.startbar{margin-top:4px}
+.play2{max-width:1240px!important}
+@media (min-width:1600px) and (min-height:860px){#menu{zoom:1.2}}
+@media (min-width:2100px) and (min-height:1100px){#menu{zoom:1.45}}
+.mpanel{display:flex;flex-direction:column}.mpanel>section{flex:none}.play2{margin:auto 0}
