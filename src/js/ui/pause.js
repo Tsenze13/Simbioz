@@ -36,13 +36,15 @@ function fillStats(){
   ];
   $('sgrid').innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
   $('pBuild').innerHTML=buildChips(g);
+  $('saveq').hidden=!g.safe;
 }
 let quitArmed=0;
+$('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
 $('resume').addEventListener('click',togglePause);
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}
   quitArmed=0;$('quit').textContent='Выйти в меню';
-  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store()}
+  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store();clearRun()}
   quitToMenu();
 });
 function dmgRows(g){
@@ -54,7 +56,7 @@ function dmgRows(g){
 }
 function showOver(win,add){
   const g=G;
-  $('goT').textContent=win?((g.ch||1)>=CHAP.length?'Пожиратель повержен':'Глава '+(g.ch||1)+' пройдена'):(g.endless?'Бесконечный режим окончен':'Аватар пал');
+  $('goT').textContent=win?((g.ch||1)>=CHAP.length?'Пожиратель повержен':'Глава '+(g.ch||1)+' пройдена'):(g.endless?'Бесконечный режим окончен':(isAva(g)?'Аватар':CLS[g.start].n)+' пал');
   $('goW').textContent=g.wave;$('goLv').textContent=g.p.lv;$('goK').textContent=g.kills;$('goE').textContent='+'+add;
   $('goBuild').innerHTML=buildChips(g);
   {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}

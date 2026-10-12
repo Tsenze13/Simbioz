@@ -25,25 +25,45 @@ function routeHtml(){
   const card=(id,lab,boss)=>{const M=MAPS[id];return '<div class="rt" style="--c1:'+M.glow+';--a:'+M.acc+';--b:'+M.base+'"><span class="msw"></span><b>'+M.n+'</b><small>'+lab+' · босс: '+BOSS[boss].n+'</small><em class="up">▲ '+M.mods.buff.n+'</em><em class="dn">▼ '+M.mods.debuff.n+'</em></div>'};
   return card(C.maps[0],'Карта 1',C.boss[0])+'<div class="rfork">'+card(C.maps[1],'Карта 2 · путь А',C.boss[1])+card(C.maps[2],'Карта 2 · путь Б',C.boss[1])+'</div>'+card(C.maps[3],'Карта 3 · логово',C.boss[2]);
 }
+function heroName(k){return k==='avatar'?'Аватар':CLS[k].n}
 function playTab(){
+  /* герои: имя персонажа, роль, стихия маленьким шрифтом */
   let picks='';
   for(const k of HEROK){
     const E=hEl(k),ava=k==='avatar';
-    picks+='<button class="pick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+(ava?'Аватар':E.n)+'</b><small>'+(ava?'Смешивает стихии':EW[k].w)+'</small></button>';
+    picks+='<button class="hpick'+(menuEl===k?' on':'')+(ava?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+heroName(k)+'</b><small>'+(ava?'Смешивает стихии':CLS[k].role+' · '+E.n.toLowerCase())+'</small></button>';
   }
   const ava=menuEl==='avatar',E=hEl(menuEl),u=ULT[menuEl],sk=AB[ELSK[menuEl]]||{n:'Навыки изученных стихий',d:'Плюс симбиозы двух стихий и их слияния'};
   const ew=EW[menuEl]||{w:'Автоатаки всех изученных стихий',d:'Каждая стихия добавляет свою',dt:'magic'};
-  let syms='';
-  for(const k of SYM_IDS){
-    const a=AB[k];
-    if(a.pair.indexOf(menuEl)<0)continue;
-    const other=a.pair[0]===menuEl?a.pair[1]:a.pair[0];
-    syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
-  }
-  return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
-    +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
-    +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
-    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
+  const C=CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)],A=ASC[Math.min(SAVE.ascSel||0,SAVE.asc||0)];
+  const rs=runSavedLine();
+  /* маршрут главы — три строки */
+  const mrow=(n,ids,b,fin)=>'<div class="mr"><span class="mn">'+n+'</span><span>'+ids.map(id=>'<i style="color:'+MAPS[id].glow+'">'+MAPS[id].n+'</i>').join(' <em>или</em> ')+'</span><span class="mb">'+(fin?'хранитель: ':'босс: ')+BOSS[b].n+'</span></div>';
+  return '<section class="play2">'
+    +(rs?'<div class="controw"><div><b>Сохранённый забег</b><span class="sub">'+rs+'</span></div><button class="btn" type="button" data-cont="1">Продолжить</button></div>':'')
+    +'<div class="pgrid"><div class="pcol">'
+      +'<h2 class="sec">Герой</h2><div class="hpicks">'+picks+'</div>'
+      +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas>'
+        +'<h3 style="color:'+E.c+'">'+heroName(menuEl)+'</h3><div class="prole">'+(ava?'Мастер всех стихий':CLS[menuEl].role+' · стихия «'+E.n+'»')+'</div>'
+        +'<p class="pdesc">'+E.d+'</p>'
+        +'<dl><dt>Автоатака</dt><dd>'+ew.w+'</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Ульта</dt><dd><b>'+u.n+'</b> (с '+ULT_LV+' ур.)</dd></dl>'
+        +'<details class="pmore"><summary>Подробнее о герое</summary><dl>'
+          +'<dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+'</dd>'
+          +'<dt>Автоатака</dt><dd>'+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd>'
+          +'<dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b>: '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd>'
+          +'<dt>Первый навык</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта</dt><dd>'+u.d+'</dd>'
+          +'<dt>Стихии</dt><dd>'+(ava?'До трёх: по одной из пар огонь/вода, земля/воздух, металл/дерево, каждая до 4 уровня. Учит симбиозы.':'Только своя — до 8 уровня. Смешивать стихии умеет только Аватар.')+'</dd>'
+        +'</dl>'+(ava?'<div class="chips" style="margin-top:6px">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</details>'
+      +'</div>'
+    +'</div><div class="pside">'
+      +'<h2 class="sec">Глава</h2>'+chapRow()
+      +'<div class="mroute"><div class="mdesc">'+C.d+'</div>'+mrow('1',[C.maps[0]],C.boss[0])+mrow('2',[C.maps[1],C.maps[2]],C.boss[1])+mrow('3',[C.maps[3]],C.boss[2],true)
+        +'<div class="mhint">'+WPM+' волн на карту · после босса — безопасная зона и выбор пути</div></div>'
+      +'<h2 class="sec" style="margin-top:14px">Сложность</h2>'+ascRow()
+    +'</div></div>'
+    +'<div class="startbar"><button class="btn big" type="button" data-start="1">'+(rs?'Новый забег':'Начать забег')+'</button>'
+      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span></div>'
+    +'</section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -75,20 +95,20 @@ function bestiaryTab(){
   const dtn={phys:'Физический урон',magic:'Магический урон',mixed:'Физ. и маг. урон'};
   const card=(k,o,boss)=>{
     const dt=boss?'mixed':(EDT[k]||'phys');
-    const map=o.map?MAPS[o.map].n:'любая карта';
+    const map=o.maps?o.maps.map(m=>MAPS[m].n).join(', '):o.map?'все карты главы «'+((CHAP.find(C=>bio(C.maps[0])===o.map)||{n:MAPS[o.map].n}).n)+'»':'любая карта';
     const st='<div class="bst">Здоровье '+o.hp+' · Урон '+o.dmg+' · Скорость '+o.sp+(o.armor?' · Броня '+o.armor:'')+(o.mres?' · Сопр. магии '+Math.round(o.mres*100)+'%':'')+'</div>';
-    return '<div class="be"><canvas class="ic '+dt+'" data-et="'+(boss?'boss_'+k:k)+'" width="128" height="128" style="--bc:'+o.col+'"></canvas><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · Волна '+(4*(BOSS_ORDER.indexOf(k)+1)):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
+    return '<div class="be"><canvas class="ic '+dt+'" data-et="'+(boss?'boss_'+k:k)+'" width="128" height="128" style="--bc:'+o.col+'"></canvas><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · '+CHAP.map((C,i)=>{const j=C.boss.indexOf(k);return j<0?'':(j===2?'хранитель главы '+(i+1):'глава '+(i+1)+', карта '+(j+1))}).filter(Boolean).join('; '):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
   };
   let h='<section><p class="s" style="color:var(--dim)">Красная пунктирная обводка у врага = физический урон (против него работает броня). Синее свечение = магический урон (против него работает сопротивление магии).</p>';
   h+='<h2 class="sec">Враги</h2><div class="bs">';
   for(const k in ET)if(ET[k].from<99&&!ET[k].map)h+=card(k,ET[k],false);
   h+='</div>';
-  for(const mk in MAPS){
-    const ks=Object.keys(ET).filter(k=>ET[k].map===mk);
-    if(!ks.length)continue;
-    h+='<h2 class="sec" style="margin-top:14px">Только на карте: '+MAPS[mk].n+'</h2><div class="bs">'+ks.map(k=>card(k,ET[k],false)).join('')+'</div>';
-  }
-  const other=Object.keys(ET).filter(k=>ET[k].from>=99&&k.indexOf('boss_')!==0);
+  CHAP.forEach((C,i)=>{
+    const b=bio(C.maps[0]),ks=Object.keys(ET).filter(k=>ET[k].map===b);
+    if(!ks.length)return;
+    h+='<h2 class="sec" style="margin-top:14px">Глава '+(i+1)+'. '+C.n+'</h2><div class="bs">'+ks.map(k=>card(k,ET[k],false)).join('')+'</div>';
+  });
+  const other=Object.keys(ET).filter(k=>ET[k].from>=99&&k.indexOf('boss_')!==0&&!ET[k].hide);
   if(other.length)h+='<h2 class="sec" style="margin-top:14px">Призванные</h2><div class="bs">'+other.map(k=>card(k,ET[k],false)).join('')+'</div>';
   h+='<h2 class="sec" style="margin-top:14px">Боссы</h2><div class="bs">'+Object.keys(BOSS).map(k=>card(k,BOSS[k],true)).join('')+'</div></section>';
   return h;
@@ -141,7 +161,7 @@ function keysTab(){
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
   h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-mmove="1">'+(SAVE.mmove?'Ходьба мышью (зажать ЛКМ): вкл.':'Ходьба мышью (зажать ЛКМ): выкл.')+'</button><button class="btn alt sm" type="button" data-light="1">'+(SAVE.light!==false?'Освещение: вкл.':'Освещение: выкл. (быстрее)')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -150,6 +170,7 @@ $('mpanel').addEventListener('click',e=>{
   if(!t)return;
   if(t.dataset.el){menuEl=t.dataset.el;renderMenu()}
   else if(t.dataset.start)startRun(menuEl);
+  else if(t.dataset.cont)loadRun();
   else if(t.dataset.meta){
     const m=META.find(x=>x.id===t.dataset.meta),l=SAVE.meta[m.id]||0,cost=m.c0+m.cs*l;
     if(l<m.max&&SAVE.ess>=cost){SAVE.ess-=cost;SAVE.meta[m.id]=l+1;store();sfx(700,0.12,'triangle',0.05,300);renderMenu()}
@@ -159,6 +180,8 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.ch){SAVE.chSel=clamp(parseInt(t.dataset.ch,10),1,SAVE.ch||1);store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
+  else if(t.dataset.mmove){SAVE.mmove=!SAVE.mmove;store();renderMenu()}
+  else if(t.dataset.light){SAVE.light=SAVE.light===false;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
   else if(t.dataset.wipe){

@@ -16,6 +16,7 @@ js/core/music.js
 js/core/state.js
 js/world/maps.js
 js/world/chapters.js
+js/world/features.js
 js/core/stats.js
 js/combat/damage.js
 js/combat/cast.js
@@ -30,6 +31,7 @@ js/game/bag.js
 js/game/leveling.js
 js/game/flow.js
 js/game/runextras.js
+js/game/runsave.js
 js/ui/hud.js
 js/ui/levelup.js
 js/ui/tree.js
@@ -50,5 +52,7 @@ js/render/heroes.js
 js/render/player.js
 js/render/map.js
 js/render/jet.js
+js/render/light.js
+js/render/zones_art.js
 js/core/loop.js
 shell/tail.html

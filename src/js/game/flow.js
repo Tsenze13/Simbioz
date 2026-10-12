@@ -7,6 +7,8 @@ function getInput(){
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
   if(joy.on){x=joy.dx;y=joy.dy}
+  /* ходьба мышью: зажатая левая кнопка ведёт героя к курсору */
+  else if(mouse.down&&SAVE.mmove&&G&&!uiOpen()){const g=G,z=ZM*(1+(g.zk||0)),hx=(g.p.x-(cam.x+VW/2))*z+W/2,hy=(g.p.y-(cam.y+VH/2))*z+H/2,dx=mouse.x-hx,dy=mouse.y-hy,d=Math.hypot(dx,dy);if(d>18){x=dx/d*Math.min(1,d/60);y=dy/d*Math.min(1,d/60)}}
   let m=Math.hypot(x,y);
   if(m>1){x/=m;y/=m;m=1}
   return {x:x,y:y,m:m};
@@ -36,7 +38,7 @@ function trailFx(dt,moving,dash){
   g.trT=dash?0.02:0.05;
   if(!moving&&!dash)return;
   const own=EK.filter(k=>g.el[k]>0);
-  const k=Math.random()<0.6?g.start:pickOf(own.length?own:[g.start]);
+  const k=isAva(g)?pickOf(own.length?own:['water']):(Math.random()<0.6?g.start:pickOf(own.length?own:[g.start]));
   const c=EL[k].c,c2=EL[k].c2;
   const base={x:p.x+rnd(-4,4),y:p.y+rnd(-2,8),life:0.45,max:0.45,col:Math.random()<0.4?c2:c,size:2.4};
   if(k==='fire'){base.vy=rnd(-45,-15);base.vx=rnd(-12,12)}
@@ -197,7 +199,7 @@ function update(dt){
   for(const m of g.merch)m.bob+=dt*2;
   compact(g.pch);compact(g.sk);compact(g.deb);compact(g.smk);compact(g.spk);compact(g.fl);compact(g.sc);compact(g.pt);compact(g.fx);compact(g.hfx);compact(g.afx);compact(g.tx);compact(g.pr);compact(g.zn);compact(g.bl);compact(g.tor);compact(g.gem);compact(g.pk);
   compact(g.em);compact(g.cfx);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
-  if(mode==='play')relicTick();
+  if(mode==='play'){relicTick();featTick(dt)}
   if(mode==='play'&&g.pending>0&&!g.lvlOpen&&!g.over)openLevelUp();
 }
 function waveLogic(dt){
@@ -216,7 +218,7 @@ function waveLogic(dt){
     const sw=effW(w),cap=Math.min(180,45+14*sw);
     const n=boss?1:1+Math.floor((sw-1)/3);
     if(g.en.length<cap)for(let i=0;i<n;i++)spawnEnemy(pickType(w));
-    g.spawnT=Math.max(0.28,(mapWave(w)===1&&w===1?1.3:1.0-0.045*sw))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
+    g.spawnT=Math.max(0.22,(w===1?1.1:1.0-0.045*sw)*BAL.wave.spawnK)*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
   }
   if(w>=3){
     const sw=effW(w);
@@ -262,6 +264,7 @@ function payEssence(win){
 function endRun(win){
   const g=G;
   if(g.over)return;
+  clearRun();
   g.over=true;mode='over';
   const add=payEssence(false);
   SAVE.runs++;SAVE.best=Math.max(SAVE.best,g.wave);
@@ -271,6 +274,7 @@ function endRun(win){
 }
 function winRun(){
   const g=G;
+  clearRun();
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
   SAVE.runs++;SAVE.wins++;
@@ -281,6 +285,7 @@ function winRun(){
   sfx(520,0.6,'triangle',0.06,400);
 }
 function startRun(el,ch){
+  clearRun();
   ch=clamp(ch||SAVE.chSel||1,1,Math.min(CHAP.length,SAVE.ch||1));
   G=mkState(el,CHAP[ch-1].maps[0]);
   const g=G;g.ch=ch;
@@ -294,6 +299,7 @@ function startRun(el,ch){
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   hc={};
   buildTopHud();
+  placeFeature();
   startWave(1);
   showBiome(g.map);
   hintQ=[];hintT=0;$('hint').hidden=true;tut('move');

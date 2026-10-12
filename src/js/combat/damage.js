@@ -114,7 +114,7 @@ function hitEnemy(e,dmg,o){
 }
 function dropLoot(e){
   const g=G,t=e.type,r=Math.random(),d=e.def;
-  const gv=Math.max(1,Math.round(d.gold*(1+(SW()-1)*0.06)));
+  const gv=Math.max(1,Math.round(d.gold*(1+(SW()-1)*0.06)*BAL.chap.goldGain));
   if(e.boss){
     for(let i=0;i<3;i++)addGem(e.x+rnd(-40,40),e.y+rnd(-40,40),'xl');
     for(let i=0;i<8;i++){const a=rnd(0,TAU),dd=rnd(20,80);addGem(e.x+Math.cos(a)*dd,e.y+Math.sin(a)*dd,'l')}

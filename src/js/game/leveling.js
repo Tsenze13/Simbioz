@@ -1,7 +1,7 @@
 /* ---------- прокачка ---------- */
 function gainXp(v){
   const g=G,p=g.p;
-  p.xp+=v*(1+g.S.xpm);
+  p.xp+=v*(1+g.S.xpm)*BAL.xp.gain;
   while(p.xp>=p.need){p.xp-=p.need;p.lv++;p.need=needFor(p.lv);g.pending++;g.sp++;recalc();if(p.lv===ULT_LV&&(tut('ult'),true))toast('Ульта доступна','Древо (T) → Ульта: выберите её за 1 очко навыков');else if(g.ult.kind&&BAL.hero.ultLvReq.indexOf(p.lv)>0&&g.ult.lv<3)toast('Ульту можно усилить','Древо (T) → Ульта')}
 }
 function buildChoices(){

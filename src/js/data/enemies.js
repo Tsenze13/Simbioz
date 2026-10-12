@@ -43,7 +43,25 @@ const EDT={wisp:'magic',swift:'phys',archer:'phys',brute:'phys',bomber:'magic',m
   ember:'magic',sporer:'magic',thornback:'phys',frostling:'magic',glacier:'phys',magmaling:'magic',imp:'magic',scarab:'phys',scorpion:'phys',djinn:'magic',stormcaller:'magic',ironwraith:'phys',
   lancer:'phys',sniper:'phys',miner:'phys',banner:'magic',binder:'magic',berserker:'phys',hound:'phys',dryad:'phys',frostwitch:'magic',ogre:'phys',sandworm:'phys',stormknight:'magic'};
 for(const k in EDT)ET[k].dt=EDT[k];
+/* враги отдельных карт глав: maps — на каких картах встречаются (map — биом, для бестиария) */
+Object.assign(ET,{
+  boar:{n:'Вепрь',r:14,hp:46,sp:58,dmg:16,armor:4,gold:2,xp:'m',col:'#8a5a3a',shape:'beetle',ai:'charger',chs:560,map:'forest',maps:['lawn','forest'],from:1,wt:5,dt:'phys',d:'Роет землю копытом и с разбега бросается по прямой. Уйди в сторону.'},
+  mossgolem:{n:'Мшистый голем',r:18,hp:120,sp:32,dmg:20,armor:16,gold:4,xp:'l',col:'#6a7a6a',shape:'hex',ai:'chase',map:'forest',maps:['thicket','forest'],from:1,wt:3,dt:'phys',d:'Камень, обросший мхом. Очень прочный и медленный. Магия пробивает его лучше.'},
+  bogling:{n:'Болотник',r:12,hp:30,sp:48,dmg:12,gold:2,xp:'s',col:'#6f8a3a',shape:'blob',ai:'ranged',rng:300,cd:2.4,shot:{spd:220,col:'#7a8a3a',n:1,spread:0,r:8,fx:'slow'},map:'forest',maps:['bog'],from:1,wt:6,dt:'magic',d:'Жаба-переросток. Плюётся тиной: попадание замедляет на 2 секунды.'},
+  vulture:{n:'Стервятник',r:11,hp:20,sp:118,dmg:8,gold:2,xp:'s',col:'#5a4a3a',shape:'dart',ai:'chase',pack:2,map:'dunes',maps:['steppe','oasis','dunes'],from:1,wt:5,dt:'phys',d:'Пикирует парами. Быстрый и хрупкий.'},
+  mummy:{n:'Мумия',r:13,hp:64,sp:40,dmg:16,armor:6,gold:3,xp:'m',col:'#d8c8a0',shape:'ghost',ai:'chase',rage:true,map:'dunes',maps:['tomb'],from:1,wt:5,dt:'phys',d:'Страж гробницы. Чем сильнее ранена, тем быстрее идёт. Добивай.'},
+  yeti:{n:'Йети',r:18,hp:120,sp:42,dmg:24,armor:6,gold:4,xp:'l',col:'#e8f0f8',shape:'hex',ai:'charger',chs:520,map:'ice',maps:['shore','glacier'],from:1,wt:3,dt:'phys',d:'Огромный и лохматый. Замирает, а потом таранит всё на своём пути.'},
+  shardarcher:{n:'Хрустальный стрелок',r:11,hp:30,sp:46,dmg:12,mres:0.2,gold:3,xp:'m',col:'#bfe8ff',shape:'crystal',ai:'ranged',rng:320,cd:2.6,shot:{spd:280,col:'#dff4ff',n:3,spread:0.4,r:5,fx:'slow'},map:'ice',maps:['palace','glacier'],from:1,wt:5,dt:'magic',d:'Свита Королевы. Стреляет веером из трёх осколков, которые замедляют.'},
+  cinderbat:{n:'Угольная мышь',r:8,hp:12,sp:122,dmg:7,gold:1,xp:'s',col:'#ff7a3a',shape:'dart',ai:'chase',pack:3,onDeath:'fire',map:'ash',maps:['cinder','mines','ash'],from:1,wt:6,dt:'magic',d:'Стайка тлеющих летучих мышей. Погибая, оставляет горящий уголёк.'},
+  voidling:{n:'Порождение пустоты',r:12,hp:42,sp:64,dmg:18,mres:0.45,armor:-4,gold:3,xp:'m',col:'#8a4ad6',shape:'ghost',ai:'specter',map:'ash',maps:['rift'],from:1,wt:6,dt:'magic',d:'Сгусток пустоты. Исчезает и появляется рядом с вами. Магию почти не замечает.'},
+  sparkbot:{n:'Искробот',r:13,hp:56,sp:44,dmg:20,armor:10,gold:3,xp:'m',col:'#c8b88a',shape:'diamond',ai:'zapper',cd:4.0,map:'storm',maps:['pylons','storm'],from:1,wt:4,dt:'magic',d:'Старый механизм с громоотводом на макушке. Вызывает молнию прямо на вас.'},
+  thunderbird:{n:'Громовая птица',r:13,hp:38,sp:70,dmg:20,gold:3,xp:'m',col:'#7fa8ff',shape:'dart',ai:'charger',chw:0.3,chs:720,map:'storm',maps:['hills','eye'],from:1,wt:5,dt:'magic',d:'Зависает в воздухе и пикирует на вас молнией. Рывок спасёт.'},
+  salamander:{n:'Саламандра',r:12,hp:34,sp:56,dmg:14,gold:3,xp:'m',col:'#ff7a2a',shape:'ember',ai:'ranged',rng:300,cd:2.0,shot:{spd:300,col:'#ffb347',n:1,spread:0,r:6},onDeath:'lava',map:'lava',maps:['cooled','river'],from:1,wt:5,dt:'magic',d:'Огненная ящерица. Плюётся огнём, а умирая, растекается лужей лавы.'},
+  nest:{n:'Гнездо',r:28,hp:260,sp:0,dmg:0,armor:8,gold:0,xp:'l',col:'#9be36a',shape:'blob',ai:'nest',from:99,wt:0,hide:true,dt:'phys',d:'Особенность карты: выпускает врагов, пока цело.'},
+  cultist:{n:'Культист Пожирателя',r:13,hp:58,sp:38,dmg:12,mres:0.2,gold:5,xp:'l',col:'#a02a5a',shape:'banner',ai:'banner',map:'lava',maps:['maw'],from:1,wt:3,dt:'magic',d:'Служит Пожирателю. Враги рядом с ним быстрее и бьют сильнее. Убей первым.'}
+});
 const ET_KEYS=Object.keys(ET).filter(k=>ET[k].from<99);
+const mapOk=(k,id)=>{const d=ET[k];return d.maps?d.maps.indexOf(id)>=0:(!d.map||d.map===bio(id))};
 const AFFIX={
   bulwark:{n:'Бронированный',d:'+16 к броне'},swift:{n:'Быстрый',d:'+45% скорость'},
   volatile:{n:'Взрывной',d:'Взрывается после смерти'},regen:{n:'Живучий',d:'Лечится сам'}

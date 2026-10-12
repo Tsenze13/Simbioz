@@ -99,6 +99,7 @@ function drawZones(g){
   for(const z of g.zn){
     if(!vis(z.x,z.y,z.r+20))continue;
     if(z.wid)continue;
+    if(zoneArt(z))continue;
     if(zoneSpr(z))continue;
     const fade=Math.min(1,z.life/0.5);
     const hot=z.kind==='lava'||z.kind==='wildfire';
@@ -133,6 +134,7 @@ function drawBlasts(g){
     if(b.vis==='meteor')drawMeteorSpr(b,pr);
     else if(b.vis==='drop')drawRainDrop(b,pr,'#e6f5ff');
     else if(b.vis==='shell')drawRainDrop(b,pr,'#fff0d0');
+    else if(b.vis==='root')drawRootTele(b,pr);
   }
 }
 function drawTelegraphs(g){

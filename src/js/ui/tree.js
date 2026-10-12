@@ -54,12 +54,18 @@ function renderTree(){
     const a=AB[id],s=slotOf(id),why=skillAvail(id);
     h+='<button type="button" data-sk="'+id+'" class="'+(trSel===id?'sel':'')+(why&&!s?' lock':'')+'" style="--c1:'+(a.c1||'#9cc4ff')+'"><canvas class="tth" data-id="'+id+'" width="104" height="60"></canvas><span class="tl"><b>'+a.n+'</b>'+(a.cat==='sym'?'<span class="rtag" style="color:'+a.c2+'">'+EL[a.pair[0]].n+' + '+EL[a.pair[1]].n+'</span>':roleTag(a))+'</span><small>'+(s?'ур.'+s.lv:(why?'🔒':'—'))+'</small></button>';
   };
-  for(const k of EK){
-    const blocked=g.el[OPP[k]]>0&&!g.el[k];
-    h+='<h4 style="--ec:'+EL[k].c+'"><span class="eo"></span>'+EL[k].n+(g.el[k]?' · ур. '+g.el[k]:(blocked?' · закрыта':''))+'</h4>';
+  /* только стихии героя: мастер видит свою, Аватар — изученные (и симбиозы из них) */
+  const els=isAva(g)?EK.filter(k=>g.el[k]>0):[g.start];
+  for(const k of els){
+    h+='<h4 style="--ec:'+EL[k].c+'"><span class="eo"></span>'+EL[k].n+(g.el[k]?' · ур. '+g.el[k]:'')+'</h4>';
     SKILL_IDS.filter(id=>AB[id].els[0]===k).forEach(row);
   }
-  h+='<h4>Симбиозы</h4>';SYM_IDS.forEach(row);
+  if(isAva(g)){
+    if(!els.length)h+='<p class="trnote">Выберите первую стихию на повышении уровня — здесь появятся её навыки.</p>';
+    const sy=SYM_IDS.filter(id=>AB[id].pair.every(k=>g.el[k]>0));
+    h+='<h4>Симбиозы</h4>';
+    if(sy.length)sy.forEach(row);else h+='<p class="trnote">Симбиоз открывается, когда изучены обе его стихии.</p>';
+  }
   $('trList').innerHTML=h;
   trThumbs();
   trPv=null;

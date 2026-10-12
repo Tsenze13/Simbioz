@@ -5,7 +5,7 @@ function toggleMute(){SAVE.muted=!SAVE.muted;store();if(mode==='menu'&&menuTab==
 addEventListener('keydown',e=>{
   const c=e.code;
   if(listening){e.preventDefault();finishListen(c);return}
-  if(mode==='menu')return;
+  if(mode==='menu'){if((c==='Enter'||c==='NumpadEnter')&&menuTab==='play'&&!e.repeat&&!(document.activeElement&&document.activeElement.tagName==='INPUT')){e.preventDefault();startRun(menuEl)}return}
   const act=KEYMAP[c];
   if(c==='Space'||c.startsWith('Arrow')||c==='Tab')e.preventDefault();
   codes[c]=true;
@@ -35,7 +35,7 @@ addEventListener('blur',()=>{for(const k in codes)codes[k]=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen)togglePause()});
 const cv=$('c'),ctx=cv.getContext('2d');
 cv.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse')return;
+  if(e.pointerType==='mouse'){if(e.button===0&&SAVE.mmove){mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true}return}
   uiTouch=true;
   joy.on=true;joy.id=e.pointerId;joy.ox=joy.cx=e.clientX;joy.oy=joy.cy=e.clientY;joy.dx=joy.dy=0;
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
@@ -48,7 +48,8 @@ cv.addEventListener('pointermove',e=>{
   joy.cx=joy.ox+dx;joy.cy=joy.oy+dy;
   joy.dx=m<7?0:dx/R;joy.dy=m<7?0:dy/R;
 });
-function joyEnd(e){if(e.pointerId===joy.id){joy.on=false;joy.dx=joy.dy=0}}
+function joyEnd(e){if(e.pointerType==='mouse'){mouse.down=false;return}if(e.pointerId===joy.id){joy.on=false;joy.dx=joy.dy=0}}
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse')mouse.down=false});
 cv.addEventListener('pointerup',joyEnd);
 cv.addEventListener('pointercancel',joyEnd);
 document.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true;uiTouch=false}});

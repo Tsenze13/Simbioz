@@ -124,6 +124,13 @@ vmap('maw','lava',{n:'Жерло Пожирателя',d:'Кратер, где �
   debuff:{n:'Пекло',d:'Падают вулканические бомбы. −1 здоровья в секунду.',st:{regen:-1},hz:'bombs'},
   foe:{n:'Слуги Пожирателя',d:'Враги прочнее на 20% и бьют на 15% сильнее',hp:1.2,dmg:1.15}});
 
+/* сумерки: [насколько темно 0..0.85, цвет ночи] — эффекты светят тем сильнее, чем темнее карта */
+const DUSK={forest:[.19,'#1c3048'],dunes:[.09,'#5a3a2a'],ice:[.14,'#24365e'],ash:[.22,'#2a2238'],storm:[.38,'#18203c'],lava:[.34,'#3a1424'],
+  lawn:[.04,'#2a3a50'],bog:[.29,'#1a2c38'],thicket:[.41,'#141e38'],steppe:[.06,'#4a3a3a'],oasis:[.15,'#2a3050'],tomb:[.38,'#3a2030'],
+  shore:[.08,'#2a3a60'],glacier:[.22,'#24365e'],palace:[.41,'#221a4a'],cinder:[.19,'#2a2238'],mines:[.38,'#2a1a1a'],rift:[.45,'#24123a'],
+  hills:[.26,'#1e2840'],pylons:[.38,'#22202c'],eye:[.46,'#121838'],cooled:[.26,'#2a1418'],river:[.38,'#341018'],maw:[.46,'#2a0c1c']};
+for(const k in DUSK){MAPS[k].dark=DUSK[k][0];MAPS[k].nc=DUSK[k][1]}
+
 /* maps: [старт, развилка А, развилка Б, логово]; boss: [босс 1-й карты, 2-й, босс главы] */
 const CHAP=[
   {n:'Зелёный край',d:'Лужайки, болота и чаща. Хранитель — Древний Энт.',maps:['lawn','forest','bog','thicket'],boss:['guard','golem','ent']},
@@ -148,7 +155,7 @@ function bossHpScale(bk,w){
   if(s<=C[0][0])hp=C[0][1]*s/C[0][0];
   else if(s>=C[C.length-1][0]){const a=C[C.length-2],b=C[C.length-1];hp=b[1]+(b[1]-a[1])/(b[0]-a[0])*(s-b[0])}
   else for(let i=1;i<C.length;i++)if(s<=C[i][0]){const a=C[i-1],b=C[i];hp=a[1]+(b[1]-a[1])*(s-a[0])/(b[0]-a[0]);break}
-  const fin=(w%(WPM*3)===0)?BAL.chap.finalBoss:1;
+  const fin=(w%(WPM*3)===0&&((G&&G.ch)||1)>1)?BAL.chap.finalBoss:1; /* в первой главе хранитель без надбавки */
   const endl=w>WAVES_TOTAL?1+BAL.boss.endlessK*(w-WAVES_TOTAL):1;
   return hp/ET['boss_'+bk].hp*fin*endl;
 }
@@ -169,7 +176,8 @@ function openSafeZone(){
     return {x,y}};
   opts.forEach((o,i)=>{const q=spot(i?1:-1);g.portals.push(Object.assign({x:q.x,y:q.y,bob:rnd(0,TAU)},o))});
   for(const m of (g.merch||[]).concat(g.evts||[]))for(const q of g.portals)if(Math.hypot(m.x-q.x,m.y-q.y)<150&&m.y<g.p.y-60){const s=freeSpot(m.x,g.p.y+rnd(150,230),48,160);m.x=s.x;m.y=s.y}
-  toast('Безопасная зона','Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
+  saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
+  toast('Безопасная зона','Забег сохранён. Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
 }
 function nearPortal(){
   const g=G;if(!g.safe||!g.portals)return null;
@@ -181,7 +189,7 @@ function portalName(q){return q.risk?'Тропа испытаний':MAPS[q.map]
 function usePortal(q){
   const g=G;
   g.safe=false;g.portals=[];g.risk=!!q.risk;if(g.risk)g.riskRun=true;g.evts=[];g.merch=[];
-  enterBiome(q.map);
+  enterBiome(q.map);placeFeature();clearRun();
   if(g.risk)toast('Тропа испытаний','Враги на '+Math.round((BAL.chap.riskHp-1)*100)+'% крепче, золота на '+Math.round((BAL.chap.riskGold-1)*100)+'% больше. Победа даст +'+Math.round((BAL.chap.riskEss-1)*100)+'% эссенции.');
   sfx(260,0.5,'sine',0.06,500);
   startWave(g.wave+1);
