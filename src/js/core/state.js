@@ -4,7 +4,7 @@
 let mode='menu',G=null,anim=0;
 let W=innerWidth,H=innerHeight,DPR=1,VX=0,VY=0,ZM=1,VW=innerWidth,VH=innerHeight;
 const cam={x:0,y:0};
-const mouse={x:0,y:0,on:false};
+const mouse={x:0,y:0,on:false,down:false};
 const joy={on:false,id:-1,ox:0,oy:0,cx:0,cy:0,dx:0,dy:0};
 let uiTouch=false;
 

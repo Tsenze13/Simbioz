@@ -7,6 +7,8 @@ function getInput(){
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
   if(joy.on){x=joy.dx;y=joy.dy}
+  /* ходьба мышью: зажатая левая кнопка ведёт героя к курсору */
+  else if(mouse.down&&SAVE.mmove&&G&&!uiOpen()){const g=G,z=ZM*(1+(g.zk||0)),hx=(g.p.x-(cam.x+VW/2))*z+W/2,hy=(g.p.y-(cam.y+VH/2))*z+H/2,dx=mouse.x-hx,dy=mouse.y-hy,d=Math.hypot(dx,dy);if(d>18){x=dx/d*Math.min(1,d/60);y=dy/d*Math.min(1,d/60)}}
   let m=Math.hypot(x,y);
   if(m>1){x/=m;y/=m;m=1}
   return {x:x,y:y,m:m};
@@ -281,6 +283,7 @@ function winRun(){
   sfx(520,0.6,'triangle',0.06,400);
 }
 function startRun(el,ch){
+  clearRun();
   ch=clamp(ch||SAVE.chSel||1,1,Math.min(CHAP.length,SAVE.ch||1));
   G=mkState(el,CHAP[ch-1].maps[0]);
   const g=G;g.ch=ch;

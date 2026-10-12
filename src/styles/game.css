@@ -369,3 +369,5 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 .rfork{display:grid;gap:6px}.rfork .rt{padding:7px 10px}
 @media(max-width:760px){.chrow{grid-template-columns:repeat(3,minmax(0,1fr))}.route{grid-template-columns:1fr}}
 .route>.rt{align-content:start}
+.controw{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #ffd36b;border-radius:10px;background:linear-gradient(120deg,rgba(255,211,107,.12),var(--panel2));margin-bottom:12px}
+.controw>div{flex:1;display:grid;gap:2px}.controw b{font:700 16px var(--f-display);color:#ffd36b}

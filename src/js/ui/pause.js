@@ -36,8 +36,10 @@ function fillStats(){
   ];
   $('sgrid').innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
   $('pBuild').innerHTML=buildChips(g);
+  $('saveq').hidden=!g.safe;
 }
 let quitArmed=0;
+$('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
 $('resume').addEventListener('click',togglePause);
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}

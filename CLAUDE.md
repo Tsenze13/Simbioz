@@ -37,6 +37,7 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/core/save.js, state.js | сохранение `SAVE` (+ hints/tut, asc/ascSel, mus, fps), звук `sfx`, `needFor` |
 | js/core/music.js | `MUS` — генеративная музыка по карте/боссу, громкость `SAVE.mus` |
 | js/world/maps.js | биомы `MAPS`, чанки, ловушки карт `hazards`, прилив воды |
+| js/world/features.js | особенности карт `FEAT` (источник, святилище, гнездо, тайник): `placeFeature`, `featTick`, `nestSpawn`, `drawFeature` |
 | js/world/chapters.js | **главы** `CHAP` (6 × [старт, путь А, путь Б, логово] + боссы), варианты карт `vmap` (поле `bio` = биом), «волна сложности» `effW/SW()`, `chapHp/chapDm`, здоровье боссов `bossHpScale`, безопасная зона `openSafeZone`, порталы |
 | js/core/stats.js | `recalc()` (все статы игрока), `tickBuffs`, эффекты |
 | js/combat/damage.js | `OUT_MODS` (множители урона), `bossDefense`, учёт урона `dmgBy`/`tagNew`, `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
@@ -49,11 +50,14 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/enemies/ai.js | `hurtPlayer`, ИИ врагов, `bossPattern`, `bossDodge`, `bossAI`, `updEnemies` |
 | js/enemies/waves.js | спавн, волны (`startWave`, `endWave`) |
 | js/game/bag.js, leveling.js | рюкзак/покупки, опыт `gainXp`, карточки `buildChoices/applyChoice` |
+| js/game/runsave.js | сохранение забега в безопасной зоне: `saveRun`, `loadRun`, `runSaved` (ключ `simbioz-run`) |
 | js/game/flow.js | рывок, движение, `heroMech`, `itemFx`, `update(dt)`, волны `waveLogic`, старт/конец забега |
 | js/game/runextras.js | выбор реликвий, комбо (`synUpdate`, `synTip`), события между волнами (`spawnEvents`, `useEvent`, `drawEvents`) |
 | js/ui/*.js | HUD, подсказки новичку `tut()`, окно уровня, древо, лавка, пауза и итоги (`dmgRows`), меню (сложность `ascRow`), ввод |
 | js/render/*.js | спрайты навыков `SP`, снаряды, стволы (`GUNS`, `GMOD`), торговцы `MS`, враги `ENS`, герои `HTD`, карта, `render()` |
 | js/render/guns_art.js | `GUNART` — спрайты оружия Солдата (пистолет…снайперка, граната), подменяют `SP.pistol` и др. |
+| js/render/light.js | **свет**: карта света `drawLighting` (сумерки `MAPS[id].dark/nc`), вспышки `addLight(x,y,r,col,a,T,тени)` |
+| js/render/zones_art.js | зоны Ледяной тюрьмы, Ржавчины, колючие лозы и извержение Древнего корня |
 | js/render/jet.js | струя огнемёта `drawJet`, стена огня `drawWalls`, смерчи, дожди/град, огненные кометы |
 | js/core/loop.js | игровой цикл, отладочные хуки `window.__sb`, `window.__x` |
 
@@ -74,6 +78,8 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 а не по `g.wave` — новую формулу с номером волны пиши через `SW()`. Карта главы — вариант биома: проверки врагов
 по карте, сродство героя `AFF` и музыка — через `bio(g.map)`. После босса карты: `g.safe` (фаза 'inter' без таймера),
 `g.portals`, вход — `interact()` → `usePortal`. `g.risk` — «Тропа испытаний».
+Враги отдельных карт: поле `maps:[...]` в `ET` (проверка `mapOk(k,id)`), `map` — биом для бестиария.
+Новое поле в состоянии `G`, которое не надо сохранять (мимолётное), — добавь в `RUN_SKIP` (runsave.js).
 
 ## Прокачка (с v0.23)
 Три пути: **уровень → карточки**, **очки навыков → древо** (навыки, мутации, пассивка, ульта и её печати),

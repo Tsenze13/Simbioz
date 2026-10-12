@@ -224,6 +224,23 @@ with sync_playwright() as p:
         S.key('KeyD',true);try{for(let i=0;i<120;i++){S.update(1/60);while(g.lvlOpen)S.pickCard(0);if(i%20===0)S.render()}}catch(e){err=e.message}S.key('KeyD',false);
         return {moved:g.p.x-x0,err,body:g.hch&&Object.keys(g.hch).length}}""")
     check('Аватар бегает со своим телом без ошибок', abs(r['moved']) > 1 and not r['err'] and r['body'] == 7, r)
+    print('Сохранение забега')
+    r = J("""()=>{const S=window.__sb;S.SAVE.ch=6;S.quitToMenu();S.startRun('earth',2);let g=S.G;g.p.inv=1e9;S.learnSkill('quake');g.p.gold=777;
+        S.startWave(12);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();
+        const before={ch:g.ch,wave:g.wave,map:g.map,lv:g.p.lv,gold:g.p.gold,sk:g.slots.filter(Boolean).map(s=>s.id).join(),portals:g.portals.length,el:g.el.earth};
+        const ok=S.saveRun();g.over=true;S.quitToMenu();const has=!!S.runSaved();const html=document.getElementById('mpanel').innerHTML.indexOf('data-cont')>=0;
+        S.loadRun();g=S.G;const after={ch:g.ch,wave:g.wave,map:g.map,lv:g.p.lv,gold:g.p.gold,sk:g.slots.filter(Boolean).map(s=>s.id).join(),portals:g.portals.length,el:g.el.earth};
+        for(let i=0;i<60;i++){S.update(1/60);while(g.lvlOpen)S.pickCard(0);if(i%20===0)S.render()}if(g.treeOpen)S.closeTree();
+        const q=g.portals[0];g.p.x=q.x;g.p.y=q.y;S.interact();for(let i=0;i<60;i++)S.update(1/60);
+        return {ok,has,html,before,after,cleared:!S.runSaved(),next:[g.wave,g.safe,g.map]}}""")
+    check('забег сохраняется в безопасной зоне', r['ok'] and r['has'] and r['html'], r)
+    check('сохранённый забег продолжается как был', {k: v for k, v in r['before'].items() if k != 'gold'} == {k: v for k, v in r['after'].items() if k != 'gold'} and r['after']['gold'] >= r['before']['gold'] and r['cleared'], r)
+    check('после продолжения портал работает', r['next'][0] == 13 and not r['next'][1], r['next'])
+    r = J("""()=>{const S=window.__sb;S.SAVE.mmove=true;S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;const x0=g.p.x;const c=document.getElementById('c');
+        c.dispatchEvent(new PointerEvent('pointerdown',{pointerType:'mouse',button:0,clientX:innerWidth/2+300,clientY:innerHeight/2,bubbles:true}));for(let i=0;i<60;i++)S.update(1/60);
+        const d=g.p.x-x0;window.dispatchEvent(new PointerEvent('pointerup',{pointerType:'mouse',button:0}));S.SAVE.mmove=false;return d}""")
+    check('ходьба мышью (настройка)', r > 60, r)
     print('Реликвии, события, комбо, сложность')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}

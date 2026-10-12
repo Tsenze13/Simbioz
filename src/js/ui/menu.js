@@ -40,10 +40,11 @@ function playTab(){
     const other=a.pair[0]===menuEl?a.pair[1]:a.pair[0];
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
-  return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
+  const rs=runSavedLine();
+  return '<section>'+(rs?'<div class="controw"><div><b>Сохранённый забег</b><span class="sub">'+rs+'</span></div><button class="btn" type="button" data-cont="1">Продолжить</button></div>':'')+'<div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
     +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
     +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
-    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
+    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">'+(runSaved()?'Новый забег (сохранённый пропадёт)':'Начать забег')+'</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -141,7 +142,7 @@ function keysTab(){
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
   h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-light="1">'+(SAVE.light!==false?'Освещение: вкл.':'Освещение: выкл. (быстрее)')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-mmove="1">'+(SAVE.mmove?'Ходьба мышью (зажать ЛКМ): вкл.':'Ходьба мышью (зажать ЛКМ): выкл.')+'</button><button class="btn alt sm" type="button" data-light="1">'+(SAVE.light!==false?'Освещение: вкл.':'Освещение: выкл. (быстрее)')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -150,6 +151,7 @@ $('mpanel').addEventListener('click',e=>{
   if(!t)return;
   if(t.dataset.el){menuEl=t.dataset.el;renderMenu()}
   else if(t.dataset.start)startRun(menuEl);
+  else if(t.dataset.cont)loadRun();
   else if(t.dataset.meta){
     const m=META.find(x=>x.id===t.dataset.meta),l=SAVE.meta[m.id]||0,cost=m.c0+m.cs*l;
     if(l<m.max&&SAVE.ess>=cost){SAVE.ess-=cost;SAVE.meta[m.id]=l+1;store();sfx(700,0.12,'triangle',0.05,300);renderMenu()}
@@ -159,6 +161,7 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.ch){SAVE.chSel=clamp(parseInt(t.dataset.ch,10),1,SAVE.ch||1);store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
+  else if(t.dataset.mmove){SAVE.mmove=!SAVE.mmove;store();renderMenu()}
   else if(t.dataset.light){SAVE.light=SAVE.light===false;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}

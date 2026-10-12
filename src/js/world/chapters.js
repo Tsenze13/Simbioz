@@ -155,7 +155,7 @@ function bossHpScale(bk,w){
   if(s<=C[0][0])hp=C[0][1]*s/C[0][0];
   else if(s>=C[C.length-1][0]){const a=C[C.length-2],b=C[C.length-1];hp=b[1]+(b[1]-a[1])/(b[0]-a[0])*(s-b[0])}
   else for(let i=1;i<C.length;i++)if(s<=C[i][0]){const a=C[i-1],b=C[i];hp=a[1]+(b[1]-a[1])*(s-a[0])/(b[0]-a[0]);break}
-  const fin=(w%(WPM*3)===0)?BAL.chap.finalBoss:1;
+  const fin=(w%(WPM*3)===0&&((G&&G.ch)||1)>1)?BAL.chap.finalBoss:1; /* в первой главе хранитель без надбавки */
   const endl=w>WAVES_TOTAL?1+BAL.boss.endlessK*(w-WAVES_TOTAL):1;
   return hp/ET['boss_'+bk].hp*fin*endl;
 }

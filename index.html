@@ -373,6 +373,8 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 .rfork{display:grid;gap:6px}.rfork .rt{padding:7px 10px}
 @media(max-width:760px){.chrow{grid-template-columns:repeat(3,minmax(0,1fr))}.route{grid-template-columns:1fr}}
 .route>.rt{align-content:start}
+.controw{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #ffd36b;border-radius:10px;background:linear-gradient(120deg,rgba(255,211,107,.12),var(--panel2));margin-bottom:12px}
+.controw>div{flex:1;display:grid;gap:2px}.controw b{font:700 16px var(--f-display);color:#ffd36b}
 </style>
 
 <div id="stage">
@@ -454,6 +456,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
       <div class="chips" id="pBuild"></div>
       <div class="playrow">
         <button class="btn" id="resume" type="button">Продолжить</button>
+        <button class="btn alt" id="saveq" type="button" hidden>Сохранить и выйти</button>
         <button class="btn alt" id="quit" type="button">Выйти в меню</button>
       </div>
     </div>
@@ -1111,7 +1114,7 @@ const BAL={
     wk:0.68,        /* «волна сложности» = 1 + (волна−1)·wk: к 36-й волне враги как раньше к 25-й */
     hpPer:0.3,      /* +30% здоровья врагов за каждую главу после первой */
     dmPer:0.12,     /* +12% урона врагов за каждую главу после первой */
-    finalBoss:1.25, /* босс главы (конец 3-й карты) крепче */
+    finalBoss:1.25, /* хранитель главы (конец 3-й карты) крепче, кроме 1-й главы */
     riskHp:1.25,riskDm:1.1,riskGold:1.5,riskEss:1.25 /* «Тропа испытаний»: враги крепче, золото ×1,5, за победу эссенция ×1,25 */
   },
   /* боссы */
@@ -1997,7 +2000,7 @@ const SYN=[
    СОХРАНЕНИЕ, ЗВУК, ВВОД
    ===================================================================== */
 const SAVE_KEY='simbioz-save-v2';
-function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0,ch:1,chSel:1,mus:0.5,fps:false,light:true}}
+function freshSave(){return {v:2,ess:40,best:0,runs:0,wins:0,meta:{},keys:Object.assign({},DEFKEYS),vol:0.7,muted:false,map:'ash',hints:true,tut:{},asc:0,ascSel:0,ch:1,chSel:1,mus:0.5,fps:false,light:true,mmove:false}}
 let SAVE=freshSave();
 (function loadSave(){
   try{
@@ -2127,7 +2130,7 @@ addEventListener('pointerdown',audioWake);addEventListener('keydown',audioWake);
 let mode='menu',G=null,anim=0;
 let W=innerWidth,H=innerHeight,DPR=1,VX=0,VY=0,ZM=1,VW=innerWidth,VH=innerHeight;
 const cam={x:0,y:0};
-const mouse={x:0,y:0,on:false};
+const mouse={x:0,y:0,on:false,down:false};
 const joy={on:false,id:-1,ox:0,oy:0,cx:0,cy:0,dx:0,dy:0};
 let uiTouch=false;
 
@@ -2734,7 +2737,7 @@ function bossHpScale(bk,w){
   if(s<=C[0][0])hp=C[0][1]*s/C[0][0];
   else if(s>=C[C.length-1][0]){const a=C[C.length-2],b=C[C.length-1];hp=b[1]+(b[1]-a[1])/(b[0]-a[0])*(s-b[0])}
   else for(let i=1;i<C.length;i++)if(s<=C[i][0]){const a=C[i-1],b=C[i];hp=a[1]+(b[1]-a[1])*(s-a[0])/(b[0]-a[0]);break}
-  const fin=(w%(WPM*3)===0)?BAL.chap.finalBoss:1;
+  const fin=(w%(WPM*3)===0&&((G&&G.ch)||1)>1)?BAL.chap.finalBoss:1; /* в первой главе хранитель без надбавки */
   const endl=w>WAVES_TOTAL?1+BAL.boss.endlessK*(w-WAVES_TOTAL):1;
   return hp/ET['boss_'+bk].hp*fin*endl;
 }
@@ -5366,6 +5369,8 @@ function getInput(){
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
   if(joy.on){x=joy.dx;y=joy.dy}
+  /* ходьба мышью: зажатая левая кнопка ведёт героя к курсору */
+  else if(mouse.down&&SAVE.mmove&&G&&!uiOpen()){const g=G,z=ZM*(1+(g.zk||0)),hx=(g.p.x-(cam.x+VW/2))*z+W/2,hy=(g.p.y-(cam.y+VH/2))*z+H/2,dx=mouse.x-hx,dy=mouse.y-hy,d=Math.hypot(dx,dy);if(d>18){x=dx/d*Math.min(1,d/60);y=dy/d*Math.min(1,d/60)}}
   let m=Math.hypot(x,y);
   if(m>1){x/=m;y/=m;m=1}
   return {x:x,y:y,m:m};
@@ -5640,6 +5645,7 @@ function winRun(){
   sfx(520,0.6,'triangle',0.06,400);
 }
 function startRun(el,ch){
+  clearRun();
   ch=clamp(ch||SAVE.chSel||1,1,Math.min(CHAP.length,SAVE.ch||1));
   G=mkState(el,CHAP[ch-1].maps[0]);
   const g=G;g.ch=ch;
@@ -5783,6 +5789,45 @@ function drawEvents(g){
     if(v===ne){ctx.font='12px "Golos Text",system-ui,sans-serif';ctx.strokeText(E.d,v.x,v.y+34);ctx.fillStyle='#dfe5f3';ctx.fillText(E.d,v.x,v.y+34)}
     ctx.restore();
   }
+}
+/* =====================================================================
+   СОХРАНЕНИЕ ЗАБЕГА: в безопасной зоне (между картами) можно сохраниться и выйти,
+   а потом продолжить из меню. Сохраняется только состояние героя и забега —
+   всё мимолётное (частицы, снаряды, враги) сбрасывается: в безопасной зоне их и так нет.
+   ===================================================================== */
+const RUN_KEY='simbioz-run';
+const RUN_SKIP={pt:1,fx:1,tx:1,deb:1,smk:1,spk:1,fl:1,sc:1,hfx:1,afx:1,cfx:1,later:1,en:1,eps:1,tgs:1,pr:1,zn:1,bl:1,tor:1,bolts:1,beams:1,gh:1,em:1,stc:1,sk:1,pch:1,
+  solids:1,pools:1,decors:1,hsim:1,hch:1,hf:1,cls:1,bossRef:1,dv:1,rt:1,jet:1,walls:1,spl:1,chan:1,gem:1,choices:1};
+function runSaved(){try{const R=JSON.parse(localStorage.getItem(RUN_KEY)||'null');return R&&R.g?R:null}catch(_){return null}}
+function clearRun(){try{localStorage.removeItem(RUN_KEY)}catch(_){}}
+function saveRun(){
+  const g=G;if(!g||!g.safe||g.over)return false;
+  const o={};
+  for(const k in g){if(RUN_SKIP[k])continue;const v=g[k];if(typeof v==='function')continue;o[k]=v}
+  if(g.feat)o.feat=Object.assign({},g.feat,{ref:null});
+  /* золото и опыт, лежащие на земле, забираем сразу */
+  for(const m of g.gem){if(m.k==='coin')o.p.gold+=Math.round(m.v*(1+g.S.goldm))}
+  try{localStorage.setItem(RUN_KEY,JSON.stringify({v:1,at:Date.now(),g:o}));return true}catch(_){return false}
+}
+function loadRun(){
+  const R=runSaved();if(!R)return false;
+  const s=R.g;
+  G=Object.assign(mkState(s.start,s.map),s);
+  const g=G;
+  g.cls=CLS[g.start]||null;g.gk='';g.later=[];g.bossRef=null;g.paused=false;g.lvlOpen=false;g.shopOpen=false;g.treeOpen=false;g.over=false;g.chan=null;
+  if(g.feat)g.feat.ref=null;
+  mode='play';recalc();
+  cam.x=g.p.x-VW/2;cam.y=g.p.y-VH/2;
+  $('menu').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;$('hud').hidden=false;
+  hc={};buildTopHud();hintQ=[];hintT=0;$('hint').hidden=true;
+  clearRun();
+  toast('Забег продолжен','Глава '+(g.ch||1)+' · '+MAPS[g.map].n+' · безопасная зона');
+  return true;
+}
+function runSavedLine(){
+  const R=runSaved();if(!R)return '';
+  const s=R.g,C=CHAP[clamp((s.ch||1)-1,0,CHAP.length-1)],hero=s.start==='avatar'?'Аватар':CLS[s.start].n;
+  return hero+' · глава '+(s.ch||1)+' «'+C.n+'» · пройдено карт: '+mapStage(s.wave)+' из 3 · ур. '+s.p.lv;
 }
 /* ---------- подсказки новичку: показываются по одному разу, выключаются в «Управлении» ---------- */
 const kb=a=>'<kbd>'+keyName(SAVE.keys[a])+'</kbd>';
@@ -6410,8 +6455,10 @@ function fillStats(){
   ];
   $('sgrid').innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
   $('pBuild').innerHTML=buildChips(g);
+  $('saveq').hidden=!g.safe;
 }
 let quitArmed=0;
+$('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
 $('resume').addEventListener('click',togglePause);
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}
@@ -6494,10 +6541,11 @@ function playTab(){
     const other=a.pair[0]===menuEl?a.pair[1]:a.pair[0];
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
-  return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
+  const rs=runSavedLine();
+  return '<section>'+(rs?'<div class="controw"><div><b>Сохранённый забег</b><span class="sub">'+rs+'</span></div><button class="btn" type="button" data-cont="1">Продолжить</button></div>':'')+'<div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
     +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
     +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
-    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
+    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">'+(runSaved()?'Новый забег (сохранённый пропадёт)':'Начать забег')+'</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -6595,7 +6643,7 @@ function keysTab(){
   }
   h+='</div></div><div class="setrow"><button class="btn alt sm" type="button" data-keyreset="1">Сбросить клавиши</button><span class="sub">Esc отменяет привязку. Стрелки всегда двигают персонажа. Цифры 1-3 выбирают карточки уровня.</span></div>';
   h+='<div><h2 class="sec">Звук</h2><div class="setrow"><label for="vol" class="sub">Громкость</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(SAVE.vol*100)+'"><label for="mus" class="sub">Музыка</label><input id="mus" type="range" min="0" max="100" value="'+Math.round((SAVE.mus===undefined?0.5:SAVE.mus)*100)+'"><button class="btn alt sm" type="button" data-mute="1">'+(SAVE.muted?'Включить звук':'Выключить звук')+'</button></div></div>';
-  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-light="1">'+(SAVE.light!==false?'Освещение: вкл.':'Освещение: выкл. (быстрее)')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
+  h+='<div><h2 class="sec">Подсказки</h2><div class="setrow"><button class="btn alt sm" type="button" data-hints="1">'+(SAVE.hints?'Подсказки новичку: вкл.':'Подсказки новичку: выкл.')+'</button><button class="btn alt sm" type="button" data-hintreset="1">Показать все заново</button><button class="btn alt sm" type="button" data-fps="1">'+(SAVE.fps?'Счётчик FPS: вкл.':'Счётчик FPS: выкл.')+'</button><button class="btn alt sm" type="button" data-mmove="1">'+(SAVE.mmove?'Ходьба мышью (зажать ЛКМ): вкл.':'Ходьба мышью (зажать ЛКМ): выкл.')+'</button><button class="btn alt sm" type="button" data-light="1">'+(SAVE.light!==false?'Освещение: вкл.':'Освещение: выкл. (быстрее)')+'</button><span class="sub">Короткие советы вверху экрана, каждый показывается один раз.</span></div></div>';
   h+='<div><h2 class="sec">Данные</h2><div class="setrow"><button class="btn danger sm" type="button" data-wipe="1">'+(resetArmed?'Точно удалить всё? Нажми ещё раз':'Сбросить прогресс')+'</button><span class="sub">Прогресс хранится только в этом браузере.</span></div></div></section>';
   return h;
 }
@@ -6604,6 +6652,7 @@ $('mpanel').addEventListener('click',e=>{
   if(!t)return;
   if(t.dataset.el){menuEl=t.dataset.el;renderMenu()}
   else if(t.dataset.start)startRun(menuEl);
+  else if(t.dataset.cont)loadRun();
   else if(t.dataset.meta){
     const m=META.find(x=>x.id===t.dataset.meta),l=SAVE.meta[m.id]||0,cost=m.c0+m.cs*l;
     if(l<m.max&&SAVE.ess>=cost){SAVE.ess-=cost;SAVE.meta[m.id]=l+1;store();sfx(700,0.12,'triangle',0.05,300);renderMenu()}
@@ -6613,6 +6662,7 @@ $('mpanel').addEventListener('click',e=>{
   else if(t.dataset.ch){SAVE.chSel=clamp(parseInt(t.dataset.ch,10),1,SAVE.ch||1);store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
+  else if(t.dataset.mmove){SAVE.mmove=!SAVE.mmove;store();renderMenu()}
   else if(t.dataset.light){SAVE.light=SAVE.light===false;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}
   else if(t.dataset.hintreset){SAVE.tut={};SAVE.hints=true;store();renderMenu()}
@@ -6674,7 +6724,7 @@ addEventListener('blur',()=>{for(const k in codes)codes[k]=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen)togglePause()});
 const cv=$('c'),ctx=cv.getContext('2d');
 cv.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='mouse')return;
+  if(e.pointerType==='mouse'){if(e.button===0&&SAVE.mmove){mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true}return}
   uiTouch=true;
   joy.on=true;joy.id=e.pointerId;joy.ox=joy.cx=e.clientX;joy.oy=joy.cy=e.clientY;joy.dx=joy.dy=0;
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
@@ -6687,7 +6737,8 @@ cv.addEventListener('pointermove',e=>{
   joy.cx=joy.ox+dx;joy.cy=joy.oy+dy;
   joy.dx=m<7?0:dx/R;joy.dy=m<7?0:dy/R;
 });
-function joyEnd(e){if(e.pointerId===joy.id){joy.on=false;joy.dx=joy.dy=0}}
+function joyEnd(e){if(e.pointerType==='mouse'){mouse.down=false;return}if(e.pointerId===joy.id){joy.on=false;joy.dx=joy.dy=0}}
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse')mouse.down=false});
 cv.addEventListener('pointerup',joyEnd);
 cv.addEventListener('pointercancel',joyEnd);
 document.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true;uiTouch=false}});
@@ -10647,7 +10698,7 @@ if(DEBUG){
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,
     CLS,genStock,TREE,openTree,openLevelUp,GUNS,closeTree,renderTree,skillPr,
-    MAPS,CHAP,openSafeZone,placeFeature,featTick,nestSpawn,FEAT,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
+    MAPS,CHAP,openSafeZone,placeFeature,featTick,nestSpawn,FEAT,saveRun,loadRun,runSaved,clearRun,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
