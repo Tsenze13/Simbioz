@@ -75,20 +75,20 @@ function bestiaryTab(){
   const dtn={phys:'Физический урон',magic:'Магический урон',mixed:'Физ. и маг. урон'};
   const card=(k,o,boss)=>{
     const dt=boss?'mixed':(EDT[k]||'phys');
-    const map=o.map?MAPS[o.map].n:'любая карта';
+    const map=o.maps?o.maps.map(m=>MAPS[m].n).join(', '):o.map?'все карты главы «'+((CHAP.find(C=>bio(C.maps[0])===o.map)||{n:MAPS[o.map].n}).n)+'»':'любая карта';
     const st='<div class="bst">Здоровье '+o.hp+' · Урон '+o.dmg+' · Скорость '+o.sp+(o.armor?' · Броня '+o.armor:'')+(o.mres?' · Сопр. магии '+Math.round(o.mres*100)+'%':'')+'</div>';
-    return '<div class="be"><canvas class="ic '+dt+'" data-et="'+(boss?'boss_'+k:k)+'" width="128" height="128" style="--bc:'+o.col+'"></canvas><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · Волна '+(4*(BOSS_ORDER.indexOf(k)+1)):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
+    return '<div class="be"><canvas class="ic '+dt+'" data-et="'+(boss?'boss_'+k:k)+'" width="128" height="128" style="--bc:'+o.col+'"></canvas><div><strong>'+o.n+'</strong><div class="tp '+dt+'">'+dtn[dt]+'</div></div>'+st+'<p>'+o.d+(boss?' · '+CHAP.map((C,i)=>{const j=C.boss.indexOf(k);return j<0?'':(j===2?'хранитель главы '+(i+1):'глава '+(i+1)+', карта '+(j+1))}).filter(Boolean).join('; '):' · Появляется: '+map+(o.from>1&&o.from<99?', с волны '+o.from:''))+'</p></div>';
   };
   let h='<section><p class="s" style="color:var(--dim)">Красная пунктирная обводка у врага = физический урон (против него работает броня). Синее свечение = магический урон (против него работает сопротивление магии).</p>';
   h+='<h2 class="sec">Враги</h2><div class="bs">';
   for(const k in ET)if(ET[k].from<99&&!ET[k].map)h+=card(k,ET[k],false);
   h+='</div>';
-  for(const mk in MAPS){
-    const ks=Object.keys(ET).filter(k=>ET[k].map===mk);
-    if(!ks.length)continue;
-    h+='<h2 class="sec" style="margin-top:14px">Только на карте: '+MAPS[mk].n+'</h2><div class="bs">'+ks.map(k=>card(k,ET[k],false)).join('')+'</div>';
-  }
-  const other=Object.keys(ET).filter(k=>ET[k].from>=99&&k.indexOf('boss_')!==0);
+  CHAP.forEach((C,i)=>{
+    const b=bio(C.maps[0]),ks=Object.keys(ET).filter(k=>ET[k].map===b);
+    if(!ks.length)return;
+    h+='<h2 class="sec" style="margin-top:14px">Глава '+(i+1)+'. '+C.n+'</h2><div class="bs">'+ks.map(k=>card(k,ET[k],false)).join('')+'</div>';
+  });
+  const other=Object.keys(ET).filter(k=>ET[k].from>=99&&k.indexOf('boss_')!==0&&!ET[k].hide);
   if(other.length)h+='<h2 class="sec" style="margin-top:14px">Призванные</h2><div class="bs">'+other.map(k=>card(k,ET[k],false)).join('')+'</div>';
   h+='<h2 class="sec" style="margin-top:14px">Боссы</h2><div class="bs">'+Object.keys(BOSS).map(k=>card(k,BOSS[k],true)).join('')+'</div></section>';
   return h;

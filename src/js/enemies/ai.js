@@ -47,7 +47,7 @@ function spawnEnemy(type,opts){
   if(pk&&!(opts&&opts.elite))for(let i=1;i<pk&&g.en.length<200;i++)spawnAt(type,pos.x+rnd(-30,30),pos.y+rnd(-30,30),hpMul(w),dmgMul(w));
   return e;
 }
-function enemyOk(k){const d=ET[k];return !d.map||d.map===bio(G.map)}
+function enemyOk(k){return mapOk(k,G.map)}
 function pickType(w){
   w=effW(w);
   const R=MAPS[G.map].roster||{};
@@ -422,6 +422,10 @@ function updEnemies(dt){
           e.tm-=dt;e.x+=(e.wx-e.x)*Math.min(1,dt*5);e.y+=(e.wy-e.y)*Math.min(1,dt*5);
           if(e.tm<=0){e.x=e.wx;e.y=e.wy;e.sub=false;e.st='move';e.cd=rnd(3.2,4.4);puff(e.x,e.y,'#d9b36a',16,200,0.6,4);g.shake=Math.max(g.shake,5);sfx(120,0.3,'sawtooth',0.05,-60)}
         }
+      }else if(ai==='nest'){
+        e.x=e.hx;e.y=e.hy;e.kx=e.ky=0;
+        e.cd-=dt;
+        if(e.cd<=0){e.cd=rnd(3.2,4.2);if(g.phase==='fight'&&d<900&&g.en.length<160){for(let k=0;k<2;k++){const a=rnd(0,TAU),m=spawnAt(pickType(g.wave),e.x+Math.cos(a)*(e.r+26),e.y+Math.sin(a)*(e.r+26),hpMul(g.wave),dmgMul(g.wave));puff(m.x,m.y,e.col,6,120,0.4,3)}ring(e.x,e.y,e.r*2.4,e.col,0.4)}}
       }else if(ai==='specter'){
         if(canMove){e.x+=dx/d*sp*dt;e.y+=dy/d*sp*dt}
         e.cd-=dt;
@@ -434,14 +438,14 @@ function updEnemies(dt){
       }
     }
     /* телепорт далеко отставших */
-    {const lim=spawnR()+450;if(!e.boss&&pd2>lim*lim){const pos=spawnPos();e.x=pos.x;e.y=pos.y}}
+    {const lim=spawnR()+450;if(!e.boss&&e.ai!=='nest'&&pd2>lim*lim){const pos=spawnPos();e.x=pos.x;e.y=pos.y}}
     /* контактный урон */
     const rr=e.r+p.r-2;
-    if(pd2<rr*rr&&e.ai!=='boss'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
+    if(pd2<rr*rr&&e.ai!=='boss'&&e.ai!=='nest'&&e.st!=='fuse'&&!locked&&!e.sub)hurtPlayer(e.dmg*(e.buf>0?1.25:1),e.def.dt==='magic'?'magic':'phys',{e:e,melee:true});
     else if(e.ai==='boss'&&pd2<rr*rr&&!locked)hurtPlayer(e.dmg,'phys',{e:e,melee:true,boss:true});
   }
   /* препятствия карты */
-  if(g.solids.length)for(const e of en){if(!e.dead&&e.ai!=='specter')obsE(e)}
+  if(g.solids.length)for(const e of en){if(!e.dead&&e.ai!=='specter'&&e.ai!=='nest')obsE(e)}
   /* разделение, столкновения с передачей импульса */
   for(let i=0;i<en.length;i++){
     const a=en[i];if(a.dead)continue;

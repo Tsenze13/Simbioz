@@ -57,6 +57,7 @@ function drawLighting(g,cx,cy,z){
   for(const m of g.merch)L(m.x,m.y-20,190,'#ffd59a',0.55);
   if(g.portals)for(const q of g.portals)L(q.x,q.y,240,q.risk?'#ff5a5a':MAPS[q.map].glow,0.8);
   if(g.evts)for(const v of g.evts)if(!v.used)L(v.x,v.y,140,'#ffd36b',0.4);
+  if(g.feat&&!(g.feat.done&&g.feat.t!=='spring')){const F=g.feat;L(F.x,F.y-10,F.t==='spring'?200:160,F.t==='cache'?'#ffd36b':F.col,F.t==='shrine'&&g.wave<F.cdW?0.15:0.6)}
   let gn=0;for(const m of g.gem){if(gn++>140)break;L(m.x,m.y,m.k==='coin'?34:30,m.k==='coin'?'#ffd36b':'#9fe0ff',0.35)}
   /* враги, которые светятся сами */
   for(const e of g.en){if(e.dead)continue;

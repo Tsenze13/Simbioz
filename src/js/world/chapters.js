@@ -188,7 +188,7 @@ function portalName(q){return q.risk?'Тропа испытаний':MAPS[q.map]
 function usePortal(q){
   const g=G;
   g.safe=false;g.portals=[];g.risk=!!q.risk;if(g.risk)g.riskRun=true;g.evts=[];g.merch=[];
-  enterBiome(q.map);
+  enterBiome(q.map);placeFeature();
   if(g.risk)toast('Тропа испытаний','Враги на '+Math.round((BAL.chap.riskHp-1)*100)+'% крепче, золота на '+Math.round((BAL.chap.riskGold-1)*100)+'% больше. Победа даст +'+Math.round((BAL.chap.riskEss-1)*100)+'% эссенции.');
   sfx(260,0.5,'sine',0.06,500);
   startWave(g.wave+1);

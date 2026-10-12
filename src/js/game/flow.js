@@ -197,7 +197,7 @@ function update(dt){
   for(const m of g.merch)m.bob+=dt*2;
   compact(g.pch);compact(g.sk);compact(g.deb);compact(g.smk);compact(g.spk);compact(g.fl);compact(g.sc);compact(g.pt);compact(g.fx);compact(g.hfx);compact(g.afx);compact(g.tx);compact(g.pr);compact(g.zn);compact(g.bl);compact(g.tor);compact(g.gem);compact(g.pk);
   compact(g.em);compact(g.cfx);compact(g.stc);compact(g.eps);compact(g.tgs);compact(g.bolts);compact(g.beams);compact(g.gh);
-  if(mode==='play')relicTick();
+  if(mode==='play'){relicTick();featTick(dt)}
   if(mode==='play'&&g.pending>0&&!g.lvlOpen&&!g.over)openLevelUp();
 }
 function waveLogic(dt){
@@ -294,6 +294,7 @@ function startRun(el,ch){
   if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   hc={};
   buildTopHud();
+  placeFeature();
   startWave(1);
   showBiome(g.map);
   hintQ=[];hintT=0;$('hint').hidden=true;tut('move');

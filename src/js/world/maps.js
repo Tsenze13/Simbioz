@@ -384,7 +384,7 @@ function hazards(dt){
 let biomeTimer=0,biomeShow=0;
 function showBiome(id,delay){
   const M=MAPS[id],el=$('biome'),A=(G&&G.map===id&&G.aff)?G.aff:null;
-  const ex=ET_KEYS.filter(k=>ET[k].map===bio(id)).map(k=>ET[k].n);
+  const ex=ET_KEYS.filter(k=>(ET[k].map||ET[k].maps)&&mapOk(k,id)).map(k=>ET[k].n);
   const more=Object.keys(M.roster||{}).filter(k=>M.roster[k]>1).map(k=>ET[k].n);
   el.style.setProperty('--bc',M.glow);
   el.innerHTML='<div class="bn" style="color:'+M.glow+'">'+M.n+'</div><div class="bs">'+M.d+'</div><div class="bm"><div><b class="up">▲ '+M.mods.buff.n+'</b>'+M.mods.buff.d+'</div><div><b class="dn">▼ '+M.mods.debuff.n+'</b>'+M.mods.debuff.d+'</div><div><b class="fo">☠ '+M.foe.n+'</b>'+M.foe.d+'. Новые враги: '+ex.join(', ')+(more.length?'. Чаще: '+more.join(', '):'')+'.</div>'+(A?'<div style="border-color:#ffd36b"><b style="color:#ffd36b">★ '+A.n+'</b>'+A.d+'</div>':'')+'</div>';

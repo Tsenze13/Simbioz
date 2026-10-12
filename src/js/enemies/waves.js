@@ -18,6 +18,7 @@ function startWave(w){
     toast(waveTitle(w),w===1?'Двигайся, пока оружие бьёт само':'');
     sfx(300,0.2,'triangle',0.05,300);
   }
+  nestSpawn();
   g.dockSig='';
 }
 function endWave(){

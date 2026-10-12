@@ -195,6 +195,31 @@ with sync_playwright() as p:
     check('портал ведёт на выбранную карту', r['after'] == [False, 13, 'bog', 'fight'], r['after'])
     check('вторая развилка: логово или тропа испытаний', r['fork2'] == ['thicket', 'thicket!'] and r['risk'] and r['riskHp'] > r['normHp'], r)
     check('победа над хранителем главы', r['win'] == [True, True, True], r['win'])
+    print('Особенности карт и враги глав')
+    r = J("""()=>{const S=window.__sb,out={};
+        const newE=['boar','mossgolem','bogling','vulture','mummy','yeti','shardarcher','cinderbat','voidling','sparkbot','thunderbird','salamander','cultist'];
+        S.quitToMenu();S.startRun('fire',1);let g=S.G;g.p.inv=1e9;out.bad=[];
+        for(const k of newE){const d=S.ET[k];for(const m of d.maps){S.enterBiome(m,true);S.startWave(5);const e=S.spawnEnemy(k);if(!e)out.bad.push(k+'@'+m)}
+          for(let i=0;i<60;i++)S.update(1/60);S.render()}
+        out.feats=Object.keys(S.FEAT).length;
+        const res={};
+        for(const [m,t] of [['thicket','spring'],['lawn','shrine'],['forest','cache'],['bog','nest']]){
+          S.quitToMenu();S.startRun('fire',1);g=S.G;g.p.inv=1e9;S.enterBiome(m,true);S.placeFeature();S.startWave(3);g.spawnT=1e9;
+          const F=g.feat;const r1={t:F.t};
+          if(t==='spring'){g.p.hp=g.S.maxHp*0.3;g.p.x=F.x;g.p.y=F.y;for(let i=0;i<120;i++){g.p.x=F.x;g.p.y=F.y;S.update(1/60)}r1.ok=g.p.hp>g.S.maxHp*0.33}
+          if(t==='shrine'){for(let i=0;i<120;i++){g.p.x=F.x;g.p.y=F.y;S.update(1/60)}r1.ok=g.bf.dm.t>30&&F.cdW===g.wave+3}
+          if(t==='cache'){const gold=g.p.gold;for(let i=0;i<120;i++){g.p.x=F.x;g.p.y=F.y;S.update(1/60)}r1.ok=F.done&&g.p.gold>gold}
+          if(t==='nest'){const e=F.ref;r1.spawned=!!e&&e.type==='nest';const n0=g.en.length+g.kills;g.p.x=F.x+200;g.p.y=F.y;for(let i=0;i<300;i++)S.update(1/60);r1.made=g.en.length+g.kills>n0;
+            e.hp=1;S.hitEnemy(e,999,{dt:'pure',src:'skill'});for(let i=0;i<10;i++)S.update(1/60);r1.ok=r1.spawned&&r1.made&&F.done&&Math.abs(e.x-F.x)<1}
+          S.render();res[m]=r1}
+        out.res=res;return out}""")
+    check('враги глав появляются на своих картах', not r['bad'], r['bad'])
+    check('у всех 24 карт есть особенность', r['feats'] == 24, r['feats'])
+    for m, v in r['res'].items():
+        check('особенность карты: ' + v['t'], v['ok'], v)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('air',1);const g=S.G;g.p.inv=1e9;S.enterBiome('maw',true);S.startWave(5);
+        S.skyStrike(g.p.x+100,g.p.y,'#f4f08a',true);for(let i=0;i<20;i++){S.update(1/60);S.render()}return window.__x.SP?1:0}""")
+    check('освещение на тёмной карте без ошибок', r == 1, r)
     print('Реликвии, события, комбо, сложность')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}

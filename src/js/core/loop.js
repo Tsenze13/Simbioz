@@ -41,12 +41,12 @@ renderMenu();
 requestAnimationFrame(frame);
 
 if(DEBUG){
-  window.__x={SPAB:SP.AB,SP,GUNART,ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
+  window.__x={SPAB:SP.AB,SP,GUNART,ENS,ultInfo,symUlt,buildChoicesX:()=>buildChoices(),skillAvail,setTr:(k)=>{trSel=k;openTree()},OPP};
   window.__pasUp=pasUp;window.__trPas=()=>{trSel='__pas';openTree()};
   window.__sb={
     get G(){return G},get mode(){return mode},SAVE:SAVE,AB:AB,ITEMS:ITEMS,ET:ET,
     CLS,genStock,TREE,openTree,openLevelUp,GUNS,closeTree,renderTree,skillPr,
-    MAPS,CHAP,openSafeZone,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
+    MAPS,CHAP,openSafeZone,placeFeature,featTick,nestSpawn,FEAT,nearPortal,usePortal,bossKeyFor,bossHpScale,effW,endWave:()=>endWave(),getChunk,enterBiome,skyStrike,showBiome,biomeFor,BIOMES,startRun,update:(dt)=>{if(mode==='play'&&G&&!G.over)update(dt)},castSlot,castUlt,useItem,pickCard,openShop,closeShop,buyItem,sellItem,
     learnSkill,addToBag,spawnEnemy,startWave,endWave,applyChoice,buildChoices,recalc,hurtPlayer,hitEnemy,tryDash,render,hud,
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
