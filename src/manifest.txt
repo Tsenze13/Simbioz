@@ -52,5 +52,6 @@ js/render/player.js
 js/render/map.js
 js/render/jet.js
 js/render/light.js
+js/render/zones_art.js
 js/core/loop.js
 shell/tail.html
