@@ -5,7 +5,7 @@ function toggleMute(){SAVE.muted=!SAVE.muted;store();if(mode==='menu'&&menuTab==
 addEventListener('keydown',e=>{
   const c=e.code;
   if(listening){e.preventDefault();finishListen(c);return}
-  if(mode==='menu')return;
+  if(mode==='menu'){if((c==='Enter'||c==='NumpadEnter')&&menuTab==='play'&&!e.repeat&&!(document.activeElement&&document.activeElement.tagName==='INPUT')){e.preventDefault();startRun(menuEl)}return}
   const act=KEYMAP[c];
   if(c==='Space'||c.startsWith('Arrow')||c==='Tab')e.preventDefault();
   codes[c]=true;

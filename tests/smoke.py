@@ -241,6 +241,15 @@ with sync_playwright() as p:
         c.dispatchEvent(new PointerEvent('pointerdown',{pointerType:'mouse',button:0,clientX:innerWidth/2+300,clientY:innerHeight/2,bubbles:true}));for(let i=0;i<60;i++)S.update(1/60);
         const d=g.p.x-x0;window.dispatchEvent(new PointerEvent('pointerup',{pointerType:'mouse',button:0}));S.SAVE.mmove=false;return d}""")
     check('ходьба мышью (настройка)', r > 60, r)
+    print('Меню и древо')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.setTab('play');const b=document.querySelector('[data-start]').getBoundingClientRect();
+        const names=[...document.querySelectorAll('.hpick b')].map(x=>x.textContent);
+        S.startRun('metal',1);const g=S.G;g.sp=5;S.openTree();const heads=[...document.querySelectorAll('#trList h4')].map(h=>h.textContent);S.closeTree();
+        S.quitToMenu();S.startRun('avatar',1);const g2=S.G;S.openTree();const heads2=[...document.querySelectorAll('#trList h4')].map(h=>h.textContent);S.closeTree();
+        S.quitToMenu();return {vis:b.bottom<=innerHeight&&b.top>=0,names,heads,heads2}}""")
+    check('кнопка «Начать забег» видна без прокрутки', r['vis'], r)
+    check('герои названы по персонажам', 'Солдат' in r['names'] and 'Пиромант' in r['names'] and 'Металл' not in r['names'], r['names'])
+    check('в древе только стихия героя', len([h for h in r['heads'] if h.startswith('Металл')]) == 1 and not any(h.startswith('Огонь') for h in r['heads']) and 'Симбиозы' not in r['heads'], r['heads'])
     print('Реликвии, события, комбо, сложность')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
