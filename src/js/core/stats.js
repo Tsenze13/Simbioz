@@ -19,7 +19,7 @@ function recalc(){
   if(isAva(g)){const n=EK.filter(k=>g.el[k]>0).length;it.dm=(it.dm||0)+PV('avatar',[0,.06,.09,.12])*n}
   {const a=PV('air',[0,.06,.1,.14]);if(a)it.spd=(it.spd||0)+a;const m=PV('metal',[0,.06,.1,.14]);if(m)it.crit=(it.crit||0)+m;if(g.start==='air'&&g.pl>=2)it.drc=(it.drc||0)+0.15}
   const x=k=>it[k]||0;
-  S.maxHp=100+12*ml('hp')+25*cl('hp')+x('hp');
+  S.maxHp=(100+12*ml('hp')+25*cl('hp')+x('hp'))*(1-(g.altarCut||0)); /* алтарь крови навсегда отнимает часть */
   S.regen=0.3+0.25*ml('reg')+0.8*cl('reg')+x('regen');
   S.maxMana=120+10*ml('mana')+20*cl('mana')+x('mana');
   S.mreg=3+0.2*ml('mreg')+0.8*cl('mreg')+x('mreg');

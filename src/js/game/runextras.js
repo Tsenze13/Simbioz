@@ -48,10 +48,13 @@ function nearEvent(){
 function useEvent(v){
   const g=G,p=g.p,w=g.wave;
   if(v.t==='altar'){
-    const cost=g.S.maxHp*0.2;
-    if(p.hp<=cost+1){toast('Алтарь молчит','Нужно больше здоровья');return}
-    p.hp-=cost;g.sp++;g.pending++;
-    ring(v.x,v.y,120,'#ff4d5e',0.6);puff(p.x,p.y,'#ff4d5e',20,200,0.6,3);toast('Алтарь крови','+1 очко навыков и карточка уровня');
+    /* цена растёт с каждым алтарём: −10%, −15%, −20%… максимума здоровья до конца забега; награда тоже растёт */
+    const n=(g.altarN||0)+1,cut=0.05+0.05*n,sp=1+Math.floor((n-1)/2),cards=1+Math.floor(n/2);
+    if((g.altarCut||0)+cut>0.6){toast('Алтарь молчит','Крови больше не хватит');return}
+    g.altarN=n;g.altarCut=(g.altarCut||0)+cut;recalc();p.hp=Math.min(p.hp,g.S.maxHp);
+    g.sp+=sp;g.pending+=cards;
+    ring(v.x,v.y,120,'#ff4d5e',0.6);puff(p.x,p.y,'#ff4d5e',20,200,0.6,3);
+    toast('Алтарь крови · '+n+'-й','−'+Math.round(cut*100)+'% максимума здоровья навсегда. +'+sp+' очк. навыков и '+cards+' карточк'+(cards>1?'и':'а')+' уровня');
   }else if(v.t==='chest'){
     const gold=Math.round(120+30*SW());p.gold+=gold;
     const ids=[];for(const k of ['smith','alch','mage','smug'])for(const id of MERCH[k].pool){const d=ITEMS[id];if(!d.scroll&&!d.ch&&d.price<500&&!g.bag.some(b=>b&&b.id===id))ids.push(id)}

@@ -58,7 +58,7 @@ function playTab(){
     +'</div><div class="pside">'
       +'<h2 class="sec">Глава</h2>'+chapRow()
       +'<div class="mroute"><div class="mdesc">'+C.d+'</div>'+mrow('1',[C.maps[0]],C.boss[0])+mrow('2',[C.maps[1],C.maps[2]],C.boss[1])+mrow('3',[C.maps[3]],C.boss[2],true)
-        +'<div class="mhint">12 волн на карту · после босса — безопасная зона и выбор пути</div></div>'
+        +'<div class="mhint">'+WPM+' волн на карту · после босса — безопасная зона и выбор пути</div></div>'
       +'<h2 class="sec" style="margin-top:14px">Сложность</h2>'+ascRow()
     +'</div></div>'
     +'<div class="startbar"><button class="btn big" type="button" data-start="1">'+(rs?'Новый забег':'Начать забег')+'</button>'

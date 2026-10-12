@@ -218,7 +218,7 @@ function waveLogic(dt){
     const sw=effW(w),cap=Math.min(180,45+14*sw);
     const n=boss?1:1+Math.floor((sw-1)/3);
     if(g.en.length<cap)for(let i=0;i<n;i++)spawnEnemy(pickType(w));
-    g.spawnT=Math.max(0.28,(mapWave(w)===1&&w===1?1.3:1.0-0.045*sw))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
+    g.spawnT=Math.max(0.22,(w===1?1.1:1.0-0.045*sw)*BAL.wave.spawnK)*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
   }
   if(w>=3){
     const sw=effW(w);

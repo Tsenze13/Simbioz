@@ -122,7 +122,7 @@ with sync_playwright() as p:
     check('навыки без ошибок', not r, r[:5])
 
     print('Боссы: все приёмы')
-    for bk, ch, w in [('guard', 1, 12), ('golem', 1, 24), ('ent', 1, 36), ('sandlord', 2, 36), ('queen', 3, 36), ('devourer', 6, 36)]:
+    for bk, ch, w in [('guard', 1, 8), ('golem', 1, 16), ('ent', 1, 24), ('sandlord', 2, 24), ('queen', 3, 24), ('devourer', 6, 24)]:
         r = J("""([bk,ch,w])=>{const S=window.__sb;S.SAVE.ch=6;S.quitToMenu();S.startRun('fire',ch);const g=S.G;g.p.inv=1e9;S.startWave(w);const e=g.bossRef;
           const pats=[...new Set(S.BOSS[bk].pats.concat(S.BOSS[bk].p2))];
           for(const pt of pats){S.bossPattern(e,pt);for(let i=0;i<120;i++){g.p.hp=g.S.maxHp;S.update(1/60)}S.render()}
@@ -173,26 +173,26 @@ with sync_playwright() as p:
     r = J("""()=>{const S=window.__sb;S.SAVE.ch=6;const out={};
         for(let c=1;c<=6;c++){S.quitToMenu();S.startRun('fire',c);const g=S.G;out['c'+c]=[g.ch,g.map,S.MAPS[g.map].bio]}
         S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;
-        out.boss=[11,12,24,36,37].map(w=>S.bossKeyFor(w));
-        out.hp=[12,24,36].map(w=>Math.round(S.bossHpScale(S.bossKeyFor(w),w)*S.ET['boss_'+S.bossKeyFor(w)].hp));
-        S.startWave(12);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        out.boss=[7,8,16,24,25].map(w=>S.bossKeyFor(w));
+        out.hp=[8,16,24].map(w=>Math.round(S.bossHpScale(S.bossKeyFor(w),w)*S.ET['boss_'+S.bossKeyFor(w)].hp));
+        S.startWave(8);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
         out.safe=[g.safe,g.phase,(g.portals||[]).map(q=>q.map)];
         for(let i=0;i<600;i++)S.update(1/60);out.still=[g.safe,g.wave];
         for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();const q=g.portals[1];g.p.x=q.x;g.p.y=q.y;S.interact();out.after=[g.safe,g.wave,g.map,g.phase];
-        S.startWave(24);const b=g.bossRef;b.bar=0;n=0;while(!b.dead&&n<4000){b.hp=Math.min(b.hp,1);S.hitEnemy(b,99999,{dt:'pure',src:'skill'});n++}
+        S.startWave(16);const b=g.bossRef;b.bar=0;n=0;while(!b.dead&&n<4000){b.hp=Math.min(b.hp,1);S.hitEnemy(b,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
         out.fork2=(g.portals||[]).map(q=>q.map+(q.risk?'!':''));
         for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();const sp=g.sp;const r2=g.portals[1];g.p.x=r2.x;g.p.y=r2.y;S.interact();out.risk=g.risk;
         const w0=S.spawnEnemy('wisp');out.riskHp=w0.max;g.risk=false;const w1=S.spawnEnemy('wisp');out.normHp=w1.max;g.risk=true;
-        S.startWave(36);const f=g.bossRef;f.bar=0;n=0;while(!f.dead&&n<4000){f.hp=Math.min(f.hp,1);S.hitEnemy(f,99999,{dt:'pure',src:'skill'});n++}
+        S.startWave(24);const f=g.bossRef;f.bar=0;n=0;while(!f.dead&&n<4000){f.hp=Math.min(f.hp,1);S.hitEnemy(f,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<300&&!g.over;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
         out.win=[g.over,g.victory,!!g.riskRun];S.SAVE.ch=1;S.SAVE.chSel=1;return out}""")
     check('6 глав, у каждой своя стартовая карта своего биома', [r['c%d' % c][2] for c in range(1, 7)] == ['forest', 'dunes', 'ice', 'ash', 'storm', 'lava'] and len({r['c%d' % c][1] for c in range(1, 7)}) == 6, {k: r[k] for k in r if k.startswith('c')})
     check('босс на 12-й волне каждой карты', r['boss'] == [None, 'guard', 'golem', 'ent', None], r['boss'])
     check('здоровье боссов растёт по картам', r['hp'][0] < r['hp'][1] < r['hp'][2], r['hp'])
-    check('после босса — безопасная зона с развилкой', r['safe'][0] and r['safe'][2] == ['forest', 'bog'] and r['still'] == [True, 12], r['safe'] + r['still'])
-    check('портал ведёт на выбранную карту', r['after'] == [False, 13, 'bog', 'fight'], r['after'])
+    check('после босса — безопасная зона с развилкой', r['safe'][0] and r['safe'][2] == ['forest', 'bog'] and r['still'] == [True, 8], r['safe'] + r['still'])
+    check('портал ведёт на выбранную карту', r['after'] == [False, 9, 'bog', 'fight'], r['after'])
     check('вторая развилка: логово или тропа испытаний', r['fork2'] == ['thicket', 'thicket!'] and r['risk'] and r['riskHp'] > r['normHp'], r)
     check('победа над хранителем главы', r['win'] == [True, True, True], r['win'])
     print('Особенности карт и враги глав')
@@ -226,7 +226,7 @@ with sync_playwright() as p:
     check('Аватар бегает со своим телом без ошибок', abs(r['moved']) > 1 and not r['err'] and r['body'] == 7, r)
     print('Сохранение забега')
     r = J("""()=>{const S=window.__sb;S.SAVE.ch=6;S.quitToMenu();S.startRun('earth',2);let g=S.G;g.p.inv=1e9;S.learnSkill('quake');g.p.gold=777;
-        S.startWave(12);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        S.startWave(8);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();
         const before={ch:g.ch,wave:g.wave,map:g.map,lv:g.p.lv,gold:g.p.gold,sk:g.slots.filter(Boolean).map(s=>s.id).join(),portals:g.portals.length,el:g.el.earth};
         const ok=S.saveRun();g.over=true;S.quitToMenu();const has=!!S.runSaved();const html=document.getElementById('mpanel').innerHTML.indexOf('data-cont')>=0;
@@ -236,11 +236,17 @@ with sync_playwright() as p:
         return {ok,has,html,before,after,cleared:!S.runSaved(),next:[g.wave,g.safe,g.map]}}""")
     check('забег сохраняется в безопасной зоне', r['ok'] and r['has'] and r['html'], r)
     check('сохранённый забег продолжается как был', {k: v for k, v in r['before'].items() if k != 'gold'} == {k: v for k, v in r['after'].items() if k != 'gold'} and r['after']['gold'] >= r['before']['gold'] and r['cleared'], r)
-    check('после продолжения портал работает', r['next'][0] == 13 and not r['next'][1], r['next'])
+    check('после продолжения портал работает', r['next'][0] == 9 and not r['next'][1], r['next'])
     r = J("""()=>{const S=window.__sb;S.SAVE.mmove=true;S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;const x0=g.p.x;const c=document.getElementById('c');
         c.dispatchEvent(new PointerEvent('pointerdown',{pointerType:'mouse',button:0,clientX:innerWidth/2+300,clientY:innerHeight/2,bubbles:true}));for(let i=0;i<60;i++)S.update(1/60);
         const d=g.p.x-x0;window.dispatchEvent(new PointerEvent('pointerup',{pointerType:'mouse',button:0}));S.SAVE.mmove=false;return d}""")
     check('ходьба мышью (настройка)', r > 60, r)
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;S.startWave(2);const hp0=g.S.maxHp,out={};
+        for(let k=0;k<2;k++){g.evts=[{t:'altar',x:g.p.x+20,y:g.p.y,used:false,bob:0}];g.phase='inter';const sp=g.sp,pd=g.pending;S.interact();out['a'+k]=[g.sp-sp,g.pending-pd,Math.round(g.S.maxHp)]}
+        out.hp0=Math.round(hp0);
+        S.startWave(3);S.endWave();out.short=[g.inter,g.merch.length];S.startWave(4);S.endWave();out.long=[g.inter,g.merch.length>0];return out}""")
+    check('алтарь крови: цена и награда растут', r['a0'][0] == 1 and r['a0'][1] == 1 and r['a1'][1] == 2 and r['a1'][2] < r['a0'][2] < r['hp0'], r)
+    check('короткая передышка и пауза с торговцами через волну', r['short'][0] <= 5 and r['short'][1] == 0 and r['long'][0] >= 20 and r['long'][1], r)
     print('Меню и древо')
     r = J("""()=>{const S=window.__sb;S.quitToMenu();S.setTab('play');const b=document.querySelector('[data-start]').getBoundingClientRect();
         const names=[...document.querySelectorAll('.hpick b')].map(x=>x.textContent);
@@ -251,7 +257,7 @@ with sync_playwright() as p:
     check('герои названы по персонажам', 'Солдат' in r['names'] and 'Пиромант' in r['names'] and 'Металл' not in r['names'], r['names'])
     check('в древе только стихия героя', len([h for h in r['heads'] if h.startswith('Металл')]) == 1 and not any(h.startswith('Огонь') for h in r['heads']) and 'Симбиозы' not in r['heads'], r['heads'])
     print('Реликвии, события, комбо, сложность')
-    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(8);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<200&&!g.lvlOpen;i++)S.update(1/60);
         const cards=(g.choices||[]).map(c=>c.kind);if(g.lvlOpen)S.pickCard(0);
