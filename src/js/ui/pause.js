@@ -44,7 +44,7 @@ $('resume').addEventListener('click',togglePause);
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}
   quitArmed=0;$('quit').textContent='Выйти в меню';
-  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store()}
+  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store();clearRun()}
   quitToMenu();
 });
 function dmgRows(g){

@@ -237,6 +237,9 @@ with sync_playwright() as p:
     check('забег сохраняется в безопасной зоне', r['ok'] and r['has'] and r['html'], r)
     check('сохранённый забег продолжается как был', {k: v for k, v in r['before'].items() if k != 'gold'} == {k: v for k, v in r['after'].items() if k != 'gold'} and r['after']['gold'] >= r['before']['gold'] and r['cleared'], r)
     check('после продолжения портал работает', r['next'][0] == 9 and not r['next'][1], r['next'])
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;S.startWave(8);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}const auto=!!S.runSaved();S.clearRun();S.quitToMenu();return auto}""")
+    check('автосохранение после каждой карты', r, r)
     r = J("""()=>{const S=window.__sb;S.SAVE.mmove=true;S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;const x0=g.p.x;const c=document.getElementById('c');
         c.dispatchEvent(new PointerEvent('pointerdown',{pointerType:'mouse',button:0,clientX:innerWidth/2+300,clientY:innerHeight/2,bubbles:true}));for(let i=0;i<60;i++)S.update(1/60);
         const d=g.p.x-x0;window.dispatchEvent(new PointerEvent('pointerup',{pointerType:'mouse',button:0}));S.SAVE.mmove=false;return d}""")

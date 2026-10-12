@@ -264,6 +264,7 @@ function payEssence(win){
 function endRun(win){
   const g=G;
   if(g.over)return;
+  clearRun();
   g.over=true;mode='over';
   const add=payEssence(false);
   SAVE.runs++;SAVE.best=Math.max(SAVE.best,g.wave);
@@ -273,6 +274,7 @@ function endRun(win){
 }
 function winRun(){
   const g=G;
+  clearRun();
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
   SAVE.runs++;SAVE.wins++;

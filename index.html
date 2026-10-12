@@ -482,7 +482,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.40-бета · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.41 · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -2813,7 +2813,8 @@ function openSafeZone(){
     return {x,y}};
   opts.forEach((o,i)=>{const q=spot(i?1:-1);g.portals.push(Object.assign({x:q.x,y:q.y,bob:rnd(0,TAU)},o))});
   for(const m of (g.merch||[]).concat(g.evts||[]))for(const q of g.portals)if(Math.hypot(m.x-q.x,m.y-q.y)<150&&m.y<g.p.y-60){const s=freeSpot(m.x,g.p.y+rnd(150,230),48,160);m.x=s.x;m.y=s.y}
-  toast('Безопасная зона','Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
+  saveRun(); /* автосохранение после каждой карты: забег можно продолжить из меню */
+  toast('Безопасная зона','Забег сохранён. Враги не придут, пока вы не войдёте в портал. Торговцы рядом.');
 }
 function nearPortal(){
   const g=G;if(!g.safe||!g.portals)return null;
@@ -2825,7 +2826,7 @@ function portalName(q){return q.risk?'Тропа испытаний':MAPS[q.map]
 function usePortal(q){
   const g=G;
   g.safe=false;g.portals=[];g.risk=!!q.risk;if(g.risk)g.riskRun=true;g.evts=[];g.merch=[];
-  enterBiome(q.map);placeFeature();
+  enterBiome(q.map);placeFeature();clearRun();
   if(g.risk)toast('Тропа испытаний','Враги на '+Math.round((BAL.chap.riskHp-1)*100)+'% крепче, золота на '+Math.round((BAL.chap.riskGold-1)*100)+'% больше. Победа даст +'+Math.round((BAL.chap.riskEss-1)*100)+'% эссенции.');
   sfx(260,0.5,'sine',0.06,500);
   startWave(g.wave+1);
@@ -5684,6 +5685,7 @@ function payEssence(win){
 function endRun(win){
   const g=G;
   if(g.over)return;
+  clearRun();
   g.over=true;mode='over';
   const add=payEssence(false);
   SAVE.runs++;SAVE.best=Math.max(SAVE.best,g.wave);
@@ -5693,6 +5695,7 @@ function endRun(win){
 }
 function winRun(){
   const g=G;
+  clearRun();
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
   SAVE.runs++;SAVE.wins++;
@@ -6530,7 +6533,7 @@ $('resume').addEventListener('click',togglePause);
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}
   quitArmed=0;$('quit').textContent='Выйти в меню';
-  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store()}
+  if(G&&!G.over){const add=payEssence(false);SAVE.runs++;SAVE.best=Math.max(SAVE.best,G.wave);store();clearRun()}
   quitToMenu();
 });
 function dmgRows(g){
