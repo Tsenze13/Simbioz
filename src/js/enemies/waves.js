@@ -10,12 +10,12 @@ function startWave(w){
   if(g.shopOpen)closeShop();
   const bk=bossKeyFor(w);
   if(bk){tut('boss');
-    const BB=BAL.boss,bs=(BB.hpBase+BB.hpPerWave*Math.max(0,w-BB.hpFromWave))*(1+(w>24?BB.endlessK*(w-24):0)),pos=spawnPos();
+    const bs=bossHpScale(bk,w),pos=spawnPos();
     g.bossRef=spawnAt('boss_'+bk,pos.x,pos.y,bs,dmgMul(w),{boss:bk});
-    toast('Волна '+w+' из '+(g.endless?'∞':WAVES_TOTAL),'Босс: '+BOSS[bk].n);
+    toast(waveTitle(w),(w%(WPM*3)===0&&!g.endless?'Хранитель главы: ':'Босс: ')+BOSS[bk].n);
     sfx(70,0.7,'sawtooth',0.07,-20);
   }else{
-    toast('Волна '+w+(g.endless?'':' из '+WAVES_TOTAL),w===1?'Двигайся, пока оружие бьёт само':'');
+    toast(waveTitle(w),w===1?'Двигайся, пока оружие бьёт само':'');
     sfx(300,0.2,'triangle',0.05,300);
   }
   g.dockSig='';
@@ -28,17 +28,22 @@ function endWave(){
   for(const m of g.gem)m.fly=true;
   g.vac=4;
   heal(g.S.maxHp*ascMod('heal'));p.mana=g.S.maxMana;
-  {const nb=biomeFor(g.wave+1);if(nb!==g.map)enterBiome(nb)}
   stockMerchants();
   spawnEvents();trialReward();
   {const bk=bossKeyFor(g.wave);if(bk&&g.bossDead)g.relicQ=bk}
+  if(bossKeyFor(g.wave)&&!g.endless&&g.wave<WAVES_TOTAL){openSafeZone();sfx(500,0.4,'triangle',0.06,300);return}
   toast('Волна '+g.wave+' пройдена',(g.merch.some(m=>m.id==='tycoon')?'Пришёл Магнат Мидас! ':'')+'Пауза 60 секунд. Торговцы рядом.'+((g.wave+1)%6===0?' Копите золото: после следующей волны может прийти Магнат ('+tycoonNeed2(g.wave+1)+'+).':''));
   sfx(500,0.4,'triangle',0.06,300);
+}
+function waveTitle(w){
+  const g=G;
+  if(g.endless)return 'Волна '+w+' · бесконечный режим';
+  return 'Карта '+mapStage(w)+' из 3 · волна '+mapWave(w)+' из '+WPM;
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a}
 function priceOf(id,mid){
   const g=G,d=ITEMS[id];
-  let pr=d.price*(1+0.03*(g.wave-1))*(1-0.03*(SAVE.meta.discount||0));
+  let pr=d.price*(1+0.03*(SW()-1))*(1-0.03*(SAVE.meta.discount||0));
   if(mid==='smug')pr*=1.15;
   pr*=ascMod('price');
   return Math.max(10,Math.round(pr/5)*5);
@@ -59,8 +64,8 @@ function genStock(mid){
   }
   return list.map(id=>({id:id,sold:false}));
 }
-function tycoonNeed2(w){return 200+25*w}
-function tycoonNeed(){return 200+25*G.wave}
+function tycoonNeed2(w){return Math.round(200+25*effW(w))}
+function tycoonNeed(){return tycoonNeed2(G.wave)}
 function invPrice(s){return Math.round(s.p*(1+0.55*((G.inv||{})[s.k]||0))/5)*5}
 function awkPrice(){return BAL.shop.awkBase+BAL.shop.awkStep*(G.awk||0)}
 function stockMerchants(){

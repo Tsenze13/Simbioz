@@ -42,10 +42,14 @@ CAST.zones=(pr,c)=>{
 };
 /* одна «порция» удерживаемой струи (вызывается каждые pr.tick секунд, пока держат кнопку) */
 CAST.channel=(pr,c)=>{
-  const k=Math.max(2,Math.round(pr.n/4));
-  for(let i=0;i<k;i++){const a=c.ang+(Math.random()-0.5)*pr.spread,sp=pr.spd*rnd(0.85,1.1);
-    shoot({vis:pr.vis,x:c.px+Math.cos(c.ang)*10,y:c.py+Math.sin(c.ang)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:pr.r,dmg:pr.dmg*0.18,dt:pr.dt,life:pr.life*rnd(1.1,1.45),pierce:pr.pierce,col:pr.col||c.col,st:pr.st,src:'proj'})}
+  /* удерживаемая струя: каждые 0,09 с бьёт всех в конусе перед героем (без летящих снарядов) */
+  const g=G,R=jetLen(pr),arc=pr.spread*1.15;let hits=0;g.jetN=(g.jetN||0)+1;const qt=g.jetN%4!==0;
+  for(const e of g.en){if(e.dead||e.sub)continue;const dx=e.x-c.px,dy=e.y-c.py,d=Math.hypot(dx,dy);if(d>R+e.r)continue;
+    const w=Math.max(0.35,arc/2+e.r/Math.max(30,d));if(Math.abs(angd(Math.atan2(dy,dx),c.ang))>w)continue;
+    hitEnemy(e,pr.dmg*0.16,{dt:pr.dt,st:pr.st,col:pr.col,src:'skill',aoe:true,quiet:qt});hits++}
+  g.jet={x:c.px,y:c.py,ang:c.ang,len:R,arc:arc,t:0.14};
 };
+function jetLen(pr){return pr.spd*pr.life*1.3*(1+G.S.area*0.4)}
 CAST.proj=(pr,c)=>{
   const n=pr.n;
   for(let i=0;i<n;i++){
@@ -112,7 +116,9 @@ CAST.leap=(pr,c)=>{
 };
 CAST.wall=(pr,c)=>{
   const g=G,t=clampRange(c,pr.range||300),px=-Math.sin(c.ang),py=Math.cos(c.ang),n=pr.n;
-  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st})}
+  const wid=(g.wid=(g.wid||0)+1);
+  for(let i=0;i<n;i++){const o=(i-(n-1)/2)*pr.gap;addZone(t.x+px*o,t.y+py*o,{r:pr.r,life:pr.life,dps:pr.dps,dt:pr.dt,vis:pr.vis,col:pr.col,st:pr.st});g.zn[g.zn.length-1].wid=wid}
+  const h=(n-1)/2*pr.gap+pr.r*0.6;(g.walls||(g.walls=[])).push({x0:t.x-px*h,y0:t.y-py*h,x1:t.x+px*h,y1:t.y+py*h,t0:g.t,dur:pr.life,col:pr.col});
 };
 CAST.strikes=(pr,c)=>{
   const g=G,t=clampRange(c,440);

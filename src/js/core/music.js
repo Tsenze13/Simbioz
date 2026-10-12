@@ -63,7 +63,7 @@ const MUS=(function(){
     if(mode!=='menu'&&G){
       if(G.over){w=0}
       else if(G.bossRef&&!G.bossRef.dead&&G.phase==='fight'){m='boss';c=false}
-      else{m=MOODS[G.map]?G.map:'ash';c=G.phase!=='fight'}
+      else{m=MOODS[bio(G.map)]?bio(G.map):'ash';c=G.phase!=='fight'}
       if(G.paused)w=0.35;
     }
     if(m!==mood){mood=m;ci=0;step=0}

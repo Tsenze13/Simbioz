@@ -53,7 +53,7 @@ function useEvent(v){
     p.hp-=cost;g.sp++;g.pending++;
     ring(v.x,v.y,120,'#ff4d5e',0.6);puff(p.x,p.y,'#ff4d5e',20,200,0.6,3);toast('Алтарь крови','+1 очко навыков и карточка уровня');
   }else if(v.t==='chest'){
-    const gold=Math.round(120+30*w);p.gold+=gold;
+    const gold=Math.round(120+30*SW());p.gold+=gold;
     const ids=[];for(const k of ['smith','alch','mage','smug'])for(const id of MERCH[k].pool){const d=ITEMS[id];if(!d.scroll&&!d.ch&&d.price<500&&!g.bag.some(b=>b&&b.id===id))ids.push(id)}
     const id=pickOf(ids);let got='';
     if(id&&addToBag(id)){recalc();got=' и «'+ITEMS[id].n+'»'}else if(id){p.gold+=Math.round(ITEMS[id].price*0.5);got=' (рюкзак полон — ещё золото)'}
@@ -67,7 +67,7 @@ function useEvent(v){
 }
 function trialReward(){
   const g=G;if(g.trialW!==g.wave)return;
-  const gold=Math.round(150+40*g.wave);g.p.gold+=gold;g.sp++;heal(g.S.maxHp*0.5);g.trialW=0;
+  const gold=Math.round(150+40*SW());g.p.gold+=gold;g.sp++;heal(g.S.maxHp*0.5);g.trialW=0;
   toast('Испытание пройдено','+'+gold+' золота, +1 очко навыков, лечение');
 }
 function drawEvents(g){

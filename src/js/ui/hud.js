@@ -118,12 +118,15 @@ function hud(){
   const gd=Math.floor(p.gold);
   if(hc.gold!==gd){hc.gold=gd;$('gold').innerHTML='<span class="coin"></span>'+gd;$('gold2').innerHTML='<span class="coin"></span>'+gd}
   /* волна */
-  setText('waveL',g.endless?('Волна '+g.wave+' · бесконечный режим'):('Волна '+g.wave+' из '+WAVES_TOTAL));
+  setText('waveL',g.endless?('Волна '+g.wave+' · бесконечный режим'):('Карта '+mapStage(g.wave)+'/3 · волна '+mapWave(g.wave)+'/'+WPM));
   const boss=!!bossKeyFor(g.wave);
   if(g.phase==='fight'){
     setText('waveT',boss?'Босс':fmt(g.waveDur-g.wt));
-    const nb=4-((g.wave-1)%4);
-    setText('waveS',(boss?'Победи босса, чтобы закончить волну':('До конца волны · врагов '+g.en.length))+(!g.endless&&g.wave<WAVES_TOTAL?' · смена карты: '+nb+' в.':''));
+    const nb=WPM-mapWave(g.wave);
+    setText('waveS',(boss?(g.wave%(WPM*3)===0&&!g.endless?'Победи хранителя главы':'Победи босса, чтобы пройти карту'):('До конца волны · врагов '+g.en.length))+(!g.endless&&nb>0?' · босс через '+nb+' в.':''));
+  }else if(g.safe){
+    setText('waveT','Отдых');
+    setText('waveS','Безопасная зона. Закупись и войди в портал ('+keyName(SAVE.keys.use)+'), когда будешь готов.');
   }else{
     setText('waveT',fmt(g.inter));
     setText('waveS','Пауза. Подойди к торговцу. Enter начнёт волну раньше.');
@@ -136,12 +139,12 @@ function hud(){
   const br=g.bossRef&&!g.bossRef.dead;
   if(hc.boss!==br){hc.boss=br;$('boss').hidden=!br}
   if(br){setText('bossN',g.bossRef.name+(g.bossRef.bar>0?' · барьер '+Math.ceil(g.bossRef.bar/g.bossRef.barMax*100)+'%':'')+(g.bossRef.phase>1?' · фаза '+g.bossRef.phase:''));$('bossF').style.transform='scaleX('+clamp(g.bossRef.hp/g.bossRef.max,0,1)+')'}
-  const nm=g.phase==='inter'?nearMerchant():null,ne=!nm&&g.phase==='inter'?nearEvent():null;
-  const key=nm?'m'+nm.id:(ne?'e'+ne.t:'');
+  const np=nearPortal(),nm=!np&&g.phase==='inter'?nearMerchant():null,ne=!nm&&!np&&g.phase==='inter'?nearEvent():null;
+  const key=nm?'m'+nm.id:(np?'p'+np.map+np.risk:(ne?'e'+ne.t:''));
   {const cd=dashCd().toFixed(1),dc=g.p.dch+'/'+(1+(g.S.dch||0))+' · '+cd+'с';if(hc.dc!==dc){hc.dc=dc;$('dashBtn').textContent='Рывок '+dc;$('dashBtn').title='Заряды рывка и время перезарядки одного заряда'}}
-  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;$('useBtn').textContent=nm?MERCH[nm.id].n:(ne?EVTS[ne.t].n:'')}
-  if((nm||ne)&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+(nm?MERCH[nm.id].n:EVTS[ne.t].n);
-  const inter=g.phase==='inter';
+  if(hc.nm!==key){hc.nm=key;$('prompt').hidden=!key||uiTouch;$('useBtn').hidden=!key;$('useBtn').textContent=nm?MERCH[nm.id].n:(np?'Портал':(ne?EVTS[ne.t].n:''))}
+  if((nm||np||ne)&&!uiTouch)$('prompt').textContent=keyName(SAVE.keys.use)+' — '+(nm?MERCH[nm.id].n:(np?'войти: '+portalName(np):EVTS[ne.t].n));
+  const inter=g.phase==='inter'&&!g.safe;
   if(hc.inter!==inter){hc.inter=inter;$('skipBtn').hidden=!inter}
 }
 function tipFor(k,i){

@@ -98,6 +98,7 @@ function drawMeteorSpr(b,pr){
 function drawZones(g){
   for(const z of g.zn){
     if(!vis(z.x,z.y,z.r+20))continue;
+    if(z.wid)continue;
     if(zoneSpr(z))continue;
     const fade=Math.min(1,z.life/0.5);
     const hot=z.kind==='lava'||z.kind==='wildfire';
@@ -128,21 +129,10 @@ function drawBlasts(g){
   for(const b of g.bl){
     if(!vis(b.x,b.y,b.r+100))continue;
     const pr=clamp(1-b.t/b.max,0,1);
-    ctx.strokeStyle=rgba(b.col,0.3+0.45*pr);ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.stroke();
-    ctx.fillStyle=rgba(b.col,0.16);ctx.beginPath();ctx.arc(b.x,b.y,b.r*pr,0,TAU);ctx.fill();
+    drawRainMark(b,pr);
     if(b.vis==='meteor')drawMeteorSpr(b,pr);
-    else if(b.vis==='drop'){
-      const k=1-pr,mx=b.x+k*30,my=b.y-k*300;
-      ctx.strokeStyle='rgba(160,220,255,.75)';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+8,my-60);ctx.stroke();ctx.lineCap='butt';
-      ctx.fillStyle='#d6f2ff';ctx.beginPath();ctx.arc(mx,my,4,0,TAU);ctx.fill();
-    }
-    else if(b.vis==='shell'){
-      const k=1-pr,mx=b.x+k*90,my=b.y-k*320;
-      ctx.strokeStyle=b.vis==='meteor'?'rgba(255,150,70,.8)':'rgba(220,235,255,.8)';ctx.lineWidth=4;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+30,my-100);ctx.stroke();ctx.lineCap='butt';
-      ctx.fillStyle=b.vis==='meteor'?'#ffb347':'#ffffff';ctx.beginPath();ctx.arc(mx,my,8,0,TAU);ctx.fill();
-    }
+    else if(b.vis==='drop')drawRainDrop(b,pr,'#e6f5ff');
+    else if(b.vis==='shell')drawRainDrop(b,pr,'#fff0d0');
   }
 }
 function drawTelegraphs(g){

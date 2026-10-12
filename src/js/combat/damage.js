@@ -104,7 +104,7 @@ function hitEnemy(e,dmg,o){
   }
   if(e.hp>0){
     if(o.st)applySt(e,o.st,E.dm);
-    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[(3+0.6*g.wave)*(g.syn.fangs?1.5:1),3]},1);
+    if(g.ifx&&g.ifx.venom&&!dot&&!zone)applySt(e,{poison:[(3+0.6*SW())*(g.syn.fangs?1.5:1),3]},1);
     if(overload){
       g.shake=Math.max(g.shake,3);
       explodeAt(e.x,e.y,70,eff*0.8/Math.max(0.01,E.dm),{dt:'magic',col:'#ffb347',src:'skill',noReact:true});
@@ -114,11 +114,11 @@ function hitEnemy(e,dmg,o){
 }
 function dropLoot(e){
   const g=G,t=e.type,r=Math.random(),d=e.def;
-  const gv=Math.max(1,Math.round(d.gold*(1+(g.wave-1)*0.06)));
+  const gv=Math.max(1,Math.round(d.gold*(1+(SW()-1)*0.06)));
   if(e.boss){
     for(let i=0;i<3;i++)addGem(e.x+rnd(-40,40),e.y+rnd(-40,40),'xl');
     for(let i=0;i<8;i++){const a=rnd(0,TAU),dd=rnd(20,80);addGem(e.x+Math.cos(a)*dd,e.y+Math.sin(a)*dd,'l')}
-    for(let i=0;i<8;i++){const a=rnd(0,TAU),dd=rnd(20,90);addCoin(e.x+Math.cos(a)*dd,e.y+Math.sin(a)*dd,10+g.wave*2.5)}
+    for(let i=0;i<8;i++){const a=rnd(0,TAU),dd=rnd(20,90);addCoin(e.x+Math.cos(a)*dd,e.y+Math.sin(a)*dd,10+SW()*2.5)}
     addPickup(e.x-24,e.y,'heal');addPickup(e.x+24,e.y,'magnet');
     return;
   }
@@ -148,7 +148,7 @@ function usePickup(type){
   else if(type==='magnet'){for(const m of g.gem)m.fly=true;g.vac=3}
   else if(type==='shield')g.shield=Math.max(g.shield,6);
   else if(type==='bomb'){
-    const dmg=(40+g.wave*14);
+    const dmg=(40+SW()*14);
     for(const e of g.en){
       if(e.dead||!vis(e.x,e.y,40))continue;
       hitEnemy(e,dmg,{dt:'magic',aoe:true,col:'#ffb347'});

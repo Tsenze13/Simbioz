@@ -23,7 +23,7 @@ function tryDash(){
   if(g.start==='air'&&g.pl>=3){g.bf.dm={t:2,v:Math.max(0.2,g.bf.dm.t>0?g.bf.dm.v:0)};tickBuffs(0)}
   g.dashHit=null;g.dashSp=0;
   if(g.ifx&&g.ifx.shadow)g.shdT=2.5;
-  if(g.ifx&&g.ifx.voidstep){const x=p.x,y=p.y,dm=30+12*g.wave;ring(x,y,95,'#a83bd0',0.3);g.later.push({t:0.25,fn:()=>explodeAt(x,y,95,dm,{dt:'magic',col:'#a83bd0',knock:200,src:'item',sk:'__item',shake:3})})}
+  if(g.ifx&&g.ifx.voidstep){const x=p.x,y=p.y,dm=30+12*SW();ring(x,y,95,'#a83bd0',0.3);g.later.push({t:0.25,fn:()=>explodeAt(x,y,95,dm,{dt:'magic',col:'#a83bd0',knock:200,src:'item',sk:'__item',shake:3})})}
   g.dashT=0.18;p.dch--;p.dash=0.28;p.inv=Math.max(p.inv,0.32);
   if(g.start==='earth'){g.curSk='__dash';const n=g.plates||0;explodeAt(p.x,p.y,78*(1+0.18*n),(22+7*g.el.earth)*(1+0.45*n),{dt:'phys',col:'#c9974f',knock:320+40*n,st:{stun:0.5+0.15*n},src:'skill',spike:true});g.shake=Math.max(g.shake,5+n);if(n){g.plates=0;tickBuffs(0);ring(p.x,p.y,78*(1+0.18*n)+20,'#e8c38a',0.5);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-36,t:0.9,txt:'Плиты ×'+n,big:true,col:'#e8c38a'})}g.curSk=null}
   ring(p.x,p.y,40,'#8febd0',0.3);puff(p.x,p.y,'#8febd0',14,200,0.4,3);
@@ -104,9 +104,9 @@ function itemFx(dt){
   if(g.phase!=='fight')return;
   if(F.thunder){g.thT=(g.thT||0)-dt;if(g.thT<=0){g.thT=g.syn.storm?1.5:2.5;let best=null,bh=0;
     for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2>480*480)continue;if(e.hp>bh){bh=e.hp;best=e}}
-    if(best){chainBolt(best.x+rnd(-30,30),best.y-320,best,0,60+14*g.wave,0,{dt:'magic',shock:true,col:'#f4f08a',src:'item'});ring(best.x,best.y,40,'#f4f08a',0.3);g.shake=Math.max(g.shake,3);sfx(900,0.12,'sawtooth',0.03,-600)}}}
+    if(best){chainBolt(best.x+rnd(-30,30),best.y-320,best,0,60+14*SW(),0,{dt:'magic',shock:true,col:'#f4f08a',src:'item'});ring(best.x,best.y,40,'#f4f08a',0.3);g.shake=Math.max(g.shake,3);sfx(900,0.12,'sawtooth',0.03,-600)}}}
   if(F.aura){g.auT=(g.auT||0)-dt;if(g.auT<=0){g.auT=0.5;for(const e of g.en){if(e.dead||e.sub)continue;if((e.x-p.x)**2+(e.y-p.y)**2<((g.syn.flame?170:120)+e.r)**2)applySt(e,{burn:[(5+1.3*g.wave)*(g.syn.flame?1.5:1),1.2]},1)}}}
-  if(F.phoenix&&p.hp<g.S.maxHp*0.3&&g.t>(g.phU||0)){g.phU=g.t+60;heal(g.S.maxHp*0.35);explodeAt(p.x,p.y,230,40+15*g.wave,{dt:'magic',col:'#ffb347',st:{burn:[8+2*g.wave,3]},knock:320,src:'item',shake:9});ring(p.x,p.y,260,'#ffd36b',0.8);puff(p.x,p.y,'#ffb347',30,300,0.8,4);toast('Перо феникса','Вы восстали из пламени')}
+  if(F.phoenix&&p.hp<g.S.maxHp*0.3&&g.t>(g.phU||0)){g.phU=g.t+60;heal(g.S.maxHp*0.35);explodeAt(p.x,p.y,230,40+15*SW(),{dt:'magic',col:'#ffb347',st:{burn:[8+2*g.wave,3]},knock:320,src:'item',shake:9});ring(p.x,p.y,260,'#ffd36b',0.8);puff(p.x,p.y,'#ffb347',30,300,0.8,4);toast('Перо феникса','Вы восстали из пламени')}
 }
 function drawItemFx(g){
   const F=g.ifx,p=g.p;if(!F)return;
@@ -169,7 +169,7 @@ function update(dt){
     if(m.fly){const s=g.vac>0?900:400;m.x+=dx/d*s*dt;m.y+=dy/d*s*dt}
     if(d<p.r+7){
       m.dead=true;
-      if(m.k==='coin'){p.gold+=Math.max(1,Math.round(m.v*(1+S.goldm)));sfx(900,0.03,'sine',0.015)}
+      if(m.k==='coin'){p.gold+=Math.max(1,Math.round(m.v*(1+S.goldm)*(g.risk?BAL.chap.riskGold:1)));sfx(900,0.03,'sine',0.015)}
       else{gainXp(m.v);sfx(600+Math.min(600,m.v*30+p.lv*8),0.04,'sine',0.02)}
     }
   }
@@ -203,6 +203,7 @@ function update(dt){
 function waveLogic(dt){
   const g=G,w=g.wave;
   if(g.phase==='inter'){
+    if(g.safe)return; /* безопасная зона: ждём, пока герой войдёт в портал */
     g.inter-=dt;
     if(g.inter<=0)startWave(w+1);
     return;
@@ -212,16 +213,17 @@ function waveLogic(dt){
   hazards(dt);
   g.spawnT-=dt;
   if(g.spawnT<=0){
-    const cap=Math.min(180,45+14*w);
-    const n=boss?1:1+Math.floor((w-1)/3);
+    const sw=effW(w),cap=Math.min(180,45+14*sw);
+    const n=boss?1:1+Math.floor((sw-1)/3);
     if(g.en.length<cap)for(let i=0;i<n;i++)spawnEnemy(pickType(w));
-    g.spawnT=Math.max(0.28,(w===1?1.3:1.0-0.045*w))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
+    g.spawnT=Math.max(0.28,(mapWave(w)===1&&w===1?1.3:1.0-0.045*sw))*(boss?2:1)/(MAPS[g.map].foe.cnt||1)/(g.trialW===w?1.4:1);
   }
   if(w>=3){
+    const sw=effW(w);
     g.eliteT-=dt;
     if(g.eliteT<=0&&g.en.length<170){
       spawnEnemy(eliteType(w),{elite:true});
-      g.eliteT=rnd(Math.max(8,18-0.4*w),Math.max(12,26-0.6*w))*ascMod('elite');
+      g.eliteT=rnd(Math.max(8,18-0.4*sw),Math.max(12,26-0.6*sw))*ascMod('elite');
       toast('Элита','Золотая обводка: падает бонус и крупные кристаллы');
     }
   }
@@ -229,7 +231,7 @@ function waveLogic(dt){
     g.evT-=dt;
     if(g.evT<=0){
       g.evT=rnd(24,34);
-      const a=rnd(0,TAU),n=8+2*w,d=Math.hypot(VW,VH)/2+90;
+      const a=rnd(0,TAU),n=8+Math.round(2*effW(w)),d=Math.hypot(VW,VH)/2+90;
       for(let i=0;i<n&&g.en.length<200;i++){
         const aa=a+rnd(-0.6,0.6),dd=d+rnd(0,70);
         spawnAt(Math.random()<0.5?'swift':'wisp',g.p.x+Math.cos(aa)*dd,g.p.y+Math.sin(aa)*dd,hpMul(w),dmgMul(w));
@@ -249,7 +251,7 @@ function waveLogic(dt){
   }else if(g.wt>=g.waveDur)endWave();
 }
 function essenceFor(g,win){
-  return Math.round((g.wave*6+g.kills/15+g.bossKills*20+(win||g.endless?120:0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0))*(1+0.25*(g.asc||0)));
+  return Math.round((g.wave*4+g.kills/15+g.bossKills*20+(win||g.endless?80+40*(g.ch||1):0)+(g.endless?(g.wave-WAVES_TOTAL)*8:0))*(1+0.25*(g.asc||0))*(win&&g.riskRun?BAL.chap.riskEss:1));
 }
 function payEssence(win){
   const g=G,total=essenceFor(g,win),add=Math.max(0,total-(g.essPaid||0));
@@ -271,14 +273,17 @@ function winRun(){
   const g=G;
   g.over=true;mode='over';g.victory=true;
   const add=payEssence(true);
-  SAVE.runs++;SAVE.wins++;if((g.asc||0)>=(SAVE.asc||0)&&(SAVE.asc||0)<ASC.length-1){SAVE.asc=(g.asc||0)+1;toast('Открыта '+ASC[SAVE.asc].n,ASC[SAVE.asc].d)}SAVE.best=Math.max(SAVE.best,g.wave);
+  SAVE.runs++;SAVE.wins++;
+  if((g.ch||1)>=(SAVE.ch||1)&&(SAVE.ch||1)<CHAP.length){SAVE.ch=(g.ch||1)+1;SAVE.chSel=SAVE.ch;toast('Открыта глава '+SAVE.ch,CHAP[SAVE.ch-1].n)}
+  if((g.ch||1)===CHAP.length&&(g.asc||0)>=(SAVE.asc||0)&&(SAVE.asc||0)<ASC.length-1){SAVE.asc=(g.asc||0)+1;toast('Открыта '+ASC[SAVE.asc].n,ASC[SAVE.asc].d)}SAVE.best=Math.max(SAVE.best,g.wave);
   store();
   showOver(true,add);
   sfx(520,0.6,'triangle',0.06,400);
 }
-function startRun(el){
-  G=mkState(el,biomeFor(1));
-  const g=G;
+function startRun(el,ch){
+  ch=clamp(ch||SAVE.chSel||1,1,Math.min(CHAP.length,SAVE.ch||1));
+  G=mkState(el,CHAP[ch-1].maps[0]);
+  const g=G;g.ch=ch;
   mode='play';
   if(el==='avatar')g.pending++;else g.el[el]=1;
   recalc();
@@ -301,13 +306,14 @@ function quitToMenu(){
 }
 function skipWave(){
   const g=G;
-  if(!g||mode!=='play'||uiOpen()||g.phase!=='inter')return;
+  if(!g||mode!=='play'||uiOpen()||g.phase!=='inter'||g.safe)return;
   startWave(g.wave+1);
 }
 function interact(){
   const g=G;
   if(!g||mode!=='play'||uiOpen())return;
   const m=nearMerchant();
+  const q=nearPortal();if(q){usePortal(q);return}
   if(m){openShop(m);return}
   const v=nearEvent();if(v)useEvent(v);
 }

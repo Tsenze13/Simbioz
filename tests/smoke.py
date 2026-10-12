@@ -47,6 +47,9 @@ with sync_playwright() as p:
     r = J("""()=>{const S=window.__sb,g=S.G;const n=Object.keys(g.dmgBy||{}).length;S.endRun(false);
         return {src:n,rows:document.querySelectorAll('#goDmg .dr').length,over:!document.getElementById('over').hidden}}""")
     check('итоги забега: урон по источникам', r['src'] > 0 and r['rows'] > 0 and r['over'], r)
+    r = J("""()=>{const X=window.__x,c=document.createElement('canvas').getContext('2d');const out={};
+        for(const k of ['pistol','shotgun','rifle','smg','launcher','sniper','grenade']){X.SP[k](c,k==='grenade'?0:1);out[k]=X.SP[k]===X.GUNART[k]}return out}""")
+    check('новые спрайты оружия Солдата рисуются', all(r.values()), r)
     r = J("()=>{const S=window.__sb;S.SAVE.tut={};S.SAVE.hints=true;S.quitToMenu();S.startRun('fire');S.update(1/60);return document.getElementById('hint').innerText}")
     check('подсказка новичку', 'Управление' in r, r[:40])
 
@@ -119,12 +122,12 @@ with sync_playwright() as p:
     check('навыки без ошибок', not r, r[:5])
 
     print('Боссы: все приёмы')
-    for bk, w in [('guard', 4), ('ent', 8), ('queen', 12), ('golem', 16), ('sandlord', 20), ('devourer', 24)]:
-        r = J("""([bk,w])=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;g.p.inv=1e9;S.startWave(w);const e=g.bossRef;
+    for bk, ch, w in [('guard', 1, 12), ('golem', 1, 24), ('ent', 1, 36), ('sandlord', 2, 36), ('queen', 3, 36), ('devourer', 6, 36)]:
+        r = J("""([bk,ch,w])=>{const S=window.__sb;S.SAVE.ch=6;S.quitToMenu();S.startRun('fire',ch);const g=S.G;g.p.inv=1e9;S.startWave(w);const e=g.bossRef;
           const pats=[...new Set(S.BOSS[bk].pats.concat(S.BOSS[bk].p2))];
           for(const pt of pats){S.bossPattern(e,pt);for(let i=0;i<120;i++){g.p.hp=g.S.maxHp;S.update(1/60)}S.render()}
           e.hp=e.max*0.5;for(let i=0;i<60;i++)S.update(1/60);
-          return {key:e.bkey,pats:pats.length,phase:e.phase,bar:e.bar>0||e.dead}}""", [bk, w])
+          return {key:e.bkey,pats:pats.length,phase:e.phase,bar:e.bar>0||e.dead}}""", [bk, ch, w])
         check('босс ' + bk, r['key'] == bk and r['phase'] >= 2, r)
 
     print('Оружие и модификации')
@@ -166,8 +169,34 @@ with sync_playwright() as p:
     check('лавка открывается', r['ok'])
     check('эффекты предметов', r['fx'] == 6 and r['phoenix'], r)
 
+    print('Главы и карты')
+    r = J("""()=>{const S=window.__sb;S.SAVE.ch=6;const out={};
+        for(let c=1;c<=6;c++){S.quitToMenu();S.startRun('fire',c);const g=S.G;out['c'+c]=[g.ch,g.map,S.MAPS[g.map].bio]}
+        S.quitToMenu();S.startRun('fire',1);const g=S.G;g.p.inv=1e9;
+        out.boss=[11,12,24,36,37].map(w=>S.bossKeyFor(w));
+        out.hp=[12,24,36].map(w=>Math.round(S.bossHpScale(S.bossKeyFor(w),w)*S.ET['boss_'+S.bossKeyFor(w)].hp));
+        S.startWave(12);const e=g.bossRef;e.bar=0;let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
+        out.safe=[g.safe,g.phase,(g.portals||[]).map(q=>q.map)];
+        for(let i=0;i<600;i++)S.update(1/60);out.still=[g.safe,g.wave];
+        for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();const q=g.portals[1];g.p.x=q.x;g.p.y=q.y;S.interact();out.after=[g.safe,g.wave,g.map,g.phase];
+        S.startWave(24);const b=g.bossRef;b.bar=0;n=0;while(!b.dead&&n<4000){b.hp=Math.min(b.hp,1);S.hitEnemy(b,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<200;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
+        out.fork2=(g.portals||[]).map(q=>q.map+(q.risk?'!':''));
+        for(let k=0;k<30&&g.lvlOpen;k++)S.pickCard(0);if(g.treeOpen)S.closeTree();const sp=g.sp;const r2=g.portals[1];g.p.x=r2.x;g.p.y=r2.y;S.interact();out.risk=g.risk;
+        const w0=S.spawnEnemy('wisp');out.riskHp=w0.max;g.risk=false;const w1=S.spawnEnemy('wisp');out.normHp=w1.max;g.risk=true;
+        S.startWave(36);const f=g.bossRef;f.bar=0;n=0;while(!f.dead&&n<4000){f.hp=Math.min(f.hp,1);S.hitEnemy(f,99999,{dt:'pure',src:'skill'});n++}
+        for(let i=0;i<300&&!g.over;i++){if(g.lvlOpen)S.pickCard(0);S.update(1/60)}
+        out.win=[g.over,g.victory,!!g.riskRun];S.SAVE.ch=1;S.SAVE.chSel=1;return out}""")
+    check('6 глав, у каждой своя стартовая карта своего биома', [r['c%d' % c][2] for c in range(1, 7)] == ['forest', 'dunes', 'ice', 'ash', 'storm', 'lava'] and len({r['c%d' % c][1] for c in range(1, 7)}) == 6, {k: r[k] for k in r if k.startswith('c')})
+    check('босс на 12-й волне каждой карты', r['boss'] == [None, 'guard', 'golem', 'ent', None], r['boss'])
+    check('здоровье боссов растёт по картам', r['hp'][0] < r['hp'][1] < r['hp'][2], r['hp'])
+    check('после босса — безопасная зона с развилкой', r['safe'][0] and r['safe'][2] == ['forest', 'bog'] and r['still'] == [True, 12], r['safe'] + r['still'])
+    check('портал ведёт на выбранную карту', r['after'] == [False, 13, 'bog', 'fight'], r['after'])
+    check('вторая развилка: логово или тропа испытаний', r['fork2'] == ['thicket', 'thicket!'] and r['risk'] and r['riskHp'] > r['normHp'], r)
+    check('победа над хранителем главы', r['win'] == [True, True, True], r['win'])
     print('Реликвии, события, комбо, сложность')
-    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(4);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();S.startRun('fire');const g=S.G;S.startWave(12);g.p.inv=1e9;const e=g.bossRef;e.bar=0;
         let n=0;while(!e.dead&&n<4000){e.hp=Math.min(e.hp,1);S.hitEnemy(e,99999,{dt:'pure',src:'skill'});n++}
         for(let i=0;i<200&&!g.lvlOpen;i++)S.update(1/60);
         const cards=(g.choices||[]).map(c=>c.kind);if(g.lvlOpen)S.pickCard(0);

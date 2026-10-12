@@ -14,10 +14,16 @@ function renderMenu(){
   else if(menuTab==='bestiary'){P.innerHTML=bestiaryTab();if(!bestRaf)bestRaf=requestAnimationFrame(bestLoop)}
   else P.innerHTML=keysTab();
 }
+function chapRow(){
+  const mx=SAVE.ch||1;let h='';
+  CHAP.forEach((C,i)=>{const n=i+1,lock=n>mx,M=MAPS[C.maps[0]];
+    h+='<button class="chb'+((SAVE.chSel||1)===n?' on':'')+'" type="button" data-ch="'+n+'"'+(lock?' disabled':'')+' style="--c1:'+M.glow+';--b:'+M.base+'"><small>Глава '+n+'</small><b>'+(lock?'🔒 '+C.n:C.n)+'</b></button>'});
+  return '<div class="chrow">'+h+'</div>';
+}
 function routeHtml(){
-  let h='';
-  BIOMES.forEach((id,i)=>{const M=MAPS[id];h+='<div class="rt" style="--c1:'+M.glow+';--a:'+M.acc+';--b:'+M.base+'"><span class="msw"></span><b>'+M.n+'</b><small>Волны '+(2*i+1)+'–'+(2*i+2)+'</small><em class="up">▲ '+M.mods.buff.n+'</em><em class="dn">▼ '+M.mods.debuff.n+'</em></div>'});
-  return h;
+  const C=CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)];
+  const card=(id,lab,boss)=>{const M=MAPS[id];return '<div class="rt" style="--c1:'+M.glow+';--a:'+M.acc+';--b:'+M.base+'"><span class="msw"></span><b>'+M.n+'</b><small>'+lab+' · босс: '+BOSS[boss].n+'</small><em class="up">▲ '+M.mods.buff.n+'</em><em class="dn">▼ '+M.mods.debuff.n+'</em></div>'};
+  return card(C.maps[0],'Карта 1',C.boss[0])+'<div class="rfork">'+card(C.maps[1],'Карта 2 · путь А',C.boss[1])+card(C.maps[2],'Карта 2 · путь Б',C.boss[1])+'</div>'+card(C.maps[3],'Карта 3 · логово',C.boss[2]);
 }
 function playTab(){
   let picks='';
@@ -34,10 +40,10 @@ function playTab(){
     const other=a.pair[0]===menuEl?a.pair[1]:a.pair[0];
     syms+='<span class="chip"><span class="orb sm dual" style="--c1:'+a.c1+';--c2:'+a.c2+'"></span><b>'+a.n+'</b> с '+EL[other].n+' · ульта: '+ULTMOD[other]+'</span>';
   }
-  return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Маршрут забега: местность меняется каждые две волны</h2><div class="route">'+routeHtml()+'</div></div>'
+  return '<section><div><h2 class="sec">Стартовая стихия</h2><div class="picks">'+picks+'</div></div><div><h2 class="sec">Глава</h2>'+chapRow()+'<div class="sub" style="margin:6px 0">'+CHAP[clamp((SAVE.chSel||1)-1,0,CHAP.length-1)].d+'</div><div class="route">'+routeHtml()+'</div></div>'
     +'<div class="pdetail" style="--c1:'+E.c+'"><canvas class="mpc" id="mpc"></canvas><h3 style="color:'+E.c+'">'+CLS[menuEl].n+' <span style="font-size:.6em;color:var(--dim)">'+E.n+'</span></h3><dl><dt>Описание</dt><dd>'+E.d+'</dd><dt>Класс</dt><dd><b>'+CLS[menuEl].n+'</b> · '+CLS[menuEl].role+'</dd><dt>Плюсы</dt><dd>'+CLS[menuEl].plus+'</dd><dt>Минусы</dt><dd>'+CLS[menuEl].minus+(ava?'':' Мастер одной стихии: качает её до 8 уровня, чужие стихии не берёт.')+'</dd><dt>Пассивка</dt><dd><b>'+HPAS[menuEl].n+'</b> (3 уровня, очками навыков): '+HPAS[menuEl].pd.map((d,i)=>(i+1)+') '+d).join('; ')+'.</dd><dt>Механика</dt><dd><b>'+HMECH[menuEl].n+'</b>. '+HMECH[menuEl].d+'.</dd><dt>Автоатака</dt><dd>'+ew.w+'. '+ew.d+' ('+DT[ew.dt].n.toLowerCase()+' урон)</dd><dt>Навык (очко на ур. 2)</dt><dd><b>'+sk.n+'</b>. '+sk.d+'</dd><dt>Ульта (с '+ULT_LV+' ур.)</dt><dd><b>'+u.n+'</b>. '+u.d+'</dd><dt>Стихии</dt><dd>'+(ava?'Не больше трёх: по одной из каждой пары огонь/вода, земля/воздух, металл/дерево. Каждая до 4 уровня.':'Только «'+E.n+'». Смешивать стихии умеет только Аватар.')+'</dd></dl>'
     +(ava?'<h2 class="sec" style="margin-top:6px">Симбиозы — по одному на каждую пару стихий, '+SYM_IDS.length+' всего</h2><div class="chips">'+SYM_IDS.map(k=>'<span class="chip"><span class="orb sm dual" style="--c1:'+AB[k].c1+';--c2:'+AB[k].c2+'"></span><b>'+AB[k].n+'</b></span>').join('')+'</div>':'')+'</div>'
-    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">24 волны, после каждой пауза с торговцами. Мир меняется каждые четыре волны: чтобы пройти дальше, победи хранителя биома. Финал: Пожиратель Стихий.</span></div></section>';
+    +ascRow()+'<div class="playrow"><button class="btn" type="button" data-start="1">Начать забег</button><span class="sub">Глава — 3 карты по 12 волн, на 12-й волне босс. После босса безопасная зона с торговцами и два портала: выбери путь. Победа открывает следующую главу.</span></div></section>';
 }
 function upTab(){
   let h='<section><div class="playrow"><div><h2 class="sec">Эссенция</h2><div class="ess">'+SAVE.ess+'</div></div><span class="sub">Эссенция выдаётся за забег: за волны, убийства и боссов. Улучшения остаются навсегда.</span></div><div class="metas">';
@@ -125,7 +131,7 @@ function codexTab(){
 }
 function ascRow(){
   const mx=SAVE.asc||0,cur=Math.min(SAVE.ascSel||0,mx),A=ASC[cur];
-  return '<div class="ascrow"><button class="btn alt sm" type="button" data-asc="-1"'+(cur>0?'':' disabled')+'>‹</button><div><b>'+A.n+'</b><span class="sub">'+(cur?A.d+(cur>1?' И всё с прошлых уровней.':'')+' Эссенция +'+cur*25+'%.':'Победа открывает «'+ASC[1].n+'».')+(mx<ASC.length-1?' Открыто: '+(mx+1)+' из '+ASC.length+'.':'')+'</span></div><button class="btn alt sm" type="button" data-asc="1"'+(cur<mx?'':' disabled')+'>›</button></div>';
+  return '<div class="ascrow"><button class="btn alt sm" type="button" data-asc="-1"'+(cur>0?'':' disabled')+'>‹</button><div><b>'+A.n+'</b><span class="sub">'+(cur?A.d+(cur>1?' И всё с прошлых уровней.':'')+' Эссенция +'+cur*25+'%.':'Победа в 6-й главе открывает «'+ASC[1].n+'».')+(mx<ASC.length-1?' Открыто: '+(mx+1)+' из '+ASC.length+'.':'')+'</span></div><button class="btn alt sm" type="button" data-asc="1"'+(cur<mx?'':' disabled')+'>›</button></div>';
 }
 function keysTab(){
   let h='<section><div><h2 class="sec">Клавиши</h2><div class="kgrid">';
@@ -150,6 +156,7 @@ $('mpanel').addEventListener('click',e=>{
   }else if(t.dataset.key){listening=t.dataset.key;renderMenu()}
   else if(t.dataset.keyreset){SAVE.keys=Object.assign({},DEFKEYS);rebuildKeys();store();renderMenu()}
   else if(t.dataset.mute){SAVE.muted=!SAVE.muted;store();renderMenu()}
+  else if(t.dataset.ch){SAVE.chSel=clamp(parseInt(t.dataset.ch,10),1,SAVE.ch||1);store();renderMenu()}
   else if(t.dataset.asc){SAVE.ascSel=clamp((SAVE.ascSel||0)+parseInt(t.dataset.asc,10),0,SAVE.asc||0);store();renderMenu()}
   else if(t.dataset.fps){SAVE.fps=!SAVE.fps;store();renderMenu()}
   else if(t.dataset.hints){SAVE.hints=!SAVE.hints;store();renderMenu()}

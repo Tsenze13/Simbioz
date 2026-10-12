@@ -10,6 +10,9 @@
 - Версия игры: строка `Версия X.Y` в `src/shell/body.html`. Поднимать при каждой выдаче игроку.
 - Коммит = одна версия/одна логическая правка, сообщение на русском: `Симбиоз vX.Y: что изменилось`.
 - `index.html` в корне коммитится всегда собранным: его раздаёт GitHub Pages → https://tsenze13.github.io/Simbioz/
+- **Бета и лаборатория.** Крупные визуальные правки сначала идут в ветку `beta-sprites` (версия «X.Y-бета»).
+  Сборка беты копируется в `beta/index.html` на main → https://tsenze13.github.io/Simbioz/beta/ ,
+  варианты спрайтов на выбор — `lab/sprites.html` на main. После одобрения игроком бета сливается в main.
 - Старые версии — в истории git (коммиты «Симбиоз v0.15.1 … v0.22»), отдельными файлами их не хранить.
 
 ## Сборка
@@ -26,14 +29,15 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/core/prelude.js | хелперы `$`, `TAU`, `rnd`, `clamp`, `pickOf`, `WAVES_TOTAL` |
 | js/data/balance.js | **`BAL` — все числа баланса**: опыт, рост врагов, защита боссов, волны, лавка, уровни ульты |
 | js/data/heroes.js | стихии `EL`, классы `CLS`, рост `GROW`, `HST`, пассивки `HPAS`, `HMECH`, иконки `GL` |
-| js/data/skills.js | навыки `AB` через `def(...)`, ульты `ULT`, `ultRoom/ultOverflow` |
+| js/data/skills.js | навыки `AB` через `def(...)`, ульты `ULT` |
 | js/data/enemies.js | враги `ET`, боссы `BOSS` (pats/p2 — списки приёмов) |
 | js/data/items.js | предметы `ITEMS` через `it(...)`, торговцы `MERCH`, вложения `INVEST` |
 | js/data/meta.js | мета-прокачка `META`, статы карточек `STC`, клавиши `ACTIONS/DEFKEYS` |
 | js/data/relics.js | реликвии боссов `RELICS`, сложность `ASC` + `ascMod()`, события `EVTS`, комбо предметов `SYN` |
 | js/core/save.js, state.js | сохранение `SAVE` (+ hints/tut, asc/ascSel, mus, fps), звук `sfx`, `needFor` |
 | js/core/music.js | `MUS` — генеративная музыка по карте/боссу, громкость `SAVE.mus` |
-| js/world/maps.js | карты/биомы, чанки, события карты, прилив воды |
+| js/world/maps.js | биомы `MAPS`, чанки, ловушки карт `hazards`, прилив воды |
+| js/world/chapters.js | **главы** `CHAP` (6 × [старт, путь А, путь Б, логово] + боссы), варианты карт `vmap` (поле `bio` = биом), «волна сложности» `effW/SW()`, `chapHp/chapDm`, здоровье боссов `bossHpScale`, безопасная зона `openSafeZone`, порталы |
 | js/core/stats.js | `recalc()` (все статы игрока), `tickBuffs`, эффекты |
 | js/combat/damage.js | `OUT_MODS` (множители урона), `bossDefense`, учёт урона `dmgBy`/`tagNew`, `hitEnemy`, `applySt`, `killEnemy`, `explodeAt`, `shoot` |
 | js/combat/cast.js | `CAST.*` — типы способностей |
@@ -49,6 +53,8 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 | js/game/runextras.js | выбор реликвий, комбо (`synUpdate`, `synTip`), события между волнами (`spawnEvents`, `useEvent`, `drawEvents`) |
 | js/ui/*.js | HUD, подсказки новичку `tut()`, окно уровня, древо, лавка, пауза и итоги (`dmgRows`), меню (сложность `ascRow`), ввод |
 | js/render/*.js | спрайты навыков `SP`, снаряды, стволы (`GUNS`, `GMOD`), торговцы `MS`, враги `ENS`, герои `HTD`, карта, `render()` |
+| js/render/guns_art.js | `GUNART` — спрайты оружия Солдата (пистолет…снайперка, граната), подменяют `SP.pistol` и др. |
+| js/render/jet.js | струя огнемёта `drawJet`, стена огня `drawWalls`, смерчи, дожди/град, огненные кометы |
 | js/core/loop.js | игровой цикл, отладочные хуки `window.__sb`, `window.__x` |
 
 ## Отладка
@@ -61,6 +67,13 @@ IIFE с `'use strict'` (открывается в `src/js/core/prelude.js`, за
 смешивает до 3 стихий (каждая до 4), учит симбиозы. Хелперы: `isAva(g)`, `elCap(k)`, `hEl(k)` (цвет/имя героя,
 вместо `EL[g.start]`), `HEROK` (список героев для меню). Тело Аватара — спрайт Мистика (`heroBody`) + гало стихий.
 Механики конкретного героя проверяются как `g.start==='fire'` — для Аватара они сами выключены.
+
+## Главы (с 0.36-беты, дизайн — docs/design-chapters.md)
+Забег = одна глава (`g.ch`): 3 карты по `WPM`=12 волн, `WAVES_TOTAL`=36. `g.wave` — сквозной номер волны;
+`mapStage(w)`/`mapWave(w)` — карта и волна на ней. Рост врагов, ловушек и цен идёт по «волне сложности» `SW()`,
+а не по `g.wave` — новую формулу с номером волны пиши через `SW()`. Карта главы — вариант биома: проверки врагов
+по карте, сродство героя `AFF` и музыка — через `bio(g.map)`. После босса карты: `g.safe` (фаза 'inter' без таймера),
+`g.portals`, вход — `interact()` → `usePortal`. `g.risk` — «Тропа испытаний».
 
 ## Прокачка (с v0.23)
 Три пути: **уровень → карточки**, **очки навыков → древо** (навыки, мутации, пассивка, ульта и её печати),

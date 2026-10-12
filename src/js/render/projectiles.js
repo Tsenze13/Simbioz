@@ -26,6 +26,7 @@ function blFx(b){
   const g=G;if(!g||g.hfx.length>34)return;
   if(b.vis==='spike')g.hfx.push({kk:'spike',x:b.x,y:b.y,a:0,k:Math.max(18,b.r),sc:1,t:0,life:.85,seed:Math.floor(Math.random()*90)});
   else if(b.vis==='meteor')hitFx('fire',b.x,b.y,0,Math.max(.5,b.r/60),.7);
+  else if(b.vis==='drop'||b.vis==='shell')rainSplash(b);
   else if(b.vis==='root')g.hfx.push({kk:'root',x:b.x,y:b.y,a:0,k:b.r/110,sc:1,t:0,life:1.1,seed:1});
 }
 const AFXM={nova:['Вспышка',118,0],frost:['Ледяной шквал',110,18],quake:['Землетрясение',100,0],blaze:['Боевой жар',100,0],stoneward:['Каменный покров',96,0],bladestorm:['Вихрь клинков',96,0],tailwind:['Попутный ветер',96,0],magnet:['Магнитный импульс',104,0],bastion:['Бастион',96,0]};

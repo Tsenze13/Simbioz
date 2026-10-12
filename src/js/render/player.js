@@ -105,6 +105,7 @@ function drawProj(g){
   for(const b of g.pr){
     if(!vis(b.x,b.y,180))continue;
     const a=Math.atan2(b.vy,b.vx),v=b.vis;
+    if(v==='comet'){drawComet(b,a);continue}
     if(NEWV[v]){drawNewProj(b,a,v);continue}
     if(SPV[v]){drawProjSpr(b,a,v);continue}
     if(v!=='tsunami'&&v!=='wave'){const gr=b.r*3.4+6;ctx.globalAlpha=0.5;ctx.drawImage(glowSpr(b.col),b.x-gr,b.y-gr,gr*2,gr*2);ctx.globalAlpha=1}
@@ -155,18 +156,6 @@ function drawEnemyProj(g){
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x,b.y,b.r*0.4,0,TAU);ctx.fill();
   }
   ctx.globalCompositeOperation='source-over';
-}
-function drawTornados(g){
-  for(const t of g.tor){
-    if(!vis(t.x,t.y,t.r+20))continue;
-    const tc=t.vis==='storm'?'244,230,130':(t.vis==='fire'?'255,140,60':'224,194,122');
-    const cc=t.vis==='storm'?['244,230,130','255,250,210']:(t.vis==='fire'?['255,120,30','255,230,150']:(t.vis==='water'?['80,160,255','200,235,255']:(t.vis==='air'?['150,235,215','235,255,250']:['220,185,120','255,235,190'])));
-    ctx.globalCompositeOperation='source-over';
-    SP.disc(ctx,t.x,t.y+6,t.r*1.1,t.r*.5,cc[0],.4);
-    SP.funnel(ctx,t.x,t.y+4,t.r*2.5,t.r*.95,anim,cc[0],cc[1]);
-    for(let i=0;i<14;i++){const q=(anim*.8+i*.173)%1,ang=anim*7+i*1.7,rr=t.r*(.2+.8*q);ctx.fillStyle='rgba('+cc[0]+','+(.8*(1-q*.5))+')';ctx.beginPath();ctx.arc(t.x+Math.cos(ang)*rr,t.y+4-q*t.r*2.4+Math.sin(ang)*rr*.2,1.8,0,TAU);ctx.fill()}
-    ctx.strokeStyle='rgba('+cc[0]+',.25)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,TAU);ctx.stroke();
-  }
 }
 function bzig(x1,y1,x2,y2,seed,depth,branch){
   const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;

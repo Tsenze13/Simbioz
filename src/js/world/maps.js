@@ -185,7 +185,7 @@ function poolsTick(dt){
   if(!pl||pl.kind!=='lava'||imm('lava')){g.lavaT=0;if(pl&&pl.kind==='lava')immFx();return}
   if(Math.random()<dt*14)puff(p.x+rnd(-8,8),p.y+rnd(-4,8),Math.random()<0.5?'#ff9a3c':'#ffd36b',1,60,0.4,2.4);
   g.lavaT=(g.lavaT||0)+dt;
-  if(g.lavaT>=0.4){g.lavaT=0;hurtPlayer(6+g.wave*0.8,'pure',{lava:true})}
+  if(g.lavaT>=0.4){g.lavaT=0;hurtPlayer(6+SW()*0.8,'pure',{lava:true})}
 }
 
 /* ---------- эффекты: свечение, искры, дым, обломки ---------- */
@@ -278,7 +278,7 @@ function mapEvents(dt){
       if(im){if(Math.random()<dt*1.2)immFx('метель не страшна')}
       else{
         bz.cd=(bz.cd||0)-dt;
-        if(bz.cd<=0){bz.cd=1.1;hurtPlayer(2+g.wave*0.35,'pure',{lava:true})}
+        if(bz.cd<=0){bz.cd=1.1;hurtPlayer(2+SW()*0.35,'pure',{lava:true})}
         if(!(g.frz>0))bz.ch+=dt/2.6;
         if(bz.ch>=1){bz.ch=-0.7;g.frz=0.9;ring(p.x,p.y,70,'#bfe8ff',0.5);puff(p.x,p.y,'#e6f7ff',22,220,0.6,3);sparks(p.x,p.y,'#ffffff',14,260);g.shake=Math.max(g.shake,4);sfx(900,0.3,'triangle',0.05,-500);if(g.tx.length<50)g.tx.push({x:p.x,y:p.y-32,t:0.9,txt:'Заморожен!',big:true,col:'#bfe8ff'})}
       }
@@ -299,7 +299,7 @@ function mapEvents(dt){
         else{
           const f=(1-dd/R2)*520;
           p.kx+=(dx/dd*0.7-dy/dd*0.7)*f*dt;p.ky+=(dy/dd*0.7+dx/dd*0.7)*f*dt;
-          if(dd<d.r){d.hc=(d.hc||0)-dt;if(d.hc<=0){d.hc=0.55;hurtPlayer(5+g.wave*0.7,'phys',{lava:true})}}
+          if(dd<d.r){d.hc=(d.hc||0)-dt;if(d.hc<=0){d.hc=0.55;hurtPlayer(5+SW()*0.7,'phys',{lava:true})}}
         }
       }
       d.ec=(d.ec||0)-dt;const hitE=d.ec<=0;if(hitE)d.ec=0.6;
@@ -309,7 +309,7 @@ function mapEvents(dt){
         if(ed<R2){
           const f=(1-ed/R2)*480*(e.boss?0.25:e.kres);
           e.kx+=(ex/ed*0.7-ey/ed*0.7)*f*dt;e.ky+=(ey/ed*0.7+ex/ed*0.7)*f*dt;
-          if(hitE&&ed<d.r+e.r)hitEnemy(e,6+3*g.wave,{dt:'phys',src:'dot',quiet:true});
+          if(hitE&&ed<d.r+e.r)hitEnemy(e,6+3*SW(),{dt:'phys',src:'dot',quiet:true});
         }
       }
     }
@@ -349,17 +349,17 @@ function hazards(dt){
   g.hzT-=dt;
   if(g.hzT>0)return;
   if(hz==='bombs'){
-    g.hzT=Math.max(2.8,rnd(4.5,6.5)-g.wave*0.12);
+    g.hzT=Math.max(2.8,rnd(4.5,6.5)-SW()*0.12);
     for(let i=0;i<2;i++){
       const a=rnd(0,TAU),d=rnd(30,270);
-      tgCircle(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,66,1.15+i*0.3,14+3.2*g.wave,'magic','#ff7a3a',{fx:'meteor',env:true,hitEn:70+11*g.wave,patch:{r:46,life:3.2,dps:8+g.wave}});
+      tgCircle(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,66,1.15+i*0.3,14+3.2*SW(),'magic','#ff7a3a',{fx:'meteor',env:true,hitEn:70+11*SW(),patch:{r:46,life:3.2,dps:8+SW()}});
     }
   }else if(hz==='strike'){
-    g.hzT=Math.max(1.6,rnd(2.6,4.2)-g.wave*0.08);
+    g.hzT=Math.max(1.6,rnd(2.6,4.2)-SW()*0.08);
     const tg=g.en.length&&Math.random()<0.55?pickOf(g.en):null;
     const a=rnd(0,TAU),d=rnd(20,240);
     const x=tg?tg.x:p.x+Math.cos(a)*d,y=tg?tg.y:p.y+Math.sin(a)*d;
-    tgCircle(x,y,58,0.95,16+3.6*g.wave,'magic','#f4f08a',{fx:'bolt',env:true,hitEn:100+15*g.wave});
+    tgCircle(x,y,58,0.95,16+3.6*SW(),'magic','#f4f08a',{fx:'bolt',env:true,hitEn:100+15*SW()});
   }else if(hz==='wind'){
     g.hzT=rnd(13,19);
     g.wind={t:3.6,max:3.6,ang:rnd(0,TAU)};
@@ -369,11 +369,11 @@ function hazards(dt){
     g.bliz={t:6.5,max:6.5,ch:0,cd:1};
     toast('Метель',imm('blizzard')?'Вода — ваша стихия: метель не страшна':'Холод ранит, а потом заморозит на месте');
   }else if(hz==='overgrow'){
-    g.hzT=Math.max(3.4,rnd(5.5,8)-g.wave*0.1);
-    const n=g.wave>8?3:2;
+    g.hzT=Math.max(3.4,rnd(5.5,8)-SW()*0.1);
+    const n=SW()>8?3:2;
     for(let i=0;i<n;i++){
       const a=rnd(0,TAU),d=i===0?rnd(0,40):rnd(60,260);
-      tgCircle(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,62,1.25+i*0.25,10+2.8*g.wave,'phys','#62c15a',{fx:'roots',env:true,hz:'overgrow',hitEn:40+7*g.wave});
+      tgCircle(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,62,1.25+i*0.25,10+2.8*SW(),'phys','#62c15a',{fx:'roots',env:true,hz:'overgrow',hitEn:40+7*SW()});
     }
   }else if(hz==='devil'){
     g.hzT=rnd(13,18);
@@ -384,7 +384,7 @@ function hazards(dt){
 let biomeTimer=0,biomeShow=0;
 function showBiome(id,delay){
   const M=MAPS[id],el=$('biome'),A=(G&&G.map===id&&G.aff)?G.aff:null;
-  const ex=ET_KEYS.filter(k=>ET[k].map===id).map(k=>ET[k].n);
+  const ex=ET_KEYS.filter(k=>ET[k].map===bio(id)).map(k=>ET[k].n);
   const more=Object.keys(M.roster||{}).filter(k=>M.roster[k]>1).map(k=>ET[k].n);
   el.style.setProperty('--bc',M.glow);
   el.innerHTML='<div class="bn" style="color:'+M.glow+'">'+M.n+'</div><div class="bs">'+M.d+'</div><div class="bm"><div><b class="up">▲ '+M.mods.buff.n+'</b>'+M.mods.buff.d+'</div><div><b class="dn">▼ '+M.mods.debuff.n+'</b>'+M.mods.debuff.d+'</div><div><b class="fo">☠ '+M.foe.n+'</b>'+M.foe.d+'. Новые враги: '+ex.join(', ')+(more.length?'. Чаще: '+more.join(', '):'')+'.</div>'+(A?'<div style="border-color:#ffd36b"><b style="color:#ffd36b">★ '+A.n+'</b>'+A.d+'</div>':'')+'</div>';
