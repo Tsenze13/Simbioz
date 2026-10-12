@@ -327,6 +327,7 @@ function quitToMenu(){
   mode='menu';G=null;hintQ=[];hintT=0;$('hint').hidden=true;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
   $('hud').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
   $('menu').hidden=false;
+  if(typeof NET!=='undefined'&&NET.st==='open')menuTab='coop';
   renderMenu();
 }
 function skipWave(){
@@ -346,6 +347,7 @@ function togglePause(){
   const g=G;
   if(mode!=='play'||!g||g.lvlOpen||g.shopOpen||g.treeOpen)return;
   g.paused=!g.paused;$('pause').hidden=!g.paused;
-  if(g.paused){fillStats();for(const k in codes)codes[k]=false}
+  /* в совместной игре пауза общая, а в окне — статы своего героя */
+  if(g.paused){const me=G;if(COOP)G=COOP.H[COOP.me];fillStats();G=me;for(const k in codes)codes[k]=false}
 }
 

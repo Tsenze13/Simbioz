@@ -1,14 +1,15 @@
 /* =====================================================================
    МЕНЮ
    ===================================================================== */
-let menuTab='play',menuEl='fire',listening=null,resetArmed=0;
-const TABS=[['play','Играть'],['up','Развитие'],['codex','Кодекс'],['bestiary','Бестиарий'],['keys','Управление']];
+let nickT=0,menuTab='play',menuEl='fire',listening=null,resetArmed=0;
+const TABS=[['play','Играть'],['coop','Вдвоём'],['up','Развитие'],['codex','Кодекс'],['bestiary','Бестиарий'],['keys','Управление']];
 function renderMenu(){
   $('tabs').innerHTML=TABS.map(t=>'<button class="tab'+(menuTab===t[0]?' on':'')+'" type="button" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
   $('essLine').innerHTML='Эссенция: <b>'+SAVE.ess+'</b>';
   $('bestLine').textContent=SAVE.best?('Лучшая волна: '+SAVE.best+' · Побед: '+SAVE.wins):'Забегов пока не было';
   const P=$('mpanel');
   if(menuTab==='play')P.innerHTML=playTab();
+  else if(menuTab==='coop')P.innerHTML=coopTab();
   else if(menuTab==='up')P.innerHTML=upTab();
   else if(menuTab==='codex')P.innerHTML=codexTab();
   else if(menuTab==='bestiary'){P.innerHTML=bestiaryTab();if(!bestRaf)bestRaf=requestAnimationFrame(bestLoop)}
@@ -62,7 +63,7 @@ function playTab(){
       +'<h2 class="sec" style="margin-top:14px">Сложность</h2>'+ascRow()
     +'</div></div>'
     +'<div class="startbar"><button class="btn big" type="button" data-start="1">'+(rs?'Новый забег':'Начать забег')+'</button>'
-      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span></div>'
+      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span><button class="btn alt" type="button" data-tabgo="coop">Играть вдвоём</button></div>'
     +'</section>';
 }
 function upTab(){
@@ -168,7 +169,9 @@ function keysTab(){
 $('mpanel').addEventListener('click',e=>{
   const t=e.target.closest('button');
   if(!t)return;
-  if(t.dataset.el){menuEl=t.dataset.el;renderMenu()}
+  if(t.dataset.net){lobbyClick(t);return}
+  if(t.dataset.tabgo){menuTab=t.dataset.tabgo;renderMenu();return}
+  if(t.dataset.el){menuEl=t.dataset.el;renderMenu();lobbyChanged()}
   else if(t.dataset.start)startRun(menuEl);
   else if(t.dataset.cont)loadRun();
   else if(t.dataset.meta){
@@ -189,7 +192,10 @@ $('mpanel').addEventListener('click',e=>{
     resetArmed=0;const keep=SAVE.keys;SAVE=freshSave();SAVE.keys=keep;store();renderMenu();
   }
 });
-$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
+$('mpanel').addEventListener('input',e=>{
+  if(e.target.id==='nick'){SAVE.nick=e.target.value.trim().slice(0,16);store();clearTimeout(nickT);nickT=setTimeout(lobbyChanged,400);return}
+  if(e.target.id==='joinCode'){LOB.joinCode=e.target.value;return}
+  if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
 $('tabs').addEventListener('click',e=>{
   const t=e.target.closest('.tab');
   if(t){menuTab=t.dataset.tab;listening=null;resetArmed=0;renderMenu()}
@@ -205,3 +211,4 @@ function finishListen(code){
   renderMenu();
 }
 
+$('mpanel').addEventListener('keydown',e=>{if(e.target.id==='joinCode'&&e.key==='Enter'){e.preventDefault();const b=document.querySelector('[data-net="join"]');if(b)lobbyClick(b)}});

@@ -36,7 +36,7 @@ function fillStats(){
   ];
   $('sgrid').innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
   $('pBuild').innerHTML=buildChips(g);
-  $('saveq').hidden=!g.safe;
+  $('saveq').hidden=!g.safe||!!COOP;
 }
 let quitArmed=0;
 $('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
@@ -61,7 +61,7 @@ function showOver(win,add){
   $('goBuild').innerHTML=buildChips(g);
   {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}
   $('goDmg').innerHTML=dmgRows(g);
-  $('endless').hidden=!win;
+  $('endless').hidden=!win||!!COOP;
   $('again').textContent='В меню';
   $('goBest').textContent='Лучшая волна: '+SAVE.best+' · Всего эссенции: '+SAVE.ess;
   $('hud').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;$('pause').hidden=true;$('over').hidden=false;

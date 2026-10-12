@@ -433,3 +433,29 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 #coopBar .cb em{font-style:normal;font-size:12px;color:#ffd36b}#coopBar .cb.down{border-color:#ff6b7a}
 #coopWait{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);padding:14px 22px;background:rgba(10,12,20,.9);border:1px solid var(--line2);border-radius:12px;font:700 18px var(--f-display);z-index:40;text-align:center}
 #coopWait small{display:block;font:400 13px var(--f-body);color:var(--dim);margin-top:4px}
+/* ---------- игра вдвоём: лобби ---------- */
+.lobby{display:grid;gap:14px;max-width:900px;margin:0 auto}
+.lobby input,.lobby textarea{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;color:inherit;font:inherit;padding:7px 10px;min-width:0}
+.lobby textarea{width:100%;font:12px/1.35 ui-monospace,monospace;resize:vertical;word-break:break-all}
+.lobby input:focus,.lobby textarea:focus{outline:2px solid #9fe0ff;outline-offset:1px}
+.lrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lrow label{display:flex;align-items:center;gap:8px;font-weight:700}
+.lcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.lcard{display:grid;gap:8px;justify-items:start;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.lcard>b{font-size:16px}
+.lcard .sub{margin:0}
+.lcard.big{justify-items:center;text-align:center;padding:22px}
+.lcode{font:800 46px/1 ui-monospace,monospace;letter-spacing:.18em;color:#ffd36b;text-shadow:0 0 18px rgba(255,211,107,.35);padding:4px 0 4px .18em;user-select:all}
+.lst{font-weight:700;color:#9fe0ff}
+.lplayers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lp{display:grid;gap:2px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--c1);border-radius:10px}
+.lp small{color:var(--dim);font-size:12px}.lp b{font-size:17px}.lp span{color:var(--c1);font-weight:700}
+.lman{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.lman summary{cursor:pointer;font-weight:700;color:#c9d3ea}
+.lman2{display:grid;gap:8px;margin-top:8px;justify-items:start;width:100%}
+.lerr{color:#ffb0a0;font-weight:700;margin:0}
+.llog{font-size:12px;color:var(--dim);display:grid;gap:2px;padding:6px 2px}
+@media (max-width:640px){.lplayers{grid-template-columns:1fr}.lcode{font-size:34px}}
+#lobbyDyn{display:grid;gap:12px}
+#lobbyDyn .sec{margin:4px 0 -4px}
+#coopBar .cb.ping{padding:2px 10px;opacity:.75;min-width:0}

@@ -277,6 +277,26 @@ with sync_playwright() as p:
         const hp5=e.max;S.SAVE.ascSel=0;S.quitToMenu();S.startRun('air');S.startWave(3);const e0=S.spawnEnemy('wisp');const r={asc5:hp5,asc0:e0.max};S.SAVE.asc=0;return r}""")
     check('сложность V крепче обычной', r['asc5'] > r['asc0'] * 1.2, r)
 
+    print('Игра вдвоём (без сети; сетевой тест — tests/net_test.py)')
+    r = J("""()=>{const S=window.__sb;S.quitToMenu();
+        const run=(seed)=>{S.coopStart({seed,ch:1,asc:0,me:0,heroes:[{start:'fire',name:'А'},{start:'avatar',name:'Б'}]});const C=S.COOP;
+          for(let i=0;i<2400;i++){S.withSim(()=>{
+            C.H.forEach((h,k)=>{h.inp.x=Math.cos(i/90+k*3);h.inp.y=Math.sin(i/70+k);
+              if(h.lvlOpen)S.runAct(k,'pick',[0]);if(h.treeOpen)S.runAct(k,'closeTree');if(h.shopOpen)S.runAct(k,'closeShop');
+              if(i%120===0)S.runAct(k,'cast',[0])});
+            S.coopTick(1/60)})}
+          const out={h:S.stateHash(),lv:C.H.map(h=>h.p.lv),gold:C.H.map(h=>h.p.gold),wave:C.W.wave,en:C.W.en.length};
+          return out};
+        const a=run(77),b=run(77),c=run(78);
+        const C=S.COOP;S.coopDown(C.H[0]);
+        let down=C.H.some(h=>h.down);
+        for(const h of C.H){h.p.x=0;h.p.y=0;h.inp.x=h.inp.y=0}for(let i=0;i<200;i++)S.withSim(()=>{C.H.forEach((h,k)=>{h.lvlOpen=h.treeOpen=h.shopOpen=false});S.coopTick(1/60)});
+        const up=!C.H.some(h=>h.down);S.quitToMenu();
+        return {a,b,c:c.h,down,up}}""")
+    check('вдвоём: один сид — один и тот же мир', r['a'] == r['b'] and r['a']['h'] != r['c'], r)
+    check('вдвоём: опыт и золото общие', r['a']['lv'][0] == r['a']['lv'][1] > 1 and r['a']['gold'][0] == r['a']['gold'][1], r['a'])
+    check('вдвоём: упавшего поднимают, постояв рядом', r['down'] and r['up'], r)
+
     le = J("()=>window.__le||null")
     check('нет ошибок в отложенных эффектах', not le, le)
     check('нет ошибок JS', not errs, errs[:5])

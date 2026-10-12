@@ -4,7 +4,7 @@
    вперёд; такт выполняется, только когда пришёл ввод всех игроков — поэтому мир у всех одинаков.
    Без сети (COOP.net=null) — тот же цикл, но второй герой стоит или управляется тестом.
    ===================================================================== */
-const LS={dt:1/60,acc:0,D:4,t:0,inq:{},cmds:[],sentT:-1,waitT:0,hash:{},bad:0};
+const LS={dt:1/60,acc:0,D:4,t:0,inq:{},cmds:[],sentT:-1,waitT:0,hash:{},rhash:{},mine:{},bad:0,needSnap:0,adv:0,rT:0};
 /* ввод этого устройства, округлённый до целых: у всех применяется одно и то же число */
 function sampleInput(){
   const g=COOP.H[COOP.me],mv=(g.lvlOpen||g.shopOpen||g.treeOpen||COOP.W.paused)?{x:0,y:0}:readMove();
@@ -17,7 +17,7 @@ function applyInput(h,q){
   if(!q)return;
   h.inp.x=q[0]/100;h.inp.y=q[1]/100;h.inp.ax=q[2];h.inp.ay=q[3];h.inp.aim=!!q[4];h.inp.held=q[5]|0;
 }
-function lsReset(){LS.acc=0;LS.t=0;LS.inq={};LS.cmds=[];LS.sentT=-1;LS.waitT=0;LS.hash={};LS.bad=0}
+function lsReset(){LS.acc=0;LS.t=0;LS.inq={};LS.cmds=[];LS.sentT=LS.D-1;LS.waitT=0;LS.hash={};LS.rhash={};LS.mine={};LS.bad=0;LS.needSnap=0;LS.adv=0;LS.rT=0}
 /* команда A(...) в сетевой игре — копится и уходит вместе с ближайшим вводом */
 function netCmd(name,args){LS.cmds.push([name,args||[]])}
 /* выполнить такт t: действия игроков по порядку, ввод, затем мир */
@@ -28,12 +28,14 @@ function lsRun(t){
     coopTick(LS.dt);
   });
   delete LS.inq[t];
-  if(t%30===0){LS.hash[t]=stateHash();netHash(t,LS.hash[t])}
+  if(t%30===0){LS.hash[t]=stateHash();if(COOP.net)netHash(t,LS.hash[t]);hashCheck(t);for(const k in LS.hash)if(+k<t-600)delete LS.hash[k];for(const k in LS.rhash)if(+k<t-600)delete LS.rhash[k];for(const k in LS.mine)if(+k<t-600)delete LS.mine[k]}
+  if(COOP.snapT&&t>COOP.snapT+180)COOP.snapT=0;
 }
 /* каждый кадр */
 function coopFrame(raw){
   if(!COOP||mode!=='play')return;
-  LS.acc=Math.min(LS.acc+raw,0.25);
+  /* кто убежал вперёд друга — чуть притормаживает, чтобы у обоих был запас под скачки пинга */
+  LS.acc=Math.min(LS.acc+raw*(COOP.net&&LS.adv>1.5?0.9:1),0.25);
   if(!COOP.net){
     /* без сети: свой ввод сразу, второй герой — как задаст тест (COOP.H[i].inp) */
     let n=0;
@@ -45,9 +47,12 @@ function coopFrame(raw){
   }
   let n=0;
   while(LS.acc>=LS.dt&&n<8){
+    /* рассинхрон замечен — хозяин шлёт снимок между тактами (тут состояние целое) */
+    if(LS.needSnap){LS.needSnap=0;coopDesync(LS.needT);if(!COOP||!COOP.net)return}
     /* свой ввод на такт t+D (один раз на такт) */
     const st=LS.t+LS.D;
-    if(LS.sentT<st){LS.sentT=st;const m={i:sampleInput(),c:LS.cmds};LS.cmds=[];(LS.inq[st]=LS.inq[st]||{})[COOP.me]=m;netSend({k:'in',t:st,m})}
+    if(LS.sentT<st){const q=sampleInput();
+      while(LS.sentT<st){LS.sentT++;const m={i:q,c:LS.cmds};LS.cmds=[];(LS.inq[LS.sentT]=LS.inq[LS.sentT]||{})[COOP.me]=m;LS.mine[LS.sentT]=m;netSend({k:'in',t:LS.sentT,m})}}
     const slot=LS.inq[LS.t];
     const ready=LS.t<LS.D||(slot&&COOP.H.every((h,i)=>slot[i]));
     if(!ready){LS.waitT+=raw;break}
@@ -58,8 +63,17 @@ function coopFrame(raw){
 }
 /* приём ввода друга */
 function lsRecv(from,m){
-  if(m.k==='in'){(LS.inq[m.t]=LS.inq[m.t]||{})[from]=m.m}
-  else if(m.k==='hash'){const mine=LS.hash[m.t];if(mine!==undefined&&mine!==m.h){LS.bad++;coopDesync(m.t)}}
+  if(m.k==='in'){(LS.inq[m.t]=LS.inq[m.t]||{})[from]=m.m;
+    /* где сейчас друг: его такт = m.t-D, плюс время полёта сообщения */
+    if(m.t>LS.rT){LS.rT=m.t;const L=(typeof NET!=='undefined'&&NET.rtt?NET.rtt/2:30)/(1000/60),adv=LS.t-(m.t-LS.D+L);LS.adv=LS.adv*0.9+adv*0.1}}
+  else if(m.k==='hash'){if((m.e|0)!==(COOP.ep|0))return;LS.rhash[m.t]=m.h;hashCheck(m.t)}
+}
+/* сравнить отпечатки такта t, когда есть оба (свой и друга) */
+function hashCheck(t){
+  const a=LS.hash[t],b=LS.rhash[t];
+  if(a===undefined||b===undefined)return;
+  delete LS.rhash[t];
+  if(a!==b){LS.bad++;LS.needSnap=1;LS.needT=t}
 }
 /* отпечаток мира: если у игроков разный — значит, разошлись */
 function stateHash(){

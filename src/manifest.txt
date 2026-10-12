@@ -35,13 +35,15 @@ js/game/runsave.js
 js/game/acts.js
 js/net/coop.js
 js/net/lockstep.js
-js/net/net_stub.js
+js/net/net.js
+js/net/snap.js
 js/ui/hud.js
 js/ui/levelup.js
 js/ui/tree.js
 js/ui/shop.js
 js/ui/pause.js
 js/ui/menu.js
+js/ui/lobby.js
 js/ui/input.js
 js/render/canvas.js
 js/render/sprites_skills.js

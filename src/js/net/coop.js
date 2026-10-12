@@ -11,7 +11,7 @@ const WORLD_KEYS=['map','binst','ox','oy','gk','solids','pools','decors','pch','
   'kills','t','slowmo','zk','slowAll','slowAllF','en','eps','tgs','gem','pk','merch','evts','feat','portals','safe','risk','riskRun',
   'curseW','trialW','ch','asc','essPaid','darkAdd','flashA','atkSrc','stockT'];
 /* общий генератор случайных чисел (mulberry32) */
-function seedRng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+function seedRng(seed){let a=seed>>>0;const f=function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};f.get=()=>a;f.set=v=>{a=v|0};return f}
 function withSim(fn){const r=Math.random;Math.random=COOP.rng;try{return fn()}finally{Math.random=r}}
 function worldify(h,W){
   for(const k of WORLD_KEYS){
@@ -24,7 +24,7 @@ function worldify(h,W){
 function coopStart(cfg){
   clearRun();
   const ch=clamp(cfg.ch||1,1,CHAP.length),map=CHAP[ch-1].maps[0];
-  COOP={H:[],me:cfg.me,cfg,net:cfg.net||null,W:{},rng:seedRng(cfg.seed),tick:0};lsReset();
+  COOP={H:[],me:cfg.me,cfg,net:cfg.net||null,W:{},rng:seedRng(cfg.seed),tick:0};LS.D=cfg.D||4;lsReset();
   withSim(()=>{
     cfg.heroes.forEach((hc,i)=>{
       const h=mkState(hc.start,map);
@@ -59,8 +59,21 @@ function coopStart(cfg){
 }
 function coopEnd(){
   if(!COOP)return;
-  if(COOP.net)netClose();
-  COOP=null;coopHud(false);
+  /* соединение не рвём: после забега можно сыграть ещё раз. Если выходим посреди забега — друг играет дальше один */
+  if(COOP.net&&!COOP.W.over)netSend({k:'leave'});
+  COOP=null;coopHud(false);$('pause').hidden=true;
+}
+/* друг ушёл (вышел или пропала связь): его герой исчезает, играем одни */
+function coopSolo(who,what){
+  if(!COOP)return;
+  const me=COOP.H[COOP.me];
+  COOP.net=null;COOP.H=[me];COOP.me=0;me.idx=0;
+  if(me.down){me.down=false;me.rev=0;me.p.hp=Math.max(1,me.S.maxHp*0.4)}
+  for(const k in LS.inq)delete LS.inq[k];LS.cmds=[];
+  if(COOP.W.paused&&$('pause').hidden)COOP.W.paused=false;
+  G=me;toast(who+what,'Играете дальше один');
+  const w=$('coopWait');if(w)w.hidden=true;
+  coopHud(true);
 }
 /* такт мира: все герои + враги. dt фиксированный */
 function coopTick(dt){
@@ -137,6 +150,7 @@ function coopHudTick(){
     h+='<div class="cb"><b style="color:'+E.c+'">'+q.name+'</b><small>'+(q.start==='avatar'?'Аватар':CLS[q.start].n)+' · ур. '+q.p.lv+'</small>'
       +'<i><u style="width:'+Math.round(clamp(q.p.hp/q.S.maxHp,0,1)*100)+'%"></u></i>'+(st?'<em>'+st+'</em>':'')+'</div>'});
   const me=COOP.H[COOP.me];
+  if(COOP.net&&NET.rtt)h+='<div class="cb ping"><small>связь '+Math.round(NET.rtt)+' мс</small></div>';
   if(me.down)h+='<div class="cb down"><b>Вы упали</b><em>Друг поднимет вас, если постоит рядом ('+Math.round(me.rev/2.5*100)+'%)</em></div>';
   if(el._h!==h){el._h=h;el.innerHTML=h}
 }
@@ -148,4 +162,19 @@ function drawNameTags(){
     ctx.fillStyle=i===COOP.me?'#ffffff':E.c;ctx.fillText(h.name,p.x,p.y-34);
     if(h.down){ctx.strokeStyle='#9fffb0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,30,-Math.PI/2,-Math.PI/2+TAU*h.rev/2.5);ctx.stroke();ctx.fillStyle='#ff6b7a';ctx.fillText('упал',p.x,p.y+44)}});
   ctx.restore();ctx.textAlign='left';
+}
+/* друг за краем экрана — стрелка с именем у края */
+function coopArrows(){
+  if(!COOP||COOP.H.length<2)return;
+  /* рамка без HUD: сверху счётчик волны, снизу панель навыков */
+  const z=W/VW,l=VX+40/z,r=VX+VW-40/z,t=VY+Math.min(150,H*0.22)/z,b=VY+VH-Math.min(200,H*0.3)/z;
+  const cx=(l+r)/2,cy=(t+b)/2,hw=(r-l)/2,hh=(b-t)/2;
+  COOP.H.forEach((h,i)=>{if(i===COOP.me)return;
+    const dx=h.p.x-cx,dy=h.p.y-cy;if(h.p.x>VX&&h.p.x<VX+VW&&h.p.y>VY&&h.p.y<VY+VH)return;
+    const k=Math.min(hw/Math.abs(dx||1),hh/Math.abs(dy||1),1),ax=cx+dx*k,ay=cy+dy*k,a=Math.atan2(dy,dx),E=hEl(h.start);
+    ctx.save();ctx.translate(ax,ay);ctx.save();ctx.rotate(a);ctx.fillStyle=h.down?'#ff6b7a':E.c;ctx.globalAlpha=0.85;
+    ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(-9,-11);ctx.lineTo(-4,0);ctx.lineTo(-9,11);ctx.closePath();ctx.fill();ctx.restore();
+    ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.globalAlpha=0.9;
+    const ty=dy>0?-18:26;ctx.fillText(h.name+(h.down?' (упал)':'')+' · '+Math.round(Math.hypot(dx,dy)/10)+' м',0,ty);
+    ctx.restore();ctx.globalAlpha=1;ctx.textAlign='left'});
 }

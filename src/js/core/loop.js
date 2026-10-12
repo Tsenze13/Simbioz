@@ -52,7 +52,8 @@ if(DEBUG){
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
     GMOD,heroMech,interact,FORMS,FORM_IDS,MSEAL,castUlt,toggleAuto,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
-    ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
+    ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()},
+    NET,LOB,BROKERS,lobbyClick,netHost,netJoin,netStartGame,netClose,coopSnap,coopApplySnap,coopSolo,coopDown,manualOffer,manualAnswer,manualFinish,zip,unzip,get menuTab(){return menuTab}
   };
 }
 })();

@@ -419,7 +419,7 @@ function render(){
   const each=f=>{if(!COOP||mode==='menu'){f(g);return}const me=G;for(const h of COOP.H){G=h;f(h)}G=me};
   drawDecor(g,MP);drawPools(g,MP);each(drawScorch);drawPatches(g);drawSolids(g,MP);
   if(mode!=='menu'){each(drawZones);each(drawBlasts);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);each(drawStructs);drawEnemies(g);each(drawWalls);each(drawSplashes);each(drawSpiralCore);drawJet(g);each(drawDebris);each(drawSmoke)}
-  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z)}
+  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z);coopArrows()}
   if(mode!=='menu'){each(drawSkillFx);each(drawProj);drawEnemyProj(g);each(drawTornados);each(drawBolts);drawSky(g);each(drawFlash);each(drawSparks);each(drawFx)}
   else drawFx(g);
   ctx.restore();

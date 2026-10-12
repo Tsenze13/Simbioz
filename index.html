@@ -437,6 +437,32 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
 #coopBar .cb em{font-style:normal;font-size:12px;color:#ffd36b}#coopBar .cb.down{border-color:#ff6b7a}
 #coopWait{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);padding:14px 22px;background:rgba(10,12,20,.9);border:1px solid var(--line2);border-radius:12px;font:700 18px var(--f-display);z-index:40;text-align:center}
 #coopWait small{display:block;font:400 13px var(--f-body);color:var(--dim);margin-top:4px}
+/* ---------- игра вдвоём: лобби ---------- */
+.lobby{display:grid;gap:14px;max-width:900px;margin:0 auto}
+.lobby input,.lobby textarea{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;color:inherit;font:inherit;padding:7px 10px;min-width:0}
+.lobby textarea{width:100%;font:12px/1.35 ui-monospace,monospace;resize:vertical;word-break:break-all}
+.lobby input:focus,.lobby textarea:focus{outline:2px solid #9fe0ff;outline-offset:1px}
+.lrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lrow label{display:flex;align-items:center;gap:8px;font-weight:700}
+.lcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.lcard{display:grid;gap:8px;justify-items:start;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.lcard>b{font-size:16px}
+.lcard .sub{margin:0}
+.lcard.big{justify-items:center;text-align:center;padding:22px}
+.lcode{font:800 46px/1 ui-monospace,monospace;letter-spacing:.18em;color:#ffd36b;text-shadow:0 0 18px rgba(255,211,107,.35);padding:4px 0 4px .18em;user-select:all}
+.lst{font-weight:700;color:#9fe0ff}
+.lplayers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lp{display:grid;gap:2px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--c1);border-radius:10px}
+.lp small{color:var(--dim);font-size:12px}.lp b{font-size:17px}.lp span{color:var(--c1);font-weight:700}
+.lman{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.lman summary{cursor:pointer;font-weight:700;color:#c9d3ea}
+.lman2{display:grid;gap:8px;margin-top:8px;justify-items:start;width:100%}
+.lerr{color:#ffb0a0;font-weight:700;margin:0}
+.llog{font-size:12px;color:var(--dim);display:grid;gap:2px;padding:6px 2px}
+@media (max-width:640px){.lplayers{grid-template-columns:1fr}.lcode{font-size:34px}}
+#lobbyDyn{display:grid;gap:12px}
+#lobbyDyn .sec{margin:4px 0 -4px}
+#coopBar .cb.ping{padding:2px 10px;opacity:.75;min-width:0}
 </style>
 
 <div id="stage">
@@ -490,7 +516,7 @@ button.card.fuse .tg{background:linear-gradient(90deg,var(--c1),var(--c2));-webk
         <p class="tag">Рогалик об аватаре шести стихий. Смешивай стихии и навыки, пока не победишь Пожирателя.</p>
       </div>
       <div class="tabs" id="tabs"></div>
-      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.41 · тест для друзей</span></div>
+      <div class="mfoot"><span id="essLine"></span><span id="bestLine"></span><span>Версия 0.42-бета · тест для друзей</span></div>
     </div>
     <div class="mpanel" id="mpanel"></div>
   </div>
@@ -5776,6 +5802,7 @@ function quitToMenu(){
   mode='menu';G=null;hintQ=[];hintT=0;$('hint').hidden=true;clearTimeout(biomeShow);clearTimeout(biomeTimer);$('biome').hidden=true;
   $('hud').hidden=true;$('over').hidden=true;$('pause').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;
   $('menu').hidden=false;
+  if(typeof NET!=='undefined'&&NET.st==='open')menuTab='coop';
   renderMenu();
 }
 function skipWave(){
@@ -5795,7 +5822,8 @@ function togglePause(){
   const g=G;
   if(mode!=='play'||!g||g.lvlOpen||g.shopOpen||g.treeOpen)return;
   g.paused=!g.paused;$('pause').hidden=!g.paused;
-  if(g.paused){fillStats();for(const k in codes)codes[k]=false}
+  /* в совместной игре пауза общая, а в окне — статы своего героя */
+  if(g.paused){const me=G;if(COOP)G=COOP.H[COOP.me];fillStats();G=me;for(const k in codes)codes[k]=false}
 }
 
 
@@ -5976,7 +6004,7 @@ const WORLD_KEYS=['map','binst','ox','oy','gk','solids','pools','decors','pch','
   'kills','t','slowmo','zk','slowAll','slowAllF','en','eps','tgs','gem','pk','merch','evts','feat','portals','safe','risk','riskRun',
   'curseW','trialW','ch','asc','essPaid','darkAdd','flashA','atkSrc','stockT'];
 /* общий генератор случайных чисел (mulberry32) */
-function seedRng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+function seedRng(seed){let a=seed>>>0;const f=function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};f.get=()=>a;f.set=v=>{a=v|0};return f}
 function withSim(fn){const r=Math.random;Math.random=COOP.rng;try{return fn()}finally{Math.random=r}}
 function worldify(h,W){
   for(const k of WORLD_KEYS){
@@ -5989,7 +6017,7 @@ function worldify(h,W){
 function coopStart(cfg){
   clearRun();
   const ch=clamp(cfg.ch||1,1,CHAP.length),map=CHAP[ch-1].maps[0];
-  COOP={H:[],me:cfg.me,cfg,net:cfg.net||null,W:{},rng:seedRng(cfg.seed),tick:0};lsReset();
+  COOP={H:[],me:cfg.me,cfg,net:cfg.net||null,W:{},rng:seedRng(cfg.seed),tick:0};LS.D=cfg.D||4;lsReset();
   withSim(()=>{
     cfg.heroes.forEach((hc,i)=>{
       const h=mkState(hc.start,map);
@@ -6024,8 +6052,21 @@ function coopStart(cfg){
 }
 function coopEnd(){
   if(!COOP)return;
-  if(COOP.net)netClose();
-  COOP=null;coopHud(false);
+  /* соединение не рвём: после забега можно сыграть ещё раз. Если выходим посреди забега — друг играет дальше один */
+  if(COOP.net&&!COOP.W.over)netSend({k:'leave'});
+  COOP=null;coopHud(false);$('pause').hidden=true;
+}
+/* друг ушёл (вышел или пропала связь): его герой исчезает, играем одни */
+function coopSolo(who,what){
+  if(!COOP)return;
+  const me=COOP.H[COOP.me];
+  COOP.net=null;COOP.H=[me];COOP.me=0;me.idx=0;
+  if(me.down){me.down=false;me.rev=0;me.p.hp=Math.max(1,me.S.maxHp*0.4)}
+  for(const k in LS.inq)delete LS.inq[k];LS.cmds=[];
+  if(COOP.W.paused&&$('pause').hidden)COOP.W.paused=false;
+  G=me;toast(who+what,'Играете дальше один');
+  const w=$('coopWait');if(w)w.hidden=true;
+  coopHud(true);
 }
 /* такт мира: все герои + враги. dt фиксированный */
 function coopTick(dt){
@@ -6102,6 +6143,7 @@ function coopHudTick(){
     h+='<div class="cb"><b style="color:'+E.c+'">'+q.name+'</b><small>'+(q.start==='avatar'?'Аватар':CLS[q.start].n)+' · ур. '+q.p.lv+'</small>'
       +'<i><u style="width:'+Math.round(clamp(q.p.hp/q.S.maxHp,0,1)*100)+'%"></u></i>'+(st?'<em>'+st+'</em>':'')+'</div>'});
   const me=COOP.H[COOP.me];
+  if(COOP.net&&NET.rtt)h+='<div class="cb ping"><small>связь '+Math.round(NET.rtt)+' мс</small></div>';
   if(me.down)h+='<div class="cb down"><b>Вы упали</b><em>Друг поднимет вас, если постоит рядом ('+Math.round(me.rev/2.5*100)+'%)</em></div>';
   if(el._h!==h){el._h=h;el.innerHTML=h}
 }
@@ -6114,13 +6156,28 @@ function drawNameTags(){
     if(h.down){ctx.strokeStyle='#9fffb0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,30,-Math.PI/2,-Math.PI/2+TAU*h.rev/2.5);ctx.stroke();ctx.fillStyle='#ff6b7a';ctx.fillText('упал',p.x,p.y+44)}});
   ctx.restore();ctx.textAlign='left';
 }
+/* друг за краем экрана — стрелка с именем у края */
+function coopArrows(){
+  if(!COOP||COOP.H.length<2)return;
+  /* рамка без HUD: сверху счётчик волны, снизу панель навыков */
+  const z=W/VW,l=VX+40/z,r=VX+VW-40/z,t=VY+Math.min(150,H*0.22)/z,b=VY+VH-Math.min(200,H*0.3)/z;
+  const cx=(l+r)/2,cy=(t+b)/2,hw=(r-l)/2,hh=(b-t)/2;
+  COOP.H.forEach((h,i)=>{if(i===COOP.me)return;
+    const dx=h.p.x-cx,dy=h.p.y-cy;if(h.p.x>VX&&h.p.x<VX+VW&&h.p.y>VY&&h.p.y<VY+VH)return;
+    const k=Math.min(hw/Math.abs(dx||1),hh/Math.abs(dy||1),1),ax=cx+dx*k,ay=cy+dy*k,a=Math.atan2(dy,dx),E=hEl(h.start);
+    ctx.save();ctx.translate(ax,ay);ctx.save();ctx.rotate(a);ctx.fillStyle=h.down?'#ff6b7a':E.c;ctx.globalAlpha=0.85;
+    ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(-9,-11);ctx.lineTo(-4,0);ctx.lineTo(-9,11);ctx.closePath();ctx.fill();ctx.restore();
+    ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.globalAlpha=0.9;
+    const ty=dy>0?-18:26;ctx.fillText(h.name+(h.down?' (упал)':'')+' · '+Math.round(Math.hypot(dx,dy)/10)+' м',0,ty);
+    ctx.restore();ctx.globalAlpha=1;ctx.textAlign='left'});
+}
 /* =====================================================================
    LOCKSTEP: мир считается тактами по 1/60 с. На каждый такт у каждого игрока есть «ввод»
    (движение, прицел, зажатые навыки) и список действий. Свой ввод отправляется на D тактов
    вперёд; такт выполняется, только когда пришёл ввод всех игроков — поэтому мир у всех одинаков.
    Без сети (COOP.net=null) — тот же цикл, но второй герой стоит или управляется тестом.
    ===================================================================== */
-const LS={dt:1/60,acc:0,D:4,t:0,inq:{},cmds:[],sentT:-1,waitT:0,hash:{},bad:0};
+const LS={dt:1/60,acc:0,D:4,t:0,inq:{},cmds:[],sentT:-1,waitT:0,hash:{},rhash:{},mine:{},bad:0,needSnap:0,adv:0,rT:0};
 /* ввод этого устройства, округлённый до целых: у всех применяется одно и то же число */
 function sampleInput(){
   const g=COOP.H[COOP.me],mv=(g.lvlOpen||g.shopOpen||g.treeOpen||COOP.W.paused)?{x:0,y:0}:readMove();
@@ -6133,7 +6190,7 @@ function applyInput(h,q){
   if(!q)return;
   h.inp.x=q[0]/100;h.inp.y=q[1]/100;h.inp.ax=q[2];h.inp.ay=q[3];h.inp.aim=!!q[4];h.inp.held=q[5]|0;
 }
-function lsReset(){LS.acc=0;LS.t=0;LS.inq={};LS.cmds=[];LS.sentT=-1;LS.waitT=0;LS.hash={};LS.bad=0}
+function lsReset(){LS.acc=0;LS.t=0;LS.inq={};LS.cmds=[];LS.sentT=LS.D-1;LS.waitT=0;LS.hash={};LS.rhash={};LS.mine={};LS.bad=0;LS.needSnap=0;LS.adv=0;LS.rT=0}
 /* команда A(...) в сетевой игре — копится и уходит вместе с ближайшим вводом */
 function netCmd(name,args){LS.cmds.push([name,args||[]])}
 /* выполнить такт t: действия игроков по порядку, ввод, затем мир */
@@ -6144,12 +6201,14 @@ function lsRun(t){
     coopTick(LS.dt);
   });
   delete LS.inq[t];
-  if(t%30===0){LS.hash[t]=stateHash();netHash(t,LS.hash[t])}
+  if(t%30===0){LS.hash[t]=stateHash();if(COOP.net)netHash(t,LS.hash[t]);hashCheck(t);for(const k in LS.hash)if(+k<t-600)delete LS.hash[k];for(const k in LS.rhash)if(+k<t-600)delete LS.rhash[k];for(const k in LS.mine)if(+k<t-600)delete LS.mine[k]}
+  if(COOP.snapT&&t>COOP.snapT+180)COOP.snapT=0;
 }
 /* каждый кадр */
 function coopFrame(raw){
   if(!COOP||mode!=='play')return;
-  LS.acc=Math.min(LS.acc+raw,0.25);
+  /* кто убежал вперёд друга — чуть притормаживает, чтобы у обоих был запас под скачки пинга */
+  LS.acc=Math.min(LS.acc+raw*(COOP.net&&LS.adv>1.5?0.9:1),0.25);
   if(!COOP.net){
     /* без сети: свой ввод сразу, второй герой — как задаст тест (COOP.H[i].inp) */
     let n=0;
@@ -6161,9 +6220,12 @@ function coopFrame(raw){
   }
   let n=0;
   while(LS.acc>=LS.dt&&n<8){
+    /* рассинхрон замечен — хозяин шлёт снимок между тактами (тут состояние целое) */
+    if(LS.needSnap){LS.needSnap=0;coopDesync(LS.needT);if(!COOP||!COOP.net)return}
     /* свой ввод на такт t+D (один раз на такт) */
     const st=LS.t+LS.D;
-    if(LS.sentT<st){LS.sentT=st;const m={i:sampleInput(),c:LS.cmds};LS.cmds=[];(LS.inq[st]=LS.inq[st]||{})[COOP.me]=m;netSend({k:'in',t:st,m})}
+    if(LS.sentT<st){const q=sampleInput();
+      while(LS.sentT<st){LS.sentT++;const m={i:q,c:LS.cmds};LS.cmds=[];(LS.inq[LS.sentT]=LS.inq[LS.sentT]||{})[COOP.me]=m;LS.mine[LS.sentT]=m;netSend({k:'in',t:LS.sentT,m})}}
     const slot=LS.inq[LS.t];
     const ready=LS.t<LS.D||(slot&&COOP.H.every((h,i)=>slot[i]));
     if(!ready){LS.waitT+=raw;break}
@@ -6174,8 +6236,17 @@ function coopFrame(raw){
 }
 /* приём ввода друга */
 function lsRecv(from,m){
-  if(m.k==='in'){(LS.inq[m.t]=LS.inq[m.t]||{})[from]=m.m}
-  else if(m.k==='hash'){const mine=LS.hash[m.t];if(mine!==undefined&&mine!==m.h){LS.bad++;coopDesync(m.t)}}
+  if(m.k==='in'){(LS.inq[m.t]=LS.inq[m.t]||{})[from]=m.m;
+    /* где сейчас друг: его такт = m.t-D, плюс время полёта сообщения */
+    if(m.t>LS.rT){LS.rT=m.t;const L=(typeof NET!=='undefined'&&NET.rtt?NET.rtt/2:30)/(1000/60),adv=LS.t-(m.t-LS.D+L);LS.adv=LS.adv*0.9+adv*0.1}}
+  else if(m.k==='hash'){if((m.e|0)!==(COOP.ep|0))return;LS.rhash[m.t]=m.h;hashCheck(m.t)}
+}
+/* сравнить отпечатки такта t, когда есть оба (свой и друга) */
+function hashCheck(t){
+  const a=LS.hash[t],b=LS.rhash[t];
+  if(a===undefined||b===undefined)return;
+  delete LS.rhash[t];
+  if(a!==b){LS.bad++;LS.needSnap=1;LS.needT=t}
 }
 /* отпечаток мира: если у игроков разный — значит, разошлись */
 function stateHash(){
@@ -6185,11 +6256,304 @@ function stateHash(){
   for(const q of COOP.H){add(q.p.x);add(q.p.y);add(q.p.hp);add(q.p.lv);add(q.p.gold)}
   return h>>>0;
 }
-/* временные заглушки сети (заменятся в net.js) */
-function netSend(m){}
-function netHash(t,h){}
-function netClose(){}
-function coopDesync(t){console.warn('рассинхрон на такте',t)}
+/* =====================================================================
+   СЕТЬ: комната по коду, прямое соединение WebRTC между игроками.
+   Сервера у игры нет. Чтобы найти друг друга, игроки на минуту встречаются в публичном
+   «почтовом ящике» (MQTT-брокер по WebSocket) под темой с кодом комнаты и обмениваются
+   данными соединения. Дальше всё идёт напрямую. Запасные пути:
+     • «вручную» — обменяться длинными кодами через мессенджер;
+     • «в этом браузере» (BroadcastChannel) — две вкладки на одном компьютере (для проверки).
+   ===================================================================== */
+const NET={st:'idle',pc:null,dc:null,sig:null,id:'',code:'',host:false,peer:null,onmsg:null,log:[],me:null,friend:null,lobby:null};
+const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:global.stun.twilio.com:3478'},
+  {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function gameVer(){const s=document.querySelector('.mfoot span:last-child');return s?s.textContent.split('·')[0].trim():'?'}
+function nlog(s){NET.log.push(s);if(NET.log.length>30)NET.log.shift();if(typeof lobbyRender==='function')lobbyRender()}
+function rid(n,abc){abc=abc||CODE_ABC;let s='';for(let i=0;i<n;i++)s+=abc[Math.floor(VR()*abc.length)];return s}
+
+/* ---------- MQTT 3.1.1 поверх WebSocket (только то, что нужно: connect / subscribe / publish / ping) ---------- */
+function mqttOpen(url,topic,onJson){
+  return new Promise((resolve,reject)=>{
+    let ws;try{ws=new WebSocket(url,'mqtt')}catch(e){reject(e);return}
+    ws.binaryType='arraybuffer';
+    const enc=new TextEncoder(),dec=new TextDecoder();
+    const str=s=>{const b=enc.encode(s);return [b.length>>8,b.length&255,...b]};
+    const pkt=(h,body)=>{const L=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;L.push(d)}while(n>0);const u=new Uint8Array(1+L.length+body.length);u[0]=h;u.set(L,1);u.set(body,1+L.length);return u};
+    let buf=new Uint8Array(0),ping=0,ok=false;
+    const to=setTimeout(()=>{if(!ok){try{ws.close()}catch(_){}reject(new Error('timeout'))}},6000);
+    ws.onopen=()=>{
+      const cid='sb'+rid(10);
+      ws.send(pkt(0x10,[...str('MQTT'),4,0x02,0,60,...str(cid)]));
+    };
+    ws.onmessage=ev=>{
+      const a=new Uint8Array(ev.data),nb=new Uint8Array(buf.length+a.length);nb.set(buf);nb.set(a,buf.length);buf=nb;
+      while(buf.length>=2){
+        let mul=1,len=0,i=1,d;
+        do{if(i>=buf.length)return;d=buf[i++];len+=(d&127)*mul;mul*=128}while(d&128);
+        if(buf.length<i+len)return;
+        const h0=buf[0],type=h0>>4,body=buf.slice(i,i+len);buf=buf.slice(i+len);
+        if(type===2){ok=true;clearTimeout(to);ws.send(pkt(0x82,[0,1,...str(topic),0]));ping=setInterval(()=>{try{ws.send(new Uint8Array([0xC0,0]))}catch(_){}},25000)}
+        else if(type===9){resolve(api)}
+        else if(type===3){const qos=(h0>>1)&3,tl=(body[0]<<8)|body[1];let p=2+tl;if(qos>0)p+=2;
+          try{onJson(JSON.parse(dec.decode(body.slice(p))))}catch(_){}}
+      }
+    };
+    ws.onerror=()=>{clearTimeout(to);if(!ok)reject(new Error('ws'))};
+    ws.onclose=()=>{clearInterval(ping);if(api.onclose)api.onclose()};
+    const api={send(o){try{ws.send(pkt(0x30,[...str(topic),...enc.encode(JSON.stringify(o))]))}catch(_){}},close(){clearInterval(ping);try{ws.send(new Uint8Array([0xE0,0]));ws.close()}catch(_){}},onclose:null,url};
+  });
+}
+/* сигнальный канал: брокер по номеру из кода комнаты, либо BroadcastChannel */
+async function sigOpen(code,onJson){
+  const cb=onJson;onJson=m=>{Promise.resolve().then(()=>cb(m)).catch(e=>nlog('Ошибка соединения: '+(e&&e.message||e)))};
+  if(code[0]==='0'){const bc=new BroadcastChannel('simbioz-'+code);bc.onmessage=e=>onJson(e.data);return {send:o=>bc.postMessage(JSON.parse(JSON.stringify(o))),close:()=>bc.close(),url:'вкладки этого браузера'}}
+  const bi=parseInt(code[0],10)-1,order=[bi,...BROKERS.map((_,i)=>i).filter(i=>i!==bi)];
+  let lastErr;
+  for(const i of order.slice(0,1)){ /* брокер задаёт код — у обоих один и тот же */
+    try{return await mqttOpen(BROKERS[i],'simbioz/v1/'+code,onJson)}catch(e){lastErr=e}
+  }
+  throw lastErr||new Error('broker');
+}
+async function pickBroker(){
+  for(let i=0;i<BROKERS.length;i++){
+    try{const s=await mqttOpen(BROKERS[i],'simbioz/v1/probe'+rid(4),()=>{});s.close();return i}catch(_){nlog('Сервер встреч '+(i+1)+' недоступен')}
+  }
+  return -1;
+}
+/* ---------- WebRTC ---------- */
+function pcNew(){
+  const pc=new RTCPeerConnection({iceServers:ICE});
+  const RU={new:'новое',connecting:'устанавливается',connected:'есть',disconnected:'прервалось',failed:'не удалось',closed:'закрыто'};
+  pc.onconnectionstatechange=()=>{
+    if(NET.pc!==pc)return;
+    const s=pc.connectionState;nlog('Соединение: '+(RU[s]||s));
+    if(s==='failed'||s==='closed')netLost();
+    /* «прервалось» бывает на секунду (смена сети) — ждём 6 с, вдруг восстановится */
+    else if(s==='disconnected')setTimeout(()=>{if(NET.pc===pc&&pc.connectionState!=='connected')netLost()},6000);
+  };
+  return pc;
+}
+function dcBind(dc){
+  NET.dc=dc;
+  dc.onopen=()=>{if(NET.dc!==dc)return;NET.st='open';nlog('Канал открыт');if(NET.sig){setTimeout(()=>{try{NET.sig.close()}catch(_){}NET.sig=null},1500)}netHello()};
+  dc.onclose=()=>{if(NET.dc===dc)netLost()};
+  dc.onmessage=e=>{if(NET.dc!==dc)return;let m;try{m=JSON.parse(e.data)}catch(_){return}netRecv(m)};
+}
+function waitIce(pc){return new Promise(r=>{if(pc.iceGatheringState==='complete'){r();return}const t=setTimeout(r,4000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);r()}})})}
+
+/* ---------- создать комнату / войти ---------- */
+async function netHost(local){
+  netClose();
+  NET.host=true;NET.id=rid(8);NET.st='wait';
+  let bi=0;
+  if(local)NET.code='0'+rid(4,'0123456789');
+  else{nlog('Ищем сервер встреч…');bi=await pickBroker();if(bi<0){NET.st='err';nlog('Серверы встреч недоступны — попробуйте «вручную»');return}NET.code=(bi+1)+rid(4,'0123456789')}
+  try{NET.sig=await sigOpen(NET.code,hostSig)}catch(e){NET.st='err';nlog('Не удалось открыть комнату: '+e.message);return}
+  nlog('Комната '+NET.code+' открыта. Ждём друга…');
+}
+async function hostSig(m){
+  if(!m||m.f===NET.id)return;
+  if(m.t==='hello'&&NET.st==='wait'){
+    NET.peer=m.f;NET.st='link';nlog('Друг нашёлся, соединяемся…');
+    const pc=NET.pc=pcNew();
+    pc.onicecandidate=e=>{if(e.candidate&&NET.sig)NET.sig.send({f:NET.id,to:NET.peer,t:'ice',d:e.candidate})};
+    dcBind(pc.createDataChannel('game',{ordered:true}));
+    await pc.setLocalDescription(await pc.createOffer());
+    NET.sig.send({f:NET.id,to:NET.peer,t:'offer',d:pc.localDescription});
+  }else if(m.t==='hello'&&m.f!==NET.peer&&NET.sig)NET.sig.send({f:NET.id,to:m.f,t:'full'});
+  else if(m.to===NET.id&&m.t==='answer'&&NET.pc)await NET.pc.setRemoteDescription(m.d);
+  else if(m.to===NET.id&&m.t==='ice'&&NET.pc){try{await NET.pc.addIceCandidate(m.d)}catch(_){}}
+}
+async function netJoin(code){
+  netClose();
+  code=(code||'').replace(/\D/g,'');
+  if(code.length!==5||code[0]>'3'){nlog('Код — 5 цифр, первая от 0 до 3. Проверьте код');return}
+  NET.host=false;NET.id=rid(8);NET.code=code;NET.st='join';
+  try{NET.sig=await sigOpen(code,joinSig)}catch(e){NET.st='err';nlog('Не удалось подключиться к серверу встреч — попробуйте «вручную»');return}
+  nlog('Ищем комнату '+code+'…');
+  let n=0;const hi=setInterval(()=>{if(NET.st!=='join'||!NET.sig){clearInterval(hi);return}if(++n>40){clearInterval(hi);NET.st='err';nlog('Комната не отвечает. Проверьте код');return}NET.sig.send({f:NET.id,t:'hello'})},1500);
+  NET.sig.send({f:NET.id,t:'hello'});
+}
+async function joinSig(m){
+  if(!m||m.f===NET.id||(m.to&&m.to!==NET.id))return;
+  if(m.t==='full'){NET.st='err';nlog('В комнате уже двое');return}
+  if(m.t==='offer'&&NET.st==='join'){
+    NET.peer=m.f;NET.st='link';nlog('Комната найдена, соединяемся…');
+    const pc=NET.pc=pcNew();
+    pc.onicecandidate=e=>{if(e.candidate&&NET.sig)NET.sig.send({f:NET.id,to:NET.peer,t:'ice',d:e.candidate})};
+    pc.ondatachannel=e=>dcBind(e.channel);
+    await pc.setRemoteDescription(m.d);
+    await pc.setLocalDescription(await pc.createAnswer());
+    NET.sig.send({f:NET.id,to:NET.peer,t:'answer',d:pc.localDescription});
+  }else if(m.t==='ice'&&NET.pc){try{await NET.pc.addIceCandidate(m.d)}catch(_){}}
+}
+/* ---------- вручную: длинные коды ---------- */
+async function zip(o){const s=new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('deflate-raw'));const b=new Uint8Array(await new Response(s).arrayBuffer());let t='';for(const x of b)t+=String.fromCharCode(x);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function unzip(s){s=s.trim().replace(/-/g,'+').replace(/_/g,'/');const t=atob(s),b=new Uint8Array(t.length);for(let i=0;i<t.length;i++)b[i]=t.charCodeAt(i);const st=new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return JSON.parse(await new Response(st).text())}
+async function manualOffer(){
+  netClose();NET.host=true;NET.st='manual';
+  const pc=NET.pc=pcNew();dcBind(pc.createDataChannel('game',{ordered:true}));
+  await pc.setLocalDescription(await pc.createOffer());await waitIce(pc);
+  return await zip({t:'o',s:pc.localDescription.sdp});
+}
+async function manualAnswer(code){
+  netClose();NET.host=false;NET.st='manual';
+  const o=await unzip(code);if(o.t!=='o')throw new Error('Это не код приглашения');
+  const pc=NET.pc=pcNew();pc.ondatachannel=e=>dcBind(e.channel);
+  await pc.setRemoteDescription({type:'offer',sdp:o.s});
+  await pc.setLocalDescription(await pc.createAnswer());await waitIce(pc);
+  return await zip({t:'a',s:pc.localDescription.sdp});
+}
+async function manualFinish(code){
+  const o=await unzip(code);if(o.t!=='a')throw new Error('Это не код ответа');
+  await NET.pc.setRemoteDescription({type:'answer',sdp:o.s});
+}
+/* ---------- обмен сообщениями ---------- */
+/* большие сообщения (снимок мира) режем на куски: между браузерами предел одного сообщения ~64 КБ */
+const PART=16000;let partN=0;
+function netSend(m){
+  if(!NET.dc||NET.dc.readyState!=='open')return;
+  /* отладка: искусственная задержка сети (порядок сохраняется) */
+  if(NET.lag&&!m._l){const at=Math.max(NET.lagAt||0,performance.now()+NET.lag+VR()*(NET.jit||0));NET.lagAt=at;const c=Object.assign({},m,{_l:1});setTimeout(()=>netSend(c),at-performance.now());return}
+  if(m._l)delete m._l;
+  try{const s=JSON.stringify(m);
+    if(s.length<=PART){NET.dc.send(s);return}
+    const id=++partN,n=Math.ceil(s.length/PART);
+    for(let i=0;i<n;i++)NET.dc.send(JSON.stringify({k:'part',id,i,n,d:s.slice(i*PART,(i+1)*PART)}));
+  }catch(e){nlog('Не удалось отправить: '+(e&&e.message||e))}
+}
+const PARTS={};
+function netPart(m){
+  const P=PARTS[m.id]=PARTS[m.id]||{n:m.n,got:0,a:[]};
+  if(P.a[m.i]===undefined){P.a[m.i]=m.d;P.got++}
+  if(P.got===P.n){delete PARTS[m.id];let o;try{o=JSON.parse(P.a.join(''))}catch(_){return}netRecv(o)}
+}
+function netHello(){NET.me=lobbyMe();netSend({k:'hello',ver:gameVer(),p:NET.me});NET.rtt=0;clearInterval(NET.pingT);NET.pingT=setInterval(()=>{if(NET.st!=='open'){clearInterval(NET.pingT);return}netSend({k:'ping',t:performance.now()});if(!COOP)lobbyPing()},1000)}
+function netRecv(m){
+  if(m.k==='part'){netPart(m);return}
+  if(m.k==='ping'){netSend({k:'pong',t:m.t});return}
+  if(m.k==='pong'){const r=performance.now()-m.t;NET.rtt=NET.rtt?NET.rtt*0.7+r*0.3:r;return}
+  if(m.k==='in'||m.k==='hash'){if(COOP&&COOP.net)lsRecv(NET.host?1:0,m);return}
+  if(m.k==='hello'){
+    if(m.ver!==gameVer()){nlog('У друга другая версия игры ('+m.ver+'). Обновите страницу у обоих');NET.verBad=true}
+    NET.friend=m.p;nlog('Друг: '+m.p.name);lobbyRender();return}
+  if(m.k==='me'){NET.friend=m.p;lobbyRender();return}
+  if(m.k==='start'&&!NET.host){coopStart(Object.assign({},m.cfg,{me:1,net:true}));return}
+  if(m.k==='snap'){if(COOP&&COOP.net)coopApplySnap(m);return}
+  if(m.k==='leave'){if(COOP&&COOP.net){coopSolo(NET.friend&&NET.friend.name||'Друг',' вышел в меню')}return}
+  if(m.k==='bye'){netLost();return}
+}
+function netHash(t,h){netSend({k:'hash',t,h,e:COOP.ep|0})}
+function netLost(){
+  if(NET.st==='closed')return;
+  const was=NET.st;NET.st='closed';
+  if(COOP&&COOP.net)coopSolo('Связь с другом',' потеряна');
+  if(was==='open'||was==='link')nlog('Связь потеряна');
+  lobbyRender();
+}
+function netClose(){
+  try{if(NET.dc&&NET.dc.readyState==='open')NET.dc.send(JSON.stringify({k:'bye'}))}catch(_){}
+  const {sig,dc,pc}=NET;NET.sig=NET.dc=NET.pc=null;
+  try{sig&&sig.close()}catch(_){}try{dc&&dc.close()}catch(_){}try{pc&&pc.close()}catch(_){}NET.st='idle';NET.friend=null;NET.peer=null;NET.verBad=false;
+}
+/* хозяин запускает забег */
+function netStartGame(){
+  if(!NET.host||!NET.friend||NET.st!=='open')return;
+  /* задержка ввода под пинг: ввод должен успеть долететь до того, как такт выполнится */
+  const D=clamp(Math.ceil((NET.rtt||60)/2/(1000/60))+3,4,14);
+  const cfg={D,seed:(VR()*2**31)|0,ch:clamp(SAVE.chSel||1,1,SAVE.ch||1),asc:Math.min(SAVE.ascSel||0,SAVE.asc||0),heroes:[lobbyMe(),NET.friend]};
+  netSend({k:'start',cfg});
+  coopStart(Object.assign({},cfg,{me:0,net:true}));
+}
+/* рассинхрон: хозяин присылает состояние, гость его принимает */
+function coopDesync(t){
+  if(!COOP||!COOP.net)return;
+  nlog('Рассинхрон на такте '+t);
+  if(NET.host&&!COOP.snapT){
+    COOP.snapT=LS.t;
+    const s=coopSnap();netSend(s);
+    /* хозяин тоже «перезагружается» из того же снимка: у обоих одинаково пропадут функции-отложки */
+    const own=JSON.parse(JSON.stringify(s));own.self=true;coopApplySnap(own);
+  }
+}
+/* =====================================================================
+   СНИМОК СОСТОЯНИЯ для выравнивания при рассинхроне: хозяин сериализует мир и героев
+   (граф объектов со ссылками; таблицы данных — ссылками по имени), гость его принимает.
+   Функции (отложенные эффекты) не переносятся — их пара кадров пропадёт, это незаметно.
+   ===================================================================== */
+let SNAP_C=null;
+function snapConsts(){
+  if(SNAP_C)return SNAP_C;
+  SNAP_C={o2p:new Map(),p2o:new Map()};
+  const T={ET,BOSS,AB,ITEMS,CLS,EL,MAPS,FORMS,GUNS,GMOD,RELICS,EVTS,MERCH,HPAS,HMECH,ULT,TREE,CHAP,INVEST,MSEAL,BAL,DT,AFF,CR,EW};
+  const reg=(o,p,d)=>{if(!o||typeof o!=='object'||SNAP_C.o2p.has(o)||d>3)return;SNAP_C.o2p.set(o,p);SNAP_C.p2o.set(p,o);for(const k of Object.keys(o))reg(o[k],p+'.'+k,d+1)};
+  for(const n in T)reg(T[n],n,0);
+  return SNAP_C;
+}
+function snapSer(root,skipKeys){
+  const C=snapConsts(),ids=new Map(),out=[];
+  const enc=v=>{
+    if(typeof v==='function')return undefined;
+    if(typeof v==='number'&&!isFinite(v))return {$n:String(v)};
+    if(v===null||typeof v!=='object')return v;
+    if(C.o2p.has(v))return {$c:C.o2p.get(v)};
+    if(ids.has(v))return {$r:ids.get(v)};
+    if(typeof Node!=='undefined'&&v instanceof Node)return null;
+    if(v instanceof CanvasRenderingContext2D||(typeof ImageData!=='undefined'&&v instanceof ImageData))return null;
+    const id=out.length;ids.set(v,id);out.push(null);
+    let o;
+    if(Array.isArray(v))o={a:v.map(x=>{const e=enc(x);return e===undefined?null:e})};
+    else if(v instanceof Set)o={s:[...v].map(enc)};
+    else if(v instanceof Map)o={m:[...v].map(([k,x])=>[enc(k),enc(x)])};
+    else{const sk=skipKeys&&skipKeys.get(v);o={o:{}};for(const k of Object.keys(v)){if(sk&&sk.has(k))continue;const e=enc(v[k]);if(e!==undefined)o.o[k]=e}}
+    out[id]=o;return {$r:id};
+  };
+  return {root:enc(root),out};
+}
+function snapDes(S){
+  const C=snapConsts(),objs=S.out.map(o=>o.a?[]:o.s?new Set():o.m?new Map():{});
+  const dec=v=>{
+    if(v===null||typeof v!=='object')return v;
+    if(v.$r!==undefined)return objs[v.$r];
+    if(v.$c!==undefined)return C.p2o.get(v.$c);
+    if(v.$n!==undefined)return Number(v.$n);
+    return v;
+  };
+  S.out.forEach((o,i)=>{const t=objs[i];
+    if(o.a)for(const x of o.a)t.push(dec(x));
+    else if(o.s)for(const x of o.s)t.add(dec(x));
+    else if(o.m)for(const [k,x] of o.m)t.set(dec(k),dec(x));
+    else for(const k in o.o)t[k]=dec(o.o[k]);
+  });
+  return dec(S.root);
+}
+/* снимок совместной игры */
+function coopSnap(){
+  const skip=new Map(),wk=new Set(WORLD_KEYS);
+  for(const h of COOP.H)skip.set(h,wk);
+  const inq={};for(const t in LS.inq)if(+t>=LS.t)inq[t]=LS.inq[t];
+  return {k:'snap',t:LS.t,rng:COOP.rng.get(),tick:COOP.tick,g:snapSer({W:COOP.W,H:COOP.H},skip),inq};
+}
+function coopApplySnap(m){
+  if(!COOP)return;
+  const st=snapDes(m.g),W=st.W;
+  COOP.W=W;COOP.H=st.H;
+  for(const h of COOP.H){worldify(h,W);h.later=(h.later||[]).filter(x=>typeof x.fn==='function');h.gk=''}
+  COOP.rng.set(m.rng);COOP.tick=m.tick;
+  const keep={};for(const t in LS.inq)if(+t>=m.t)keep[t]=LS.inq[t];
+  LS.inq=keep;for(const t in m.inq){LS.inq[t]=LS.inq[t]||{};Object.assign(LS.inq[t],m.inq[t])}
+  /* свой ввод — из своей истории: часть его могла быть уже выполнена и ещё лететь к хозяину */
+  for(const t in LS.mine)if(+t>=m.t)(LS.inq[t]=LS.inq[t]||{})[COOP.me]=LS.mine[t];
+  COOP.ep=(COOP.ep|0)+1;
+  LS.t=m.t;LS.acc=0;LS.hash={};LS.rhash={};
+  /* sentT не трогаем: всё, что уже отправлено, у хозяина есть; пропуски дозаполнит coopFrame */
+  G=COOP.H[COOP.me];
+  hc={};buildTopHud();
+  COOP.resyncs=(COOP.resyncs||0)+1;
+  if(!m.self)toast('Игра выровнена','Состояние мира взято у хозяина комнаты');
+}
 /* ---------- подсказки новичку: показываются по одному разу, выключаются в «Управлении» ---------- */
 const kb=a=>'<kbd>'+keyName(SAVE.keys[a])+'</kbd>';
 const TUT={
@@ -6840,7 +7204,7 @@ function fillStats(){
   ];
   $('sgrid').innerHTML=rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
   $('pBuild').innerHTML=buildChips(g);
-  $('saveq').hidden=!g.safe;
+  $('saveq').hidden=!g.safe||!!COOP;
 }
 let quitArmed=0;
 $('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
@@ -6865,7 +7229,7 @@ function showOver(win,add){
   $('goBuild').innerHTML=buildChips(g);
   {const w=$('goWhy');if(!win&&g.lastHurt){w.hidden=false;w.innerHTML='Последний удар: <b>'+g.lastHurt.n+'</b> (−'+g.lastHurt.d+')'}else w.hidden=true}
   $('goDmg').innerHTML=dmgRows(g);
-  $('endless').hidden=!win;
+  $('endless').hidden=!win||!!COOP;
   $('again').textContent='В меню';
   $('goBest').textContent='Лучшая волна: '+SAVE.best+' · Всего эссенции: '+SAVE.ess;
   $('hud').hidden=true;$('levelup').hidden=true;$('shop').hidden=true;$('pause').hidden=true;$('over').hidden=false;
@@ -6887,14 +7251,15 @@ $('dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();uiTouch=true;
 /* =====================================================================
    МЕНЮ
    ===================================================================== */
-let menuTab='play',menuEl='fire',listening=null,resetArmed=0;
-const TABS=[['play','Играть'],['up','Развитие'],['codex','Кодекс'],['bestiary','Бестиарий'],['keys','Управление']];
+let nickT=0,menuTab='play',menuEl='fire',listening=null,resetArmed=0;
+const TABS=[['play','Играть'],['coop','Вдвоём'],['up','Развитие'],['codex','Кодекс'],['bestiary','Бестиарий'],['keys','Управление']];
 function renderMenu(){
   $('tabs').innerHTML=TABS.map(t=>'<button class="tab'+(menuTab===t[0]?' on':'')+'" type="button" data-tab="'+t[0]+'">'+t[1]+'</button>').join('');
   $('essLine').innerHTML='Эссенция: <b>'+SAVE.ess+'</b>';
   $('bestLine').textContent=SAVE.best?('Лучшая волна: '+SAVE.best+' · Побед: '+SAVE.wins):'Забегов пока не было';
   const P=$('mpanel');
   if(menuTab==='play')P.innerHTML=playTab();
+  else if(menuTab==='coop')P.innerHTML=coopTab();
   else if(menuTab==='up')P.innerHTML=upTab();
   else if(menuTab==='codex')P.innerHTML=codexTab();
   else if(menuTab==='bestiary'){P.innerHTML=bestiaryTab();if(!bestRaf)bestRaf=requestAnimationFrame(bestLoop)}
@@ -6948,7 +7313,7 @@ function playTab(){
       +'<h2 class="sec" style="margin-top:14px">Сложность</h2>'+ascRow()
     +'</div></div>'
     +'<div class="startbar"><button class="btn big" type="button" data-start="1">'+(rs?'Новый забег':'Начать забег')+'</button>'
-      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span></div>'
+      +'<span class="sbinfo"><b style="color:'+E.c+'">'+heroName(menuEl)+'</b> · глава '+(SAVE.chSel||1)+' «'+C.n+'» · '+A.n+(rs?'<br><span style="color:#ffb0a0">Сохранённый забег пропадёт</span>':'')+'<br><span class="kh">Enter — начать</span></span><button class="btn alt" type="button" data-tabgo="coop">Играть вдвоём</button></div>'
     +'</section>';
 }
 function upTab(){
@@ -7054,7 +7419,9 @@ function keysTab(){
 $('mpanel').addEventListener('click',e=>{
   const t=e.target.closest('button');
   if(!t)return;
-  if(t.dataset.el){menuEl=t.dataset.el;renderMenu()}
+  if(t.dataset.net){lobbyClick(t);return}
+  if(t.dataset.tabgo){menuTab=t.dataset.tabgo;renderMenu();return}
+  if(t.dataset.el){menuEl=t.dataset.el;renderMenu();lobbyChanged()}
   else if(t.dataset.start)startRun(menuEl);
   else if(t.dataset.cont)loadRun();
   else if(t.dataset.meta){
@@ -7075,7 +7442,10 @@ $('mpanel').addEventListener('click',e=>{
     resetArmed=0;const keep=SAVE.keys;SAVE=freshSave();SAVE.keys=keep;store();renderMenu();
   }
 });
-$('mpanel').addEventListener('input',e=>{if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
+$('mpanel').addEventListener('input',e=>{
+  if(e.target.id==='nick'){SAVE.nick=e.target.value.trim().slice(0,16);store();clearTimeout(nickT);nickT=setTimeout(lobbyChanged,400);return}
+  if(e.target.id==='joinCode'){LOB.joinCode=e.target.value;return}
+  if(e.target.id==='vol'){SAVE.vol=parseInt(e.target.value,10)/100;store();sfx(500,0.06,'triangle',0.05)}else if(e.target.id==='mus'){SAVE.mus=parseInt(e.target.value,10)/100;store()}});
 $('tabs').addEventListener('click',e=>{
   const t=e.target.closest('.tab');
   if(t){menuTab=t.dataset.tab;listening=null;resetArmed=0;renderMenu()}
@@ -7091,6 +7461,78 @@ function finishListen(code){
   renderMenu();
 }
 
+$('mpanel').addEventListener('keydown',e=>{if(e.target.id==='joinCode'&&e.key==='Enter'){e.preventDefault();const b=document.querySelector('[data-net="join"]');if(b)lobbyClick(b)}});
+/* =====================================================================
+   МЕНЮ «ВДВОЁМ»: имя, герой, комната по коду, ручное подключение, старт.
+   ===================================================================== */
+function lobbyMe(){return {name:(SAVE.nick||'Игрок').slice(0,16),start:menuEl,meta:Object.assign({},SAVE.meta)}}
+const LOB={manual:false,inv:'',ans:'',joinCode:'',busy:false};
+function heroLabel(p){return p?(p.start==='avatar'?'Аватар':CLS[p.start].n):'—'}
+function coopTab(){
+  let picks='';
+  for(const k of HEROK){const E=hEl(k);picks+='<button class="hpick'+(menuEl===k?' on':'')+(k==='avatar'?' ava':'')+'" type="button" data-el="'+k+'" style="--c1:'+E.c+';--c2:'+E.c2+'"><span class="orb"></span><b>'+heroName(k)+'</b></button>'}
+  return '<section class="lobby"><div><h2 class="sec">Игра вдвоём</h2><p class="sub" style="margin:0">Один игрок создаёт комнату и говорит другу код из 5 цифр. Второй вводит код — игра соединяет вас напрямую. Лучше играть в одном и том же браузере (например, оба в Chrome).</p></div>'
+    +'<div class="lrow"><label>Ваше имя <input id="nick" maxlength="16" value="'+(SAVE.nick||'').replace(/"/g,'')+'" placeholder="Игрок"></label></div>'
+    +'<div><h2 class="sec">Ваш герой</h2><div class="hpicks">'+picks+'</div></div>'
+    +'<div id="lobbyDyn">'+lobbyDyn()+'</div></section>';
+}
+function lobbyDyn(){
+  const st=NET.st,h=[];
+  const log=NET.log.slice(-4).map(s=>'<div>'+s+'</div>').join('');
+  if(st==='idle'||st==='err'||st==='closed'){
+    h.push('<div class="lcards"><div class="lcard"><b>Создать комнату</b><p class="sub">Получите код и отправьте его другу.</p><button class="btn" type="button" data-net="host">Создать комнату</button></div>'
+      +'<div class="lcard"><b>Войти по коду</b><p class="sub">Код вам скажет друг.</p><div class="lrow"><input id="joinCode" maxlength="7" inputmode="numeric" autocomplete="off" placeholder="Например 14827" value="'+LOB.joinCode+'" style="letter-spacing:.2em;width:9em"><button class="btn" type="button" data-net="join">Войти</button></div></div></div>');
+    h.push('<details class="lman"'+(LOB.manual?' open':'')+'><summary>Не соединяется? Подключиться вручную через мессенджер</summary>'+manualHtml()+'</details>');
+    h.push('<details class="lman"><summary>Проверить на одном компьютере (две вкладки)</summary><p class="sub">Откройте игру во второй вкладке этого же браузера. В одной нажмите «Создать (вкладки)», в другой введите код, который начинается на 0.</p><button class="btn alt sm" type="button" data-net="hostL">Создать (вкладки)</button></details>');
+  }else if(st==='wait'||st==='join'||st==='link'){
+    h.push('<div class="lcard big">'+(NET.host&&NET.code?'<div class="sub">Код комнаты — скажите его другу</div><div class="lcode">'+NET.code+'</div><button class="btn alt sm" type="button" data-net="copy">Скопировать код</button>':'')+'<div class="lst">'+(st==='link'?'Соединяемся…':NET.host?'Ждём друга…':'Ищем комнату '+NET.code+'…')+'</div><button class="btn alt sm" type="button" data-net="leave">Отмена</button></div>');
+  }else if(st==='manual'){
+    h.push('<div class="lcard big">'+manualHtml()+'<button class="btn alt sm" type="button" data-net="leave">Отмена</button></div>');
+  }else if(st==='open'){
+    const me=lobbyMe(),fr=NET.friend;
+    h.push('<div class="lplayers"><div class="lp" style="--c1:'+hEl(me.start).c+'"><small>Вы'+(NET.host?' · хозяин':'')+'</small><b>'+me.name+'</b><span>'+heroLabel(me)+'</span></div>'
+      +'<div class="lp" style="--c1:'+(fr?hEl(fr.start).c:'#888')+'"><small>Друг'+(!NET.host?' · хозяин':'')+' · <span id="lping">'+pingTxt()+'</span></small><b>'+(fr?fr.name:'…')+'</b><span>'+heroLabel(fr)+'</span></div></div>');
+    if(NET.verBad)h.push('<p class="lerr">У вас разные версии игры. Обновите страницу у обоих (Ctrl+F5).</p>');
+    if(NET.host){
+      h.push('<h2 class="sec">Глава</h2>'+chapRow()+'<h2 class="sec" style="margin-top:10px">Сложность</h2>'+ascRow());
+      h.push('<div class="startbar"><button class="btn big" type="button" data-net="start"'+(fr&&!NET.verBad?'':' disabled')+'>Начать вдвоём</button><span class="sbinfo">Глава '+(SAVE.chSel||1)+' · опыт и золото общие · упавшего друга поднимают, постояв рядом</span></div>');
+    }else h.push('<div class="lcard"><div class="lst">Хозяин комнаты выбирает главу и начинает игру. Можно поменять героя выше.</div></div>');
+    h.push('<button class="btn alt sm" type="button" data-net="leave">Выйти из комнаты</button>');
+  }
+  if(log)h.push('<div class="llog">'+log+'</div>');
+  return h.join('');
+}
+function manualHtml(){
+  return '<div class="lman2"><p class="sub">1) Один нажимает «Создать приглашение» и отправляет длинный код другу. 2) Друг вставляет его и нажимает «Создать ответ», отправляет ответ обратно. 3) Первый вставляет ответ и нажимает «Подключить».</p>'
+    +'<div class="lrow"><button class="btn alt sm" type="button" data-net="mOffer">Создать приглашение</button></div>'
+    +(LOB.inv?'<textarea readonly rows="3" id="mInv">'+LOB.inv+'</textarea><button class="btn alt sm" type="button" data-net="copyInv">Скопировать</button>':'')
+    +'<textarea rows="3" id="mIn" placeholder="Вставьте сюда код от друга"></textarea>'
+    +'<div class="lrow"><button class="btn alt sm" type="button" data-net="mAnswer">Это приглашение → создать ответ</button><button class="btn alt sm" type="button" data-net="mFinish">Это ответ → подключить</button></div>'
+    +(LOB.ans?'<textarea readonly rows="3" id="mAns">'+LOB.ans+'</textarea><button class="btn alt sm" type="button" data-net="copyAns">Скопировать ответ</button>':'')+'</div>';
+}
+function pingTxt(){const r=NET.rtt;return r?'связь '+Math.round(r)+' мс'+(r>250?' (медленно)':''):'связь…'}
+function lobbyPing(){const e=$('lping');if(e)e.textContent=pingTxt()}
+function lobbyRender(){if(mode==='menu'&&menuTab==='coop'){const d=$('lobbyDyn');if(d)d.innerHTML=lobbyDyn()}}
+async function lobbyClick(t){
+  const a=t.dataset.net;
+  const copy=s=>{try{navigator.clipboard.writeText(s);nlog('Скопировано')}catch(_){}};
+  try{
+    if(a==='host')await netHost(false);
+    else if(a==='hostL')await netHost(true);
+    else if(a==='join'){const v=($('joinCode')||{}).value||'';LOB.joinCode=v;await netJoin(v)}
+    else if(a==='leave'){netClose();LOB.inv=LOB.ans='';nlog('Вы вышли из комнаты')}
+    else if(a==='copy')copy(NET.code);
+    else if(a==='start')netStartGame();
+    else if(a==='mOffer'){LOB.manual=true;LOB.inv=await manualOffer();nlog('Приглашение готово — отправьте его другу')}
+    else if(a==='mAnswer'){LOB.manual=true;const v=($('mIn')||{}).value||'';LOB.ans=await manualAnswer(v);nlog('Ответ готов — отправьте его обратно')}
+    else if(a==='mFinish'){const v=($('mIn')||{}).value||'';await manualFinish(v);nlog('Подключаемся…')}
+    else if(a==='copyInv')copy(LOB.inv);
+    else if(a==='copyAns')copy(LOB.ans);
+  }catch(e){nlog('Ошибка: '+(e&&e.message||e))}
+  lobbyRender();
+}
+/* сменили героя/главу в лобби — рассказать другу */
+function lobbyChanged(){if(NET.st==='open'&&!COOP)netSend({k:'me',p:lobbyMe()})}
 /* =====================================================================
    ВВОД
    ===================================================================== */
@@ -10646,7 +11088,7 @@ function render(){
   const each=f=>{if(!COOP||mode==='menu'){f(g);return}const me=G;for(const h of COOP.H){G=h;f(h)}G=me};
   drawDecor(g,MP);drawPools(g,MP);each(drawScorch);drawPatches(g);drawSolids(g,MP);
   if(mode!=='menu'){each(drawZones);each(drawBlasts);drawTelegraphs(g);drawGems(g);drawPickups(g);drawPortals(g);drawFeature(g);drawMerchants(g);drawEvents(g);each(drawStructs);drawEnemies(g);each(drawWalls);each(drawSplashes);each(drawSpiralCore);drawJet(g);each(drawDebris);each(drawSmoke)}
-  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z)}
+  each(drawRocks);each(drawPlayer);if(mode!=='menu'){each(drawGuns);drawMapFx(g);drawNameTags();drawLighting(g,cx,cy,z);coopArrows()}
   if(mode!=='menu'){each(drawSkillFx);each(drawProj);drawEnemyProj(g);each(drawTornados);each(drawBolts);drawSky(g);each(drawFlash);each(drawSparks);each(drawFx)}
   else drawFx(g);
   ctx.restore();
@@ -11110,7 +11552,8 @@ if(DEBUG){
     nearMerchant,skipWave,winRun,endRun,quitToMenu,renderMenu,setTab:(t)=>{menuTab=t;renderMenu()},bossKeyFor,doFuse,priceOf,
     setMouse:(x,y)=>{mouse.x=x;mouse.y=y;mouse.on=true;uiTouch=false},key:(c,d)=>{codes[c]=d},togglePause,gainXp,
     GMOD,heroMech,interact,FORMS,FORM_IDS,MSEAL,castUlt,toggleAuto,MUS,get ac(){return ac},bossPattern,itemTip,ultCanUp,BOSS,
-    ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()}
+    ultMods,fillStats,essenceFor,freeSlot,uiOpen,setMenuEl:(k)=>{menuEl=k;renderMenu()},
+    NET,LOB,BROKERS,lobbyClick,netHost,netJoin,netStartGame,netClose,coopSnap,coopApplySnap,coopSolo,coopDown,manualOffer,manualAnswer,manualFinish,zip,unzip,get menuTab(){return menuTab}
   };
 }
 })();
