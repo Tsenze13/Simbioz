@@ -388,7 +388,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;
 addEventListener('keyup',e=>{keys[e.code]=false});
 /* сенсорный джойстик: палец в любом месте левой половины */
 const joy={id:null,x0:0,y0:0,dx:0,dy:0};
-cv.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joy.x0=e.clientX;joy.y0=e.clientY;joy.dx=joy.dy=0;$('joy').style.display='block';$('joy').style.left=e.clientX+'px';$('joy').style.top=e.clientY+'px'});
+cv.addEventListener('pointerdown',e=>{if(joy.id!==null||e.pointerType==='mouse')return; /* джойстик только для пальца */joy.id=e.pointerId;joy.x0=e.clientX;joy.y0=e.clientY;joy.dx=joy.dy=0;$('joy').style.display='block';$('joy').style.left=e.clientX+'px';$('joy').style.top=e.clientY+'px'});
 addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=e.clientX-joy.x0,dy=e.clientY-joy.y0;const L=Math.hypot(dx,dy),M=50;if(L>M){dx*=M/L;dy*=M/L}joy.dx=dx/M;joy.dy=dy/M;$('knob').style.transform='translate('+dx+'px,'+dy+'px)'});
 const jEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.dx=joy.dy=0;$('joy').style.display='none';$('knob').style.transform=''};
 addEventListener('pointerup',jEnd);addEventListener('pointercancel',jEnd);
