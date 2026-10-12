@@ -50,5 +50,6 @@ js/render/heroes.js
 js/render/player.js
 js/render/map.js
 js/render/jet.js
+js/render/light.js
 js/core/loop.js
 shell/tail.html
