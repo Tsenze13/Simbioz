@@ -17,13 +17,13 @@ function treeBadge(){
 function openTree(){
   const g=G;
   if(!g||mode!=='play'||g.treeOpen||g.lvlOpen||g.shopOpen||g.paused||g.over)return;
-  g.treeOpen=true;
+  g.treeOpen=true;if(!isLocal())return;
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
   if(!trSel||(trSel!=='__pas'&&trSel!=='__ult'&&!AB[trSel])){const f=g.slots.find(s=>s&&AB[s.id].cat!=='fuse');trSel=f?f.id:(ELSK[g.start]||'__pas')}
   $('tree').hidden=false;renderTree();
 }
-function closeTree(){const g=G;if(!g)return;g.treeOpen=false;$('tree').hidden=true;$('tip').hidden=true;treeBadge()}
+function closeTree(){const g=G;if(!g)return;g.treeOpen=false;if(!isLocal())return;$('tree').hidden=true;$('tip').hidden=true;treeBadge()}
 function slotOf(id){return G.slots.find(s=>s&&s.id===id)}
 let trPv=null,trRaf=0;
 function trLoop(){
@@ -134,22 +134,29 @@ function ultTreeHtml(){
   return d;
 }
 $('trList').addEventListener('click',e=>{const b=e.target.closest('button[data-sk]');if(b){trSel=b.getAttribute('data-sk');renderTree()}});
+/* действие в древе (по сети в совместной игре — одинаково у обоих) */
+const TRA=['data-pas','data-ult','data-ultlv','data-mseal','data-seal','data-unlock','data-core','data-node'];
+function treeAct(attr,val){
+  const g=G;if(!g)return;
+  if(attr==='data-pas'){pasUp()}
+  else if(attr==='data-ult'){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=val==='hero'?'hero':val;g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
+  else if(attr==='data-ultlv'){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
+  else if(attr==='data-mseal'){const k=val;g.ult.ms=g.ult.ms||{};if(g.sp>0&&g.ult.kind&&!g.ult.ms[k]){g.sp--;g.ult.ms[k]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);const s=MSEAL[g.start].find(x=>x.k===k);toast('Печать: '+s.n,s.d)}}
+  else if(attr==='data-seal'){const p=val;if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&isAva(g)&&g.el[p]>0){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
+  else if(attr==='data-unlock'){const id=val;if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
+  else if(attr==='data-core'){const s=slotOf(val);if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
+  else if(attr==='data-node'){
+    const [id,i]=val.split(':'),ix=parseInt(i,10),s=slotOf(id);
+    if(s&&g.sp>0&&s.lv>=NODE_REQ[ix]&&nodeRank(id,ix)<3){(g.nodes[id]=g.nodes[id]||{})['abc'[ix]]=nodeRank(id,ix)+1;g.sp--;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Мутация: '+TREE[id][ix].n,AB[id].n)}
+  }
+  if(isLocal()&&g.treeOpen){renderTree();treeBadge()}
+}
 $('trDet').addEventListener('click',e=>{
   const g=G,b=e.target.closest('button');
   if(!g||!b||b.disabled)return;
-  if(b.hasAttribute('data-pas')){pasUp()}
-  else if(b.hasAttribute('data-ult')){if(g.sp>0&&!g.ult.kind&&g.p.lv>=ULT_LV){g.sp--;g.ult.kind=b.getAttribute('data-ult')==='hero'?'hero':b.getAttribute('data-ult');g.ult.lv=1;g.ult.cd=0;g.dockSig='';sfx(880,0.2,'triangle',0.06,500);toast('Ульта открыта',ultInfo().n+' · клавиша '+keyName(SAVE.keys.ult))}}
-  else if(b.hasAttribute('data-ultlv')){if(g.sp>0&&ultCanUp()){g.sp--;g.ult.lv++;g.dockSig='';sfx(820,0.14,'triangle',0.05,400)}}
-  else if(b.hasAttribute('data-mseal')){const k=b.getAttribute('data-mseal');g.ult.ms=g.ult.ms||{};if(g.sp>0&&g.ult.kind&&!g.ult.ms[k]){g.sp--;g.ult.ms[k]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);const s=MSEAL[g.start].find(x=>x.k===k);toast('Печать: '+s.n,s.d)}}
-  else if(b.hasAttribute('data-seal')){const p=b.getAttribute('data-seal');if(g.sp>0&&g.ult.kind&&!g.ult.seals[p]&&isAva(g)&&g.el[p]>0){g.sp--;g.ult.seals[p]=true;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Печать: '+ULTMOD[p],ULTMODD[p])}}
-  else if(b.hasAttribute('data-unlock')){const id=b.getAttribute('data-unlock');if(g.sp>0&&!skillAvail(id)&&learnSkill(id)){g.sp--;sfx(700,0.12,'triangle',0.05,300)}}
-  else if(b.hasAttribute('data-core')){const s=slotOf(b.getAttribute('data-core'));if(s&&s.lv<5&&g.sp>0){s.lv++;g.sp--;g.dockSig='';sfx(700,0.12,'triangle',0.05,300)}}
-  else if(b.hasAttribute('data-node')){
-    const [id,i]=b.getAttribute('data-node').split(':'),ix=parseInt(i,10),s=slotOf(id);
-    if(s&&g.sp>0&&s.lv>=NODE_REQ[ix]&&nodeRank(id,ix)<3){(g.nodes[id]=g.nodes[id]||{})['abc'[ix]]=nodeRank(id,ix)+1;g.sp--;g.dockSig='';sfx(820,0.14,'triangle',0.05,400);toast('Мутация: '+TREE[id][ix].n,AB[id].n)}
-  }
-  renderTree();treeBadge();
+  const attr=TRA.find(a=>b.hasAttribute(a));if(!attr)return;
+  A('tree',attr,b.getAttribute(attr)||'');
 });
-$('trClose').addEventListener('click',closeTree);
-$('treeBtn').addEventListener('click',()=>{G&&G.treeOpen?closeTree():openTree()});
+$('trClose').addEventListener('click',()=>A('closeTree'));
+$('treeBtn').addEventListener('click',()=>{G&&G.treeOpen?A('closeTree'):A('openTree')});
 

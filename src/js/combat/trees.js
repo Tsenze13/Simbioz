@@ -349,7 +349,8 @@ function chanStart(i){
   const c=castCtx(a.c1,a.c2),L0=lens();g.curSk=a.id;runHooks(pr,c,a);tagNew(L0,a.id);g.curSk=null;
   sfx(180,0.25,'sawtooth',0.04,120);
 }
-function chanHeld(i){const g=G,s=g.slots[i];if(!s)return false;if(codes[SAVE.keys['s'+(i+1)]]||g.chanPtr===i)return true;
+function keyHeld(i){const g=G;return g.inp?!!(g.inp.held&(1<<i)):!!codes[SAVE.keys['s'+(i+1)]]}
+function chanHeld(i){const g=G,s=g.slots[i];if(!s)return false;if(keyHeld(i)||g.chanPtr===i)return true;
   if(s.auto){const a=AB[s.id],t=nearest(g.p.x,g.p.y,260);return !!t&&g.p.mana>g.S.maxMana*0.12}return false}
 function chanTick(dt){
   const g=G,ch=g.chan;if(!ch)return;
@@ -360,7 +361,7 @@ function chanTick(dt){
   g.p.mana=Math.max(0,g.p.mana-chanCost(a,pr)*dt);ch.t+=dt;g.heatIdle=0;
   ch.tt-=dt;
   if(ch.tt<=0){ch.tt=0.09;
-    if(s.auto&&!codes[SAVE.keys['s'+(ch.i+1)]]&&g.chanPtr!==ch.i)g.autoAim=true;
+    if(s.auto&&!keyHeld(ch.i)&&g.chanPtr!==ch.i)g.autoAim=true;
     const c=castCtx(a.c1,a.c2);g.autoAim=false;
     const L0=lens();g.curSk=a.id;CAST.channel(pr,c);
     ch.zt-=0.09;if(ch.zt<=0){ch.zt=0.5;const zh=pr.hk.filter(h=>h.t==='zone');if(zh.length)runHooks(Object.assign({},pr,{hk:zh}),c,a)}

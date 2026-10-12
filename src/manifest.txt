@@ -32,6 +32,7 @@ js/game/leveling.js
 js/game/flow.js
 js/game/runextras.js
 js/game/runsave.js
+js/game/acts.js
 js/ui/hud.js
 js/ui/levelup.js
 js/ui/tree.js

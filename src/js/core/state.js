@@ -2,6 +2,8 @@
    СОСТОЯНИЕ
    ===================================================================== */
 let mode='menu',G=null,anim=0;
+let COOP=null; /* совместная игра (net/coop.js): {H:[герои], me, ...} */
+const isLocal=()=>!COOP||G===COOP.H[COOP.me]; /* текущий герой — тот, кем играют на этом устройстве */
 let W=innerWidth,H=innerHeight,DPR=1,VX=0,VY=0,ZM=1,VW=innerWidth,VH=innerHeight;
 const cam={x:0,y:0};
 const mouse={x:0,y:0,on:false,down:false};

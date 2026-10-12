@@ -16,7 +16,7 @@ const TUT={
 };
 let hintQ=[],hintT=0;
 function tut(k){
-  if(!SAVE.hints||!TUT[k])return;
+  if(!SAVE.hints||!TUT[k]||!isLocal())return;
   const id=k==='mech'&&G?'mech_'+G.start:k;
   if(SAVE.tut[id]||hintQ.includes(k))return;
   SAVE.tut[id]=1;store();hintQ.push(k);
@@ -166,6 +166,7 @@ function tipFor(k,i){
   const d=ITEMS[x.id];
   return itemTip(x.id,true)+'<div class="tu">Клавиша ['+keyName(SAVE.keys['i'+(i+1)])+']</div>';
 }
+let chanLocal=-1;
 (function initDock(){
   const dock=$('dock'),tip=$('tip');
   dock.addEventListener('pointerdown',e=>{
@@ -174,11 +175,11 @@ function tipFor(k,i){
     e.preventDefault();
     const k=b.dataset.k,i=parseInt(b.dataset.i,10);
     if(e.pointerType!=='mouse')uiTouch=true;
-    if(k==='s'){if(e.button===2||e.altKey){toggleAuto(i);return}const s=G.slots[i];if(s&&AB[s.id].kind==='channel')G.chanPtr=i;castSlot(i)}else if(k==='u')castUlt();else if(k==='i')useItem(i);
-    else if(k==='p'){if(!pasUp()){trSel='__pas';openTree()}else{tip.innerHTML=pasTip()}}
+    if(k==='s'){if(e.button===2||e.altKey){A('auto',i);return}const s=G.slots[i];if(s&&AB[s.id].kind==='channel'){A('chanPtr',i);chanLocal=i}A('cast',i)}else if(k==='u')A('ult');else if(k==='i')A('item',i);
+    else if(k==='p'){if(!pasCan()){trSel='__pas';A('openTree')}else{A('pas');setTimeout(()=>{tip.innerHTML=pasTip()},120)}}
   });
   dock.addEventListener('contextmenu',e=>{if(e.target.closest('.slot'))e.preventDefault()});
-  addEventListener('pointerup',()=>{if(G)G.chanPtr=-1});addEventListener('pointercancel',()=>{if(G)G.chanPtr=-1});
+  const chanOff=()=>{if(G&&chanLocal>=0){chanLocal=-1;A('chanPtr',-1)}};addEventListener('pointerup',chanOff);addEventListener('pointercancel',chanOff);
   dock.addEventListener('mouseover',e=>{
     const b=e.target.closest('.slot');
     if(!b||!G||uiTouch){tip.hidden=true;return}

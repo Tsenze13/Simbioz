@@ -3,6 +3,7 @@
    ===================================================================== */
 const DASH_CD=BAL.hero.dashCd;
 function getInput(){
+  if(G&&G.inp){const q=G.inp;let x=q.x,y=q.y,m=Math.hypot(x,y);if(m>1){x/=m;y/=m;m=1}return {x,y,m}} /* совместная игра: ввод героя приходит по сети */
   const k=SAVE.keys;
   let x=(codes[k.right]||codes.ArrowRight?1:0)-(codes[k.left]||codes.ArrowLeft?1:0);
   let y=(codes[k.down]||codes.ArrowDown?1:0)-(codes[k.up]||codes.ArrowUp?1:0);
@@ -58,7 +59,7 @@ function movePlayer(dt){
     const L=g.leap;L.t+=dt;const k=Math.min(1,L.t/L.T),e=k*k*(3-2*k);
     p.x=L.x0+(L.x1-L.x0)*e;p.y=L.y0+(L.y1-L.y0)*e;g.leapH=Math.sin(k*Math.PI)*60;p.vx=p.vy=0;
     if(k>=1){g.leap=null;g.leapH=0;const pr=L.pr;explodeAt(p.x,p.y,pr.r,pr.dmg,{dt:pr.dt,col:pr.col,st:pr.st,knock:pr.knock||260,spike:true,shake:9});smokeAt(p.x,p.y,30,4);if(pr.zone)addZone(p.x,p.y,pr.zone);if(pr.shards)CAST.nova({r:20,dmg:0,dt:'phys',col:pr.col,shards:pr.shards},{px:p.x,py:p.y,col:pr.col})}
-    cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
+    if(isLocal()){cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8)}
     return;
   }
   if(g.dashT>0){
@@ -97,8 +98,7 @@ function movePlayer(dt){
     g.hph+=dt*spd*0.085;
     g.hch=HTD.step(g.hsim,heroBody(g),dt,p.x,p.y,g.hf);
   }
-  cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);
-  cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8);
+  if(isLocal()){cam.x+=(p.x-VW/2-cam.x)*Math.min(1,dt*8);cam.y+=(p.y-VH/2-cam.y)*Math.min(1,dt*8)}
 }
 function itemFx(dt){
   const g=G,p=g.p,F=g.ifx;if(!F)return;
@@ -134,12 +134,19 @@ function heroMech(dt){
     if(g.impR&&Math.random()<0.5&&g.pt.length<470)g.pt.push({x:p.x+rnd(-6,6),y:p.y+rnd(-6,6),vx:-p.vx*0.3,vy:-p.vy*0.3,life:0.3,max:0.3,col:'#e6fff7',size:2});
   }
 }
+/* обновление мира: в одиночной игре — герой, мир, итоги героя; в совместной — так же, но для каждого героя (coop.js) */
 function update(dt){
-  const g=G,p=g.p,S=g.S;
+  const g=G;
   if(g.slowmo>0){g.slowmo-=dt;dt*=0.35}
   g.zk=Math.max(0,g.zk-dt*0.2);
-  gatherWorld(g,p.x,p.y);
+  gatherWorld(g,g.p.x,g.p.y);
   g.t+=dt;
+  heroUpdate(dt);
+  worldUpdate(dt);
+  heroPost(dt);
+}
+function heroUpdate(dt){
+  const g=G,p=g.p,S=g.S;
   p.inv=Math.max(0,p.inv-dt);p.dash=Math.max(0,p.dash-dt);
   {const mxd=1+(S.dch||0);if(p.dch<mxd){p.dcr+=dt;const need=dashCd();if(p.dcr>=need){p.dcr=0;p.dch++;if(p.dch>=mxd){p.dcr=0}ring(p.x,p.y,26,'#8febd0',0.25)}}else p.dcr=0}
   g.shield=Math.max(0,g.shield-dt);g.vac=Math.max(0,g.vac-dt);g.block=Math.max(0,g.block-dt);
@@ -152,7 +159,7 @@ function update(dt){
   if(g.ult.cd>0)g.ult.cd=Math.max(0,g.ult.cd-dt);
   movePlayer(dt);
   heroMech(dt);
-  hintTick(dt);if(SAVE.hints)hintTriggers();
+  if(isLocal()){hintTick(dt);if(SAVE.hints)hintTriggers()}
   chanTick(dt);autoTick();
   itemFx(dt);
   poolsTick(dt);
@@ -160,9 +167,14 @@ function update(dt){
   if(g.start==='earth'&&g.pl>=3){g.pasT-=dt;if(g.pasT<=0){g.pasT=20;g.shield=Math.max(g.shield,3);ring(g.p.x,g.p.y,60,'#c9974f',0.6);toast('Каменная кожа','Щит на 3 секунды')}}
   if(g.phase==='fight')weapons(dt);
   updPlayerSide(dt);
+}
+function worldUpdate(dt){
   waveLogic(dt);
   updEnemies(dt);
   updEnemyProj(dt);
+}
+function heroPost(dt){
+  const g=G,p=g.p,S=g.S;
   /* кристаллы и монеты */
   for(const m of g.gem){
     const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy)||1;
@@ -233,7 +245,7 @@ function waveLogic(dt){
     g.evT-=dt;
     if(g.evT<=0){
       g.evT=rnd(24,34);
-      const a=rnd(0,TAU),n=8+Math.round(2*effW(w)),d=Math.hypot(VW,VH)/2+90;
+      const a=rnd(0,TAU),n=8+Math.round(2*effW(w)),d=Math.hypot(simVW(),simVH())/2+90;
       for(let i=0;i<n&&g.en.length<200;i++){
         const aa=a+rnd(-0.6,0.6),dd=d+rnd(0,70);
         spawnAt(Math.random()<0.5?'swift':'wisp',g.p.x+Math.cos(aa)*dd,g.p.y+Math.sin(aa)*dd,hpMul(w),dmgMul(w));

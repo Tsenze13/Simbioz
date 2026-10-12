@@ -47,7 +47,7 @@ function waveTitle(w){
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a}
 function priceOf(id,mid){
   const g=G,d=ITEMS[id];
-  let pr=d.price*(1+0.03*(SW()-1))*(1-0.03*(SAVE.meta.discount||0));
+  let pr=d.price*(1+0.03*(SW()-1))*(1-0.03*((G.meta||SAVE.meta).discount||0));
   if(mid==='smug')pr*=1.15;
   pr*=ascMod('price');
   return Math.max(10,Math.round(pr/5)*5);

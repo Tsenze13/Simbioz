@@ -54,6 +54,7 @@ function openLevelUp(force){
   const g=G;
   g.pending--;g.lvlOpen=true;tut('level');g.choices=force||buildChoices();
   if(!g.choices.length){g.lvlOpen=false;return}
+  if(!isLocal())return; /* друг выбирает у себя */
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
   $('luT').textContent='Уровень '+g.p.lv;
@@ -75,9 +76,9 @@ function pickCard(i){
   const c=g.choices[i];
   if(!c)return;
   applyChoice(c);
-  g.lvlOpen=false;$('levelup').hidden=true;
-  if(g.sp>0&&!g.hinted&&g.pending<=0){g.hinted=true;openTree()}
+  g.lvlOpen=false;if(!isLocal())return;$('levelup').hidden=true;
+  if(g.sp>0&&!g.hinted&&g.pending<=0&&!COOP){g.hinted=true;openTree()}
   sfx(660,0.12,'triangle',0.05,300);
 }
-$('cards').addEventListener('click',e=>{const b=e.target.closest('.card');if(b)pickCard(parseInt(b.getAttribute('data-i'),10))});
+$('cards').addEventListener('click',e=>{const b=e.target.closest('.card');if(b)A('pick',parseInt(b.getAttribute('data-i'),10))});
 

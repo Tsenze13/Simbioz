@@ -100,7 +100,7 @@ function hitEnemy(e,dmg,o){
     if(g.pt.length<430)puff(e.x,e.y,col,crit?8:(o.aoe?1:3),crit?180:120,0.3,crit?2.8:2);
     if((o.proj||crit)&&g.fx.length<60)ring(e.x,e.y,crit?24:15,col,0.16);
     const now=performance.now();
-    if(now-lastHitSfx>55){lastHitSfx=now;sfx(crit?520:240+Math.random()*60,0.04,crit?'triangle':'square',0.016,-60)}
+    if(now-lastHitSfx>55){lastHitSfx=now;sfx(crit?520:240+VR()*60,0.04,crit?'triangle':'square',0.016,-60)}
   }
   if(e.hp>0){
     if(o.st)applySt(e,o.st,E.dm);
@@ -167,7 +167,7 @@ function killEnemy(e,o){
   puff(e.x,e.y,e.col,e.boss?40:(e.elite?14:7),e.boss?260:120,0.5,e.boss?4:2.4);
   debrisAt(e);
   const now=performance.now();
-  if(now-lastKillSfx>70){lastKillSfx=now;sfx(rnd(170,250),0.06,'square',0.02,-80)}
+  if(now-lastKillSfx>70){lastKillSfx=now;sfx(170+VR()*80,0.06,'square',0.02,-80)}
   if(e.def.split){
     for(let i=0;i<e.def.split;i++){const a=rnd(0,TAU);spawnAt('slimelet',e.x+Math.cos(a)*12,e.y+Math.sin(a)*12,e.hpMul,e.dmgMul)}
   }
@@ -235,7 +235,7 @@ function chainBolt(x,y,first,jumps,dmg,range,o){
   }
   g.bolts.push({pts:pts,t:0.22,max:0.22,col:o.col||'#f4f08a'});
   const now=performance.now();
-  if(now-lastBoltSfx>90){lastBoltSfx=now;sfx(rnd(700,900),0.08,'sawtooth',0.02,-300)}
+  if(now-lastBoltSfx>90){lastBoltSfx=now;sfx(700+VR()*200,0.08,'sawtooth',0.02,-300)}
 }
 function addZone(x,y,z,self){
   const g=G,area=1+g.S.area;
@@ -247,7 +247,8 @@ function s2w(sx,sy){const z=ZM*(1+(G?G.zk:0));return {x:cam.x+VW/2+(sx-W/2)/z,y:
 function aimPoint(){
   const g=G,p=g.p;
   if(g.autoAim){const t=nearest(p.x,p.y,600);if(t)return {x:t.x,y:t.y}}
-  if(mouse.on&&!uiTouch)return s2w(mouse.x,mouse.y);
+  if(g.inp){if(g.inp.aim)return {x:g.inp.ax,y:g.inp.ay}}
+  else if(mouse.on&&!uiTouch)return s2w(mouse.x,mouse.y);
   const t=nearest(p.x,p.y,520);
   if(t)return {x:t.x,y:t.y};
   return {x:p.x+Math.cos(p.face)*220,y:p.y+Math.sin(p.face)*220};

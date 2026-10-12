@@ -40,7 +40,7 @@ function fillStats(){
 }
 let quitArmed=0;
 $('saveq').addEventListener('click',()=>{if(saveRun()){G.over=true;quitToMenu();toast('Забег сохранён','Продолжить можно из меню «Играть»')}});
-$('resume').addEventListener('click',togglePause);
+$('resume').addEventListener('click',()=>A('pause'));
 $('quit').addEventListener('click',()=>{
   if(!quitArmed){quitArmed=1;$('quit').textContent='Точно выйти? Забег будет потерян';return}
   quitArmed=0;$('quit').textContent='Выйти в меню';
@@ -75,8 +75,8 @@ $('endless').addEventListener('click',()=>{
   endWave();
   toast('Бесконечный режим','Враги будут только сильнее');
 });
-$('pauseBtn').addEventListener('click',togglePause);
-$('skipBtn').addEventListener('click',skipWave);
-$('useBtn').addEventListener('click',interact);
+$('pauseBtn').addEventListener('click',()=>A('pause'));
+$('skipBtn').addEventListener('click',()=>A('skip'));
+$('useBtn').addEventListener('click',()=>A('use'));
 $('dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();uiTouch=true;tryDash()});
 

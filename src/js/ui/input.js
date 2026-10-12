@@ -13,26 +13,26 @@ addEventListener('keydown',e=>{
   const g=G;
   if(!g)return;
   if(g.lvlOpen){
-    if(c==='Digit1'||c==='Digit2'||c==='Digit3')pickCard(parseInt(c.slice(5),10)-1);
+    if(c==='Digit1'||c==='Digit2'||c==='Digit3')A('pick',parseInt(c.slice(5),10)-1);
     return;
   }
   if(act==='mute'){toggleMute();return}
-  if(g.treeOpen){if(act==='tree'||act==='pause'||c==='Escape')closeTree();return}
-  if(g.shopOpen){if(act==='use'||act==='pause'||c==='Escape')closeShop();return}
+  if(g.treeOpen){if(act==='tree'||act==='pause'||c==='Escape')A('closeTree');return}
+  if(g.shopOpen){if(act==='use'||act==='pause'||c==='Escape')A('closeShop');return}
   if(g.over)return;
-  if(act==='pause'||c==='Escape'){togglePause();return}
+  if(act==='pause'||c==='Escape'){A('pause');return}
   if(g.paused)return;
-  if(act==='dash')tryDash();
-  else if(act==='ult')castUlt();
-  else if(act==='tree')openTree();
-  else if(act==='use')interact();
-  else if(act==='skip')skipWave();
-  else if(act&&act.length===2&&act[0]==='s'){if(e.altKey){e.preventDefault();toggleAuto(parseInt(act[1],10)-1)}else castSlot(parseInt(act[1],10)-1)}
-  else if(act&&act.length===2&&act[0]==='i')useItem(parseInt(act[1],10)-1);
+  if(act==='dash')A('dash');
+  else if(act==='ult')A('ult');
+  else if(act==='tree')A('openTree');
+  else if(act==='use')A('use');
+  else if(act==='skip')A('skip');
+  else if(act&&act.length===2&&act[0]==='s'){if(e.altKey){e.preventDefault();A('auto',parseInt(act[1],10)-1)}else A('cast',parseInt(act[1],10)-1)}
+  else if(act&&act.length===2&&act[0]==='i')A('item',parseInt(act[1],10)-1);
 });
 addEventListener('keyup',e=>{codes[e.code]=false;if(e.key==='Alt')e.preventDefault()});
 addEventListener('blur',()=>{for(const k in codes)codes[k]=false});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen)togglePause()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!COOP&&mode==='play'&&G&&!G.paused&&!G.lvlOpen&&!G.shopOpen&&!G.treeOpen)togglePause()});
 const cv=$('c'),ctx=cv.getContext('2d');
 cv.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'){if(e.button===0&&SAVE.mmove){mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true}return}

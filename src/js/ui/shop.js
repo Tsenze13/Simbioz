@@ -5,7 +5,7 @@ let shopM=null,shopMsg='';
 function openShop(m){
   const g=G;
   if(!g||g.shopOpen)return;
-  g.shopOpen=true;shopM=m;shopMsg='';
+  g.shopOpen=true;g.shopMi=g.merch.indexOf(m);if(!isLocal())return;shopM=m;shopMsg='';
   for(const k in codes)codes[k]=false;
   joy.on=false;joy.dx=joy.dy=0;
   renderShop();
@@ -15,7 +15,7 @@ function openShop(m){
 function closeShop(){
   const g=G;
   if(!g)return;
-  g.shopOpen=false;shopM=null;$('shop').hidden=true;$('tip').hidden=true;
+  g.shopOpen=false;if(!isLocal())return;shopM=null;$('shop').hidden=true;$('tip').hidden=true;
 }
 function itemCard(id,price,sold,afford){
   const d=ITEMS[id];
@@ -126,37 +126,45 @@ $('shop').addEventListener('mouseover',e=>{
   tip.style.left=x+'px';tip.style.top=clamp(r.top,8,innerHeight-th-8)+'px';
 });
 $('shop').addEventListener('mouseout',e=>{if(!e.relatedTarget||!e.relatedTarget.closest||!e.relatedTarget.closest('[data-tipid],[data-tipown]'))$('tip').hidden=true});
+/* действие в лавке: выполняется для героя, который его сделал (в совместной игре — по сети) */
+function shopAct(kind,mi,a,b){
+  const g=G;if(!g)return '';
+  const M=g.merch[mi];let msg='';
+  if(kind==='sp'){
+    const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
+    if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко навыков получено';sfx(700,0.12,'triangle',0.05,300)}
+  }else if(kind==='inv'){
+    const s=INVEST.find(x=>x.k===a),n=g.inv[s.k]||0,pr=invPrice(s);
+    if(n>=INV_MAX)msg='Уже на максимуме';else if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.inv[s.k]=n+1;recalc();msg=s.n+': '+s.d;sfx(700,0.12,'triangle',0.05,300)}
+  }else if(kind==='awk'){
+    const k=a,pr=awkPrice();
+    if(g.p.gold<pr)msg='Не хватает золота';else if(g.el[k]>=(k===g.start?5:4))msg='Стихия уже на максимуме';else{g.p.gold-=pr;g.el[k]++;g.awk=(g.awk||0)+1;recalc();msg=EL[k].n+' стала сильнее';sfx(560,0.2,'triangle',0.05,400)}
+  }else if(kind==='sage'&&M){msg=sageSwap(M,a,b)}
+  else if(kind==='buy'&&M){msg=buyItem(M,a)||'Куплено'}
+  else if(kind==='sell'){sellItem(a);msg='Продано'}
+  if(isLocal()&&g.shopOpen){shopMsg=msg;renderShop()}
+  return msg;
+}
 $('shop').addEventListener('click',e=>{
   const g=G;
   if(!g||!shopM)return;
+  const mi=g.merch.indexOf(shopM);
   const buy=e.target.closest('[data-buy]'),sell=e.target.closest('[data-sell]'),tab=e.target.closest('[data-merch]'),cl=e.target.closest('[data-close]');
   const iv=e.target.closest('[data-inv]'),aw=e.target.closest('[data-awk]');
-  if(iv||aw){
-    let msg='';
-    if(iv&&iv.dataset.inv==='__sp'){
-      const pr=BAL.shop.spBase+BAL.shop.spStep*(g.spb||0);
-      if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.sp++;g.spb=(g.spb||0)+1;msg='Очко навыков получено';sfx(700,0.12,'triangle',0.05,300)}
-    }else if(iv){
-      const s=INVEST.find(x=>x.k===iv.dataset.inv),n=g.inv[s.k]||0,pr=invPrice(s);
-      if(n>=INV_MAX)msg='Уже на максимуме';else if(g.p.gold<pr)msg='Не хватает золота';else{g.p.gold-=pr;g.inv[s.k]=n+1;recalc();msg=s.n+': '+s.d;sfx(700,0.12,'triangle',0.05,300)}
-    }else{
-      const k=aw.dataset.awk,pr=awkPrice();
-      if(g.p.gold<pr)msg='Не хватает золота';else if(g.el[k]>=(k===g.start?5:4))msg='Стихия уже на максимуме';else{g.p.gold-=pr;g.el[k]++;g.awk=(g.awk||0)+1;recalc();msg=EL[k].n+' стала сильнее';sfx(560,0.2,'triangle',0.05,400);ring(g.p.x,g.p.y,90,EL[k].c,0.5)}
-    }
-    shopMsg=msg;renderShop();return;
-  }
+  if(iv){if(iv.dataset.inv==='__sp')A('shop','sp',mi);else A('shop','inv',mi,iv.dataset.inv);return}
+  if(aw){A('shop','awk',mi,aw.dataset.awk);return}
   const sg=e.target.closest('[data-sage]');
   if(sg){
     const v=sg.dataset.sage;
     if(v==='back')shopM.sel=-1;
     else if(v.indexOf('old:')===0){shopM.sel=parseInt(v.slice(4),10);shopMsg=''}
-    else if(v.indexOf('new:')===0){shopMsg=sageSwap(shopM,shopM.sel,v.slice(4))}
+    else if(v.indexOf('new:')===0){A('shop','sage',mi,shopM.sel,v.slice(4));return}
     renderShop();return;
   }
-  if(buy){shopMsg=buyItem(shopM,parseInt(buy.dataset.buy,10))||'Куплено';renderShop()}
-  else if(sell){sellItem(parseInt(sell.dataset.sell,10));shopMsg='Продано';renderShop()}
+  if(buy)A('shop','buy',mi,parseInt(buy.dataset.buy,10));
+  else if(sell)A('shop','sell',mi,parseInt(sell.dataset.sell,10));
   else if(tab){shopM=g.merch[parseInt(tab.dataset.merch,10)];shopMsg='';renderShop()}
-  else if(cl)closeShop();
-  else if(e.target===$('shop'))closeShop();
+  else if(cl)A('closeShop');
+  else if(e.target===$('shop'))A('closeShop');
 });
 

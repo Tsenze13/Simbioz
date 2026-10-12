@@ -16,7 +16,7 @@ function relicTick(){
   if(!g.relicQ||g.lvlOpen||g.over||g.shopOpen||g.treeOpen||g.paused)return;
   const bk=g.relicQ;g.relicQ=null;
   const ch=relicChoices(bk);if(!ch.length)return;
-  g.pending++;openLevelUp(ch);$('luT').textContent='Трофей: '+BOSS[bk].n+' повержен — выбери реликвию';
+  g.pending++;openLevelUp(ch);if(isLocal())$('luT').textContent='Трофей: '+BOSS[bk].n+' повержен — выбери реликвию';
 }
 
 /* ---------- комбо предметов ---------- */

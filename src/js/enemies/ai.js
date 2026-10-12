@@ -15,9 +15,9 @@ function bossKeyFor(w){
   const B=chapOf(G).boss;
   return B[(w/WPM-1)%B.length];
 }
-function spawnR(){return Math.hypot(VW,VH)/2+160}
+function spawnR(){return Math.hypot(simVW(),simVH())/2+160}
 function spawnPos(){
-  const a=rnd(0,TAU),d=Math.hypot(VW,VH)/2+rnd(40,140);
+  const a=rnd(0,TAU),d=Math.hypot(simVW(),simVH())/2+rnd(40,140);
   return {x:G.p.x+Math.cos(a)*d,y:G.p.y+Math.sin(a)*d};
 }
 function spawnAt(type,x,y,hm,dm,opts){

@@ -1,6 +1,6 @@
 /* ---------- характеристики ---------- */
 function recalc(){
-  const g=G,S=g.S,m=SAVE.meta,p=g.p;
+  const g=G,S=g.S,m=g.meta||SAVE.meta,p=g.p;
   const ml=k=>m[k]||0,cl=k=>g.pass[k]||0;
   const it={};
   for(const b of g.bag){
@@ -82,6 +82,7 @@ function ring(x,y,max,col,life,spike){
 }
 let toastTimer=0;
 function toast(a,b){
+  if(!isLocal())return; /* сообщения героя друга не показываем */
   const t=$('toast');
   t.hidden=true;void t.offsetWidth;
   t.innerHTML=a+(b?'<small>'+b+'</small>':'');

@@ -106,8 +106,10 @@ function getChunk(g,cx,cy){
   return c;
 }
 function gatherWorld(g,px,py){
-  const m=520,hw=VW/2+m,hh=VH/2+m;
-  const x0=Math.floor((px-hw)/CH),x1=Math.floor((px+hw)/CH),y0=Math.floor((py-hh)/CH),y1=Math.floor((py+hh)/CH);
+  const m=520,hw=simVW()/2+m,hh=simVH()/2+m;
+  let ax=px,bx=px,ay=py,by=py;
+  if(COOP)for(const h of COOP.H){ax=Math.min(ax,h.p.x);bx=Math.max(bx,h.p.x);ay=Math.min(ay,h.p.y);by=Math.max(by,h.p.y)} /* вдвоём — вокруг обоих героев */
+  const x0=Math.floor((ax-hw)/CH),x1=Math.floor((bx+hw)/CH),y0=Math.floor((ay-hh)/CH),y1=Math.floor((by+hh)/CH);
   const k=g.map+g.binst+':'+x0+','+x1+','+y0+','+y1;
   if(g.gk===k)return;
   g.gk=k;
