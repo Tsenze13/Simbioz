@@ -10,7 +10,7 @@ canvas{width:100%;height:auto;display:block;background:radial-gradient(#26301f,#
 @media(max-width:700px){.cols{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>Оружие Солдата — было / стало</h1>
-<p>Бета 0.35. Слева старые спрайты, справа новые. В каждой рамке: крупно (как в карточке уровня) и мелко в углу — как ствол парит возле героя в бою. Оружие стреляет по кругу.</p>
+<p>Бета 0.36.1. Слева старые спрайты, справа новые. В каждой рамке: крупно (как в карточке уровня) и мелко в углу — как ствол парит возле героя в бою. Оружие стреляет по кругу.</p>
 <div id=list></div></main><script>
 const TAU=Math.PI*2;
 function rg(c,x,y,r,st){const g=c.createRadialGradient(x,y,0,x,y,r);for(const [o,col] of st)g.addColorStop(o,col);return g}
@@ -226,10 +226,18 @@ function shotgun(c,fl){
 function rifle(c,fl){
   wood(c,[[-38,-5],[-10,-8],[-8,0],[-10,4],[-24,10],[-37,12],[-40,8]]);
   part(c,[[-41,-5.6],[-37.6,-5.8],[-38.2,12.6],[-41.4,12.4]],'poly',{hi:.18});
-  /* магазин */
-  c.beginPath();c.moveTo(6,3);c.lineTo(21,3);c.quadraticCurveTo(23,24,39,37);c.lineTo(26,41);c.quadraticCurveTo(9,27,6,3);c.closePath();
-  c.fillStyle=lgr(c,6,0,36,0,[[0,'#3e2a18'],[.4,'#a86e3a'],[.7,'#7a4a24'],[1,'#2e1c0e']]);c.fill();c.strokeStyle='rgba(22,10,3,.96)';c.lineWidth=1.15;c.stroke();
-  c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=1;for(let i=0;i<5;i++){const q=(i+1)/6;c.beginPath();c.moveTo(7+q*12+q*q*7,3+q*30);c.lineTo(21+q*10+q*q*8,3+q*30-2);c.stroke()}
+  /* магазин: рёбра идут между передней и задней кромкой и обрезаны по форме */
+  const qb=(a,b,d,t)=>(1-t)*(1-t)*a+2*(1-t)*t*b+t*t*d;
+  const fr=t=>[qb(21,23,39,t),qb(3,24,37,t)],bk=t=>[qb(6,9,26,t),qb(3,27,41,t)];
+  const magP=()=>{c.beginPath();c.moveTo(6,3);c.lineTo(21,3);c.quadraticCurveTo(23,24,39,37);c.lineTo(26,41);c.quadraticCurveTo(9,27,6,3);c.closePath()};
+  magP();c.fillStyle=lgr(c,6,0,36,0,[[0,'#3e2a18'],[.4,'#a86e3a'],[.7,'#7a4a24'],[1,'#2e1c0e']]);c.fill();
+  c.save();magP();c.clip();
+  for(let i=1;i<=4;i++){const t=i/5,f=fr(t),b=bk(t),ix=(f[0]-b[0])*.08,iy=(f[1]-b[1])*.08;
+    c.strokeStyle='rgba(30,14,4,.6)';c.lineWidth=1.3;c.beginPath();c.moveTo(b[0]+ix,b[1]+iy);c.lineTo(f[0]-ix,f[1]-iy);c.stroke();
+    c.strokeStyle='rgba(255,214,160,.22)';c.lineWidth=.7;c.beginPath();c.moveTo(b[0]+ix,b[1]+iy+1.2);c.lineTo(f[0]-ix,f[1]-iy+1.2);c.stroke()}
+  c.strokeStyle='rgba(255,220,170,.28)';c.lineWidth=1.4;c.beginPath();c.moveTo(19.6,4);c.quadraticCurveTo(21.4,24,36.6,35.6);c.stroke();
+  c.restore();
+  magP();c.strokeStyle='rgba(22,10,3,.96)';c.lineWidth=1.15;c.stroke();
   part(c,[[24,39],[39.5,34.5],[41,38],[26.6,42.6]],'dark');
   grip(c,[[-7,2],[3,2],[5,7],[2,19],[-8,19],[-9,15]],'poly');
   guard(c,2,14,3,6);
